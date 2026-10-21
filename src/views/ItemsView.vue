@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { parseQuickAdd } from '../lib/quickAdd'
 import { act } from '../lib/toast'
 import { archiveItem, items, now, saveItem, type ItemForm } from '../lib/store'
 
@@ -24,6 +25,19 @@ function setKind(kind: 'habit' | 'task') {
 }
 function toggleDay(d: number) {
   form.weekdays = form.weekdays.includes(d) ? form.weekdays.filter((x) => x !== d) : [...form.weekdays, d]
+}
+const quick = ref('')
+async function quickAdd(kind: 'habit' | 'task') {
+  const parsed = parseQuickAdd(quick.value)
+  if (!parsed) return void (error.value = 'Digite um nome e, opcionalmente, a duração: "Ler 45"')
+  error.value = ''
+  await act(() =>
+    saveItem({
+      ...blank(), kind, name: parsed.name, duration_min: parsed.durationMin,
+      weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date: kind === 'task' ? now.value.day : null,
+    }),
+  )
+  quick.value = ''
 }
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
@@ -67,7 +81,15 @@ async function submit() {
       <button type="button" class="ghost" @click="open = false">Cancelar</button>
     </div>
   </form>
-  <button v-else style="width: 100%" @click="edit()">+ Novo item</button>
+  <template v-else>
+    <input v-model="quick" placeholder="Adicionar rápido: Ler livro 45" @keydown.enter.prevent="quickAdd('task')" />
+    <div class="row" style="margin: 8px 0">
+      <button class="ghost" @click="quickAdd('task')">+ Tarefa hoje</button>
+      <button class="ghost" @click="quickAdd('habit')">+ Hábito diário</button>
+      <button @click="edit()">Formulário completo</button>
+    </div>
+    <p v-if="error" class="error">{{ error }}</p>
+  </template>
 
   <div v-for="item in items" :key="item.id" class="card row">
     <div>
