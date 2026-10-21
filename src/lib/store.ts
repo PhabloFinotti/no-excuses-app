@@ -24,7 +24,8 @@ export const profile = ref<ProfileRow | null>(null)
 export const items = ref<ItemRow[]>([])
 export const completions = ref<CompletionRow[]>([])
 export const nowMs = ref(Date.now())
-setInterval(() => (nowMs.value = Date.now()), 15_000)
+// 1s para a barra de tempo e o timer andarem suaves; parado com a aba oculta.
+setInterval(() => !document.hidden && (nowMs.value = Date.now()), 1000)
 
 const tz = () => profile.value?.tz ?? 'America/Sao_Paulo'
 export const now = computed(() => localTime(new Date(nowMs.value), tz()))
@@ -77,12 +78,18 @@ export async function archiveItem(id: string) {
   await loadAll()
 }
 
+// Otimista: a tela muda na hora e volta atrás se o servidor recusar.
 async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   const day = completionDay(item, now.value.day)
-  const row = must(
-    await supabase.from('item_completions').upsert({ item_id: item.id, day, ...patch }, { onConflict: 'item_id,day' }).select().single(),
-  ) as CompletionRow
-  completions.value = [...completions.value.filter((c) => !(c.item_id === row.item_id && c.day === row.day)), row]
+  const before = completions.value
+  const replace = (row: CompletionRow) => (completions.value = [...completions.value.filter((c) => !(c.item_id === row.item_id && c.day === row.day)), row])
+  replace({ item_id: item.id, day, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...completionOf(item), ...patch })
+  try {
+    replace(must(await supabase.from('item_completions').upsert({ item_id: item.id, day, ...patch }, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)
+  } catch (e) {
+    completions.value = before
+    throw e
+  }
 }
 
 // O timer vive no banco (started_at + acumulado), então sobrevive ao app fechado.

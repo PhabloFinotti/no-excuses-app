@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { shortDate, weekdaysLabel } from '../lib/format'
 import { parseQuickAdd } from '../lib/quickAdd'
+import Icon from '../components/Icon.vue'
 import { act } from '../lib/toast'
 import { archiveItem, items, now, saveItem, type ItemForm } from '../lib/store'
 
@@ -55,7 +57,7 @@ async function submit() {
 <template>
   <h1>Itens</h1>
 
-  <form v-if="open" class="card" @submit.prevent="submit">
+  <form v-if="open" class="plain" @submit.prevent="submit">
     <div class="chips">
       <button type="button" :class="{ on: form.kind === 'habit' }" class="ghost" @click="setKind('habit')">Hábito</button>
       <button type="button" :class="{ on: form.kind === 'task' }" class="ghost" @click="setKind('task')">Tarefa avulsa</button>
@@ -86,20 +88,23 @@ async function submit() {
     <div class="row" style="margin: 8px 0">
       <button class="ghost" @click="quickAdd('task')">+ Tarefa hoje</button>
       <button class="ghost" @click="quickAdd('habit')">+ Hábito diário</button>
-      <button @click="edit()">Formulário completo</button>
+      <button class="ghost" @click="edit()">Formulário completo</button>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
   </template>
 
-  <div v-for="item in items" :key="item.id" class="card row">
-    <div>
+  <h2 class="section">Cadastrados</h2>
+  <div v-for="item in items" :key="item.id" class="plain item-row">
+    <div class="grow">
       <strong>{{ item.name }}</strong>
       <div class="meta">
-        {{ item.kind === 'task' ? `Tarefa · ${item.due_date}` : `Hábito · ${item.weekdays.map((d) => DAYS[d]).join(' ')}` }} · {{ item.duration_min }} min
+        {{ item.kind === 'task' ? `Tarefa · ${shortDate(item.due_date!)}` : `Hábito · ${weekdaysLabel(item.weekdays)}` }} · {{ item.duration_min }} min
         <template v-if="item.fixed_time"> · {{ item.fixed_time.slice(0, 5) }}</template>
       </div>
     </div>
-    <button class="ghost" style="flex: 0 0 auto" @click="edit(item)">Editar</button>
-    <button class="ghost" style="flex: 0 0 auto" @click="act(() => archiveItem(item.id))">Arquivar</button>
+    <div class="tools">
+      <button class="icon-btn" aria-label="Editar" title="Editar" @click="edit(item)"><Icon name="edit" /></button>
+      <button class="icon-btn" aria-label="Arquivar" title="Arquivar" @click="act(() => archiveItem(item.id))"><Icon name="archive" /></button>
+    </div>
   </div>
 </template>

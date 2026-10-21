@@ -51,7 +51,7 @@ const save = () => run(() => {
     <button style="margin-top: 12px; width: 100%">Salvar</button>
   </form>
 
-  <h2>Notificações</h2>
+  <h2 class="section">Notificações</h2>
   <div class="row">
     <button @click="run(enablePush, 'Notificações ativadas neste aparelho.')">Ativar</button>
     <button class="ghost" @click="run(sendTestPush, 'Teste enviado.')">Enviar teste</button>
@@ -62,7 +62,7 @@ const save = () => run(() => {
   </p>
   <p v-if="msg">{{ msg }}</p>
 
-  <h2>Dados</h2>
+  <h2 class="section">Dados</h2>
   <div class="row">
     <button class="ghost" @click="run(exportCsv, 'CSV exportado.')">Exportar CSV</button>
     <button class="ghost" @click="run(exportBackup, 'Backup exportado.')">Backup JSON</button>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { enablePush } from '../lib/push'
 import { act } from '../lib/toast'
 
@@ -10,36 +10,40 @@ const read = () => {
 }
 
 const installed = ref(true)
-const permitted = ref(true)
-const subscribed = ref(true)
+const notifying = ref(true)
 const battery = ref(read())
 
 async function check() {
   installed.value = matchMedia('(display-mode: standalone)').matches
-  permitted.value = 'Notification' in window && Notification.permission === 'granted'
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.ready : undefined
-  subscribed.value = !!(await reg?.pushManager.getSubscription())
+  notifying.value = 'Notification' in window && Notification.permission === 'granted' && !!(await reg?.pushManager.getSubscription())
 }
 function confirmBattery() {
   battery.value = true
   try { localStorage.setItem(KEY, '1') } catch { /* sem storage: pergunta de novo na próxima */ }
 }
 onMounted(check)
+
+// Mostra só o próximo passo pendente, para não dominar a tela.
+const steps = computed(() => [
+  { done: installed.value, title: 'Instale o app', hint: 'Menu do Chrome → “Adicionar à tela inicial”.' },
+  { done: notifying.value, title: 'Ative as notificações', hint: 'Sem isso o alerta não chega com o app fechado.', action: 'Ativar' },
+  { done: battery.value, title: 'Libere a bateria', hint: 'Configurações → Aplicativos → No Excuses → Bateria → Sem restrições.', action: 'Já fiz' },
+])
+const current = computed(() => steps.value.find((s) => !s.done))
+const index = computed(() => (current.value ? steps.value.indexOf(current.value) + 1 : 0))
+function run() {
+  if (current.value?.action === 'Ativar') act(async () => { await enablePush(); await check() })
+  else confirmBattery()
+}
 </script>
 
 <template>
-  <div v-if="!(installed && permitted && subscribed && battery)" class="card">
-    <strong>Para os alertas chegarem no horário</strong>
-    <ul class="meta" style="padding-left: 18px">
-      <li :style="{ opacity: installed ? 0.5 : 1 }">{{ installed ? '✓' : '○' }} Instalar o app: menu do Chrome → “Adicionar à tela inicial”.</li>
-      <li :style="{ opacity: permitted && subscribed ? 0.5 : 1 }">
-        {{ permitted && subscribed ? '✓' : '○' }} Ativar notificações neste aparelho.
-        <button v-if="!(permitted && subscribed)" style="padding: 4px 10px" @click="act(async () => { await enablePush(); await check() })">Ativar</button>
-      </li>
-      <li :style="{ opacity: battery ? 0.5 : 1 }">
-        {{ battery ? '✓' : '○' }} Bateria “Sem restrições”: Configurações → Aplicativos → No Excuses → Bateria.
-        <button v-if="!battery" class="ghost" style="padding: 4px 10px" @click="confirmBattery">Já fiz</button>
-      </li>
-    </ul>
+  <div v-if="current" class="setup">
+    <div>
+      <strong>{{ current.title }} <span class="meta">({{ index }}/3)</span></strong>
+      <span class="meta">{{ current.hint }}</span>
+    </div>
+    <button v-if="current.action" @click="run">{{ current.action }}</button>
   </div>
 </template>

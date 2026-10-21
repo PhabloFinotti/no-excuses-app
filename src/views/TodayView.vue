@@ -1,100 +1,149 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import FocusMode from '../components/FocusMode.vue'
+import Icon from '../components/Icon.vue'
+import ItemCard from '../components/ItemCard.vue'
+import OnboardingCard from '../components/OnboardingCard.vue'
+import { shortDate } from '../lib/format'
+import { burst } from '../lib/confetti'
+import { act, notify } from '../lib/toast'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
-import { minToTime } from '../../supabase/functions/_shared/time'
-import FocusMode from '../components/FocusMode.vue'
-import OnboardingCard from '../components/OnboardingCard.vue'
-import { act } from '../lib/toast'
-import { rescheduleToday, staleTasks, isSnoozed, snoozeItem, calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
+import { timeToMin } from '../../supabase/functions/_shared/time'
+import { calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, rescheduleToday, skipItem, snoozeItem, staleTasks, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
   calc.value.states
-    .map((s) => ({ s, item: items.value.find((i) => i.id === s.id)! }))
-    .sort((a, b) => a.s.deadlineMin - b.s.deadlineMin),
+    .map((state) => ({ state, item: items.value.find((i) => i.id === state.id)! }))
+    .sort((a, b) => a.state.deadlineMin - b.state.deadlineMin),
 )
-const nowRows = computed(() => rows.value.filter((r) => r.s.level !== 'normal'))
-const laterRows = computed(() => rows.value.filter((r) => r.s.level === 'normal'))
+const nowRows = computed(() => rows.value.filter((r) => r.state.level !== 'normal'))
+const laterRows = computed(() => rows.value.filter((r) => r.state.level === 'normal'))
 const suggested = computed(() => items.value.find((i) => i.id === calc.value.suggestSkip))
 
-const focused = ref<ItemRow | null>(null)
-const LEVEL_LABEL = { normal: '', attention: 'Atenção', urgent: 'Urgente', overdue: 'Atrasado' }
+const total = computed(() => rows.value.length + doneToday.value.length)
+const pct = computed(() => (total.value ? doneToday.value.length / total.value : 0))
+const sleepLeftMin = computed(() => (profile.value ? Math.max(0, timeToMin(profile.value.sleep_time) - now.value.minutes) : 0))
+const hm = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}` : `${min} min`)
+const dateLabel = computed(() =>
+  new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: profile.value?.tz }).format(new Date(nowMs.value)),
+)
+const nowSec = computed(() => now.value.minutes * 60 + new Date(nowMs.value).getSeconds())
+const allDone = computed(() => !rows.value.length && doneToday.value.length > 0)
 
-function clock(item: ItemRow) {
-  const s = Math.round(elapsedSeconds(completionOf(item), nowMs.value))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
+const focused = ref<ItemRow | null>(null)
+const lastAction = ref<'done' | 'skip'>('done') // define a animação de saída do card
+
 const running = (item: ItemRow) => !!completionOf(item)?.timer_started_at
-const hasTime = (item: ItemRow) => !!completionOf(item)?.timer_started_at || (completionOf(item)?.timer_accum_s ?? 0) > 0
-const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < now.value.day
+const elapsed = (item: ItemRow) => elapsedSeconds(completionOf(item), nowMs.value)
+const hasTimer = (item: ItemRow) => running(item) || (completionOf(item)?.timer_accum_s ?? 0) > 0
+const rolled = (item: ItemRow) => item.kind === 'task' && item.due_date! < now.value.day
+const warnOf = (item: ItemRow) => item.warn_min ?? profile.value?.warn_min ?? 30
+
+function complete(item: ItemRow, e?: MouseEvent) {
+  const wasLast = rows.value.length === 1
+  const el = e?.currentTarget as HTMLElement | undefined
+  const r = el?.getBoundingClientRect()
+  lastAction.value = 'done'
+  burst(r ? r.left + r.width / 2 : innerWidth / 2, r ? r.top + r.height / 2 : innerHeight / 2)
+  if (wasLast) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.25, true), 280)
+  navigator.vibrate?.(15) // retorno tátil curto no Android
+  act(() => markDone(item))
+  notify(`${item.name} feito.`, { undo: () => undoToday(item) })
+}
+function skip(item: ItemRow) {
+  lastAction.value = 'skip'
+  act(() => skipItem(item))
+  notify(`${item.name}: ${item.kind === 'task' ? 'descartada' : 'pulado hoje'}.`, { undo: () => undoToday(item) })
+}
+const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`)
 </script>
 
 <template>
   <FocusMode
     v-if="focused"
     :item="focused"
-    :clock="clock(focused)"
+    :clock="`${Math.floor(elapsed(focused) / 60)}:${String(Math.floor(elapsed(focused) % 60)).padStart(2, '0')}`"
     :running="running(focused)"
     @close="focused = null"
     @toggle="act(() => (running(focused!) ? pauseTimer(focused!) : startTimer(focused!)))"
-    @done="act(() => markDone(focused!)); focused = null"
+    @done="complete(focused!); focused = null"
   />
-  <h1>Hoje</h1>
+
+  <header class="day">
+    <p class="date">{{ dateLabel }}</p>
+    <h1>Hoje</h1>
+    <div v-if="total" class="day-progress">
+      <div class="track"><div class="fill ok" :style="{ transform: `scaleX(${pct})` }" /></div>
+      <p class="meta"><span class="num">{{ doneToday.length }}/{{ total }}</span> feitos<template v-if="sleepLeftMin"> · <span class="num">{{ hm(sleepLeftMin) }}</span> até dormir</template></p>
+    </div>
+  </header>
+
   <OnboardingCard />
 
-  <div v-if="calc.deficitMin" class="banner">
-    Não cabe tudo antes de dormir: faltam {{ calc.deficitMin }} min.
-    <template v-if="suggested">
-      Sugestão: pular “{{ suggested.name }}”.
-      <button class="ghost" style="color: #fff; border-color: #fff; margin-top: 8px" @click="act(() => skipItem(suggested!))">Pular</button>
-    </template>
+  <div v-if="calc.deficitMin" class="banner" role="alert">
+    <Icon name="alert" />
+    <div>
+      <strong>Não cabe tudo antes de dormir.</strong> Faltam {{ hm(calc.deficitMin) }}.
+      <template v-if="suggested">Sugestão: pular “{{ suggested.name }}”.</template>
+    </div>
+    <button v-if="suggested" class="btn ghost on-banner" @click="skip(suggested!)">Pular</button>
   </div>
 
-  <p v-if="!rows.length">Nada pendente. 🎉</p>
+  <section v-if="allDone" class="closed">
+    <div class="closed-mark"><Icon name="check" :size="34" /></div>
+    <h2>Dia fechado.</h2>
+    <p>Tudo feito. Sem desculpas.</p>
+  </section>
+  <p v-else-if="!rows.length && !staleTasks.length" class="empty">Nada para hoje. Cadastre um hábito ou uma tarefa na aba Itens.</p>
 
   <template v-for="group in [{ title: 'Agora', rows: nowRows }, { title: 'Mais tarde', rows: laterRows }]" :key="group.title">
-    <h2 v-if="group.rows.length">{{ group.title }}</h2>
-    <div v-for="{ s, item } in group.rows" :key="item.id" class="card" :class="s.level">
-      <div class="row">
-        <strong>{{ item.name }}<span v-if="item.essential"> ★</span></strong>
-        <span class="meta" style="text-align: right">{{ LEVEL_LABEL[s.level] }}</span>
-      </div>
-      <div class="meta">
-        {{ item.duration_min }} min · começar até {{ minToTime(s.deadlineMin) }}
-        <template v-if="s.minutesUntilDeadline >= 0">(em {{ s.minutesUntilDeadline }} min)</template>
-        <template v-if="overdueTask(item)"> · atrasada de ontem</template>
-        <template v-if="isSnoozed(item)"> · alerta adiado</template>
-      </div>
-      <div class="row" style="margin-top: 8px">
-        <span v-if="hasTime(item)" class="timer" style="flex: 0 0 auto">⏱ {{ clock(item) }}</span>
-        <button v-if="!running(item)" class="ghost" @click="act(() => startTimer(item))">Iniciar</button>
-        <button v-else class="ghost" @click="act(() => pauseTimer(item))">Pausar</button>
-        <button class="ghost" @click="focused = item">Foco</button>
-        <button @click="act(() => markDone(item))">Feito</button>
-        <button v-if="s.level !== 'normal' && !isSnoozed(item)" class="ghost" @click="act(() => snoozeItem(item))">Adiar 10</button>
-        <button class="ghost" @click="act(() => skipItem(item))">{{ item.kind === 'task' ? 'Descartar' : 'Pular' }}</button>
-      </div>
-    </div>
-
+    <h2 v-if="group.rows.length" class="section">{{ group.title }}</h2>
+    <TransitionGroup name="item" tag="div" @before-leave="leaveClass">
+      <ItemCard
+        v-for="{ state, item } in group.rows"
+        :key="item.id"
+        :item="item"
+        :state="state"
+        :warn-min="warnOf(item)"
+        :now-sec="nowSec"
+        :elapsed-s="elapsed(item)"
+        :has-timer="hasTimer(item)"
+        :running="running(item)"
+        :snoozed="isSnoozed(item)"
+        :rolled="rolled(item)"
+        @done="complete(item, $event)"
+        @timer="act(() => (running(item) ? pauseTimer(item) : startTimer(item)))"
+        @focus="focused = item"
+        @snooze="act(() => snoozeItem(item))"
+        @skip="skip(item)"
+      />
+    </TransitionGroup>
   </template>
 
   <template v-if="staleTasks.length">
-    <h2>Paradas há dias</h2>
-    <div v-for="item in staleTasks" :key="item.id" class="card">
+    <h2 class="section">Paradas há dias</h2>
+    <div v-for="item in staleTasks" :key="item.id" class="plain">
       <strong>{{ item.name }}</strong>
-      <div class="meta">Vencida em {{ item.due_date }}. Fora do cálculo de tempo até você decidir.</div>
-      <div class="row" style="margin-top: 8px">
-        <button @click="act(() => rescheduleToday(item))">Fazer hoje</button>
-        <button class="ghost" @click="act(() => skipItem(item))">Descartar</button>
+      <p class="meta">Vencida em {{ shortDate(item.due_date!) }}. Fora do cálculo de tempo até você decidir.</p>
+      <div class="actions">
+        <button class="btn primary" @click="act(() => rescheduleToday(item))">Fazer hoje</button>
+        <button class="btn ghost" @click="skip(item)">Descartar</button>
       </div>
     </div>
   </template>
 
   <template v-if="doneToday.length">
-    <h2>Feitos hoje</h2>
-    <div v-for="item in doneToday" :key="item.id" class="card done row">
-      <span>{{ item.name }}<span class="meta"> · {{ completionOf(item)?.spent_min }} min</span></span>
-      <button class="ghost" style="flex: 0 0 auto" @click="act(() => undoToday(item))">Desfazer</button>
-    </div>
+    <h2 class="section">Feitos hoje</h2>
+    <TransitionGroup name="item" tag="div">
+      <div v-for="item in doneToday" :key="item.id" class="slot">
+        <div class="plain done-row">
+          <span class="done-check"><Icon name="check" :size="16" /></span>
+          <span class="done-name">{{ item.name }}</span>
+          <span class="meta num">{{ completionOf(item)?.spent_min || item.duration_min }} min</span>
+          <button class="icon-btn small" aria-label="Desfazer" title="Desfazer" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" /></button>
+        </div>
+      </div>
+    </TransitionGroup>
   </template>
 </template>
