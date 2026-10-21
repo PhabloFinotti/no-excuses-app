@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { minToTime } from '../../supabase/functions/_shared/time'
+import OnboardingCard from '../components/OnboardingCard.vue'
 import { act } from '../lib/toast'
 import { rescheduleToday, staleTasks, isSnoozed, snoozeItem, calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
 
@@ -26,6 +27,7 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
 
 <template>
   <h1>Hoje</h1>
+  <OnboardingCard />
 
   <div v-if="calc.deficitMin" class="banner">
     Não cabe tudo antes de dormir: faltam {{ calc.deficitMin }} min.
