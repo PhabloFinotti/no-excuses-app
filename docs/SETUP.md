@@ -22,3 +22,6 @@ supabase functions serve --env-file supabase/.env.local   # VAPID_*, CRON_SECRET
 curl -X POST localhost:54321/functions/v1/tick -H "x-cron-secret: $CRON_SECRET"
 ```
 A lógica do `tick` está em `supabase/functions/_shared/runTick.ts` e é coberta por `npm test`; o I/O (banco, web-push) só se valida assim ou em produção.
+
+## Modo demo (UI sem backend)
+`npm run dev:demo` sobe o app com um Supabase falso em memória (`src/lib/demo.ts`), com dados relativos ao horário atual (itens urgentes, atrasados, histórico). Não precisa de login nem de `.env`. Os dados somem ao recarregar.
