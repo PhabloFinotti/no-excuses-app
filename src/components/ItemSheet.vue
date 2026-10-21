@@ -2,8 +2,9 @@
 import { computed, ref } from 'vue'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
+import { googleCalendarUrl } from '../lib/calendar'
 import { shortDate } from '../lib/format'
-import { completionOf, now, nowMs, rescheduleTo, setSpent } from '../lib/store'
+import { completionOf, now, nowMs, profile, rescheduleTo, setSpent } from '../lib/store'
 import { act, notify } from '../lib/toast'
 import Icon from './Icon.vue'
 import ItemForm from './ItemForm.vue'
@@ -32,6 +33,10 @@ const hint = computed(() => {
   }
   return hasTimer ? `O cronômetro marcou ${elapsedMin} min. Corrija se precisar.` : `Sem cronômetro: o previsto é ${props.item.duration_min} min.`
 })
+
+const calendarUrl = computed(() =>
+  props.item.kind === 'task' ? googleCalendarUrl({ name: props.item.name, due_date: props.item.due_date!, fixed_time: props.item.fixed_time, duration_min: props.item.duration_min }, profile.value?.tz ?? 'America/Sao_Paulo') : '',
+)
 
 function saveTime() {
   act(() => setSpent(props.item, clamp(minutes.value)))
@@ -74,6 +79,7 @@ function tomorrow() {
           <button v-if="!isDone" @click="emit('finish', clamp(minutes))"><Icon name="check" :size="20" />Concluir com {{ clamp(minutes) }} min</button>
           <button :class="{ ghost: !isDone }" @click="saveTime">{{ isDone ? 'Salvar tempo' : 'Só salvar o cronômetro' }}</button>
           <button v-if="item.kind === 'task' && !isDone" class="ghost" @click="tomorrow">Fazer amanhã</button>
+          <a v-if="calendarUrl" class="btn ghost" :href="calendarUrl" target="_blank" rel="noopener">Adicionar ao Google Agenda</a>
         </div>
       </template>
 

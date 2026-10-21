@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
-import { now, saveItem, type ItemForm } from '../lib/store'
+import { googleCalendarUrl } from '../lib/calendar'
+import { now, profile, saveItem, type ItemForm } from '../lib/store'
+import { notify } from '../lib/toast'
 
 const props = defineProps<{ item?: ItemRow }>()
 const emit = defineEmits<{ saved: []; cancel: [] }>()
@@ -28,6 +30,10 @@ async function submit() {
   error.value = ''
   try {
     await saveItem({ ...form, fixed_time: form.fixed_time || null, warn_min: num(form.warn_min), urgent_min: num(form.urgent_min) })
+    if (form.kind === 'task' && !props.item) {
+      const t = { name: form.name, due_date: form.due_date!, fixed_time: form.fixed_time || null, duration_min: form.duration_min }
+      notify(`${form.name} adicionada.`, { action: { label: 'Agenda', run: () => window.open(googleCalendarUrl(t, profile.value?.tz ?? 'America/Sao_Paulo'), '_blank', 'noopener') } })
+    }
     emit('saved')
   } catch (e) {
     error.value = (e as Error).message

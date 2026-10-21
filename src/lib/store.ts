@@ -142,9 +142,10 @@ export async function setDuration(id: string, durationMin: number) {
 export async function addQuick(kind: 'habit' | 'task', text: string) {
   const parsed = parseQuickAdd(text)
   if (!parsed) throw new Error('Digite um nome e, se quiser, a duração: "Ler 45"')
+  const due_date = kind === 'task' ? now.value.day : null
   await saveItem({
     kind, name: parsed.name, duration_min: parsed.durationMin, fixed_time: null, essential: false, warn_min: null, urgent_min: null,
-    weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date: kind === 'task' ? now.value.day : null,
+    weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date,
   })
-  return parsed
+  return { ...parsed, due_date }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { addQuick } from '../lib/store'
+import { googleCalendarUrl } from '../lib/calendar'
+import { addQuick, profile } from '../lib/store'
 import { act, notify } from '../lib/toast'
 import Icon from './Icon.vue'
 import Sheet from './Sheet.vue'
@@ -18,7 +19,11 @@ async function submit() {
   busy.value = true
   await act(async () => {
     const item = await addQuick(kind.value, text.value)
-    notify(`${item.name} adicionado.`)
+    notify(`${item.name} adicionado.`, {
+      action: item.due_date
+        ? { label: 'Agenda', run: () => window.open(googleCalendarUrl({ name: item.name, due_date: item.due_date!, fixed_time: null, duration_min: item.durationMin }, profile.value?.tz ?? 'America/Sao_Paulo'), '_blank', 'noopener') }
+        : undefined,
+    })
     close()
   })
   busy.value = false
