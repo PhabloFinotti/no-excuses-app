@@ -30,4 +30,23 @@ describe('computeStats', () => {
     const close = computeStats([habit], [done('2026-10-18', 32), done('2026-10-19', 33), done('2026-10-20', 31)], '2026-10-21').habitStats[0]!
     expect(close.suggestedDurationMin).toBeUndefined()
   })
+
+  it('daily series: moving average needs a full 7-day window; weekday averages and best day', () => {
+    const c = [done('2026-10-15'), done('2026-10-16'), done('2026-10-17'), done('2026-10-18'), done('2026-10-19'), done('2026-10-20'), done('2026-10-21')]
+    const r = computeStats([habit], c, '2026-10-21', 10)
+    expect(r.cells).toHaveLength(10)
+    expect(r.average7.slice(0, 6).every((v) => v === null)).toBe(true)
+    expect(r.average7[9]).toBe(1) // 1 feito por dia nos últimos 7
+    expect(r.average7[8]).toBeCloseTo(6 / 7)
+    expect(r.total).toBe(7)
+    expect(r.best.done).toBe(1)
+    expect(r.weekdayAvg).toHaveLength(7)
+    expect(Math.max(...r.weekdayAvg)).toBe(1)
+  })
+
+  it('days before the first item do not enter the series', () => {
+    const r = computeStats([habit], [], '2026-10-21', 90) // hábito criado em 01/10
+    expect(r.cells).toHaveLength(21)
+    expect(r.cells[0]!.day).toBe('2026-10-01')
+  })
 })

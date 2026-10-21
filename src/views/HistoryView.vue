@@ -1,10 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import ColumnChart from '../components/ColumnChart.vue'
+import { shortDate } from '../lib/format'
 import { act } from '../lib/toast'
 import { completions, items, now, setDuration } from '../lib/store'
 import { computeStats } from '../lib/stats'
 
-const stats = computed(() => computeStats(items.value, completions.value, now.value.day))
+const RANGES = [7, 30, 90] as const
+const days = ref<(typeof RANGES)[number]>(30)
+const stats = computed(() => computeStats(items.value, completions.value, now.value.day, days.value))
+
+const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+const titles = computed(() => stats.value.cells.map((c) => `${WEEKDAYS[new Date(`${c.day}T00:00:00Z`).getUTCDay()]!.slice(0, 3)}, ${shortDate(c.day)}`))
+const bestIndex = computed(() => stats.value.cells.findIndex((c) => c.day === stats.value.best.day))
+const xTicks = computed(() => {
+  const n = stats.value.cells.length
+  return [0, Math.floor((n - 1) / 2), n - 1].map((i) => ({ i, text: shortDate(stats.value.cells[i]!.day) }))
+})
+const bestWeekday = computed(() => stats.value.weekdayAvg.indexOf(Math.max(...stats.value.weekdayAvg)))
+const avgLabel = computed(() => stats.value.avgPerDay.toLocaleString('pt-BR', { maximumFractionDigits: 1 }))
 // Cor da célula: vazio (nada agendado) cinza, parcial âmbar, completo verde, nada feito vermelho.
 const DOW = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const offset = computed(() => new Date(`${stats.value.cells[0]?.day}T00:00:00Z`).getUTCDay())
@@ -14,7 +28,25 @@ const color = (c: { scheduled: number; done: number }) =>
 
 <template>
   <h1>Histórico</h1>
-  <p class="meta" style="margin: 4px 0 16px">Últimos 30 dias</p>
+  <div class="chips range" role="group" aria-label="Período">
+    <button v-for="r in RANGES" :key="r" class="ghost" :class="{ on: days === r }" :aria-pressed="days === r" @click="days = r">{{ r }} dias</button>
+  </div>
+
+  <h2 class="section">Itens feitos por dia</h2>
+  <div class="plain">
+    <p class="meta" style="margin-bottom: 8px">
+      {{ stats.total }} no período · média <span class="num">{{ avgLabel }}</span> por dia<template v-if="stats.best.done"> · melhor dia {{ shortDate(stats.best.day) }} (<span class="num">{{ stats.best.done }}</span>)</template>
+    </p>
+    <ColumnChart :values="stats.cells.map((c) => c.done)" :titles="titles" :x-ticks="xTicks" value-name="feitos" :line="stats.average7" line-name="média de 7 dias" :highlight="stats.best.done ? bestIndex : undefined" />
+  </div>
+
+  <h2 class="section">Média por dia da semana</h2>
+  <div class="plain">
+    <p class="meta" style="margin-bottom: 8px">Você rende mais {{ bestWeekday === 0 || bestWeekday === 6 ? 'no' : 'na' }} {{ WEEKDAYS[bestWeekday]!.toLowerCase() }}{{ bestWeekday === 0 || bestWeekday === 6 ? '' : '-feira' }}.</p>
+    <ColumnChart :values="stats.weekdayAvg" :titles="WEEKDAYS" :x-ticks="WEEKDAYS.map((d, i) => ({ i, text: d.slice(0, 3) }))" value-name="feitos por dia" :highlight="stats.weekdayAvg[bestWeekday] ? bestWeekday : undefined" />
+  </div>
+
+  <h2 class="section">Calendário</h2>
   <div class="cells">
     <div v-for="(d, i) in DOW" :key="`d${i}`" class="dow">{{ d }}</div>
     <div v-for="n in offset" :key="`o${n}`" style="background: none" />

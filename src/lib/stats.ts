@@ -10,7 +10,9 @@ const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
 const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 export function computeStats(items: ItemRow[], completions: CompletionRow[], today: string, days = 30) {
-  const window = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1))
+  // Antes do primeiro item cadastrado não há dado: esses dias ficam fora da série (não são "zero").
+  const firstDay = items.length ? items.map((i) => i.created_at.slice(0, 10)).sort()[0]! : today
+  const window = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1)).filter((d) => d >= firstDay || d === today)
   const doneOn = (id: string, day: string) => completions.some((c) => c.item_id === id && c.day === day && c.done)
   const habits = items.filter((i) => i.kind === 'habit')
 
@@ -46,5 +48,13 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
     return { day, scheduled: scheduled.length + tasks, done: scheduled.filter((h) => doneOn(h.id, day)).length + tasks }
   })
 
-  return { habitStats, cells, tasksDone: doneTasks.filter((c) => window.includes(c.day)).length }
+  // Média móvel de 7 dias (só com janela completa) e média por dia da semana (dias com algo agendado).
+  const average7 = cells.map((_, i) => (i < 6 ? null : cells.slice(i - 6, i + 1).reduce((s, c) => s + c.done, 0) / 7))
+  const sums = Array.from({ length: 7 }, () => ({ done: 0, days: 0 }))
+  for (const c of cells) if (c.scheduled > 0) { const w = sums[weekdayOf(c.day)]!; w.done += c.done; w.days++ }
+  const weekdayAvg = sums.map((w) => (w.days ? w.done / w.days : 0))
+  const total = cells.reduce((s, c) => s + c.done, 0)
+  const best = cells.reduce((b, c) => (c.done > b.done ? c : b), cells[0]!)
+
+  return { habitStats, cells, average7, weekdayAvg, total, avgPerDay: total / window.length, best, tasksDone: doneTasks.filter((c) => window.includes(c.day)).length }
 }
