@@ -13,3 +13,12 @@
 7. **S21+:** abra a URL no Chrome → Adicionar à tela inicial → entre → Ajustes → Ativar → Enviar teste.
    Bateria: Configurações → Aplicativos → No Excuses → Bateria → "Sem restrições".
 8. **Medir atraso (M0.5):** deixe 24h com o app fechado e a tela bloqueada. Compare o horário de `notification_log.sent_at` com a hora em que a notificação apareceu. Anote em `adr/0001`.
+
+## Rodar as Edge Functions localmente (F1.2)
+Requer Docker e a CLI do Supabase.
+```
+supabase start                      # banco local + auth
+supabase functions serve --env-file supabase/.env.local   # VAPID_*, CRON_SECRET, SUPABASE_*
+curl -X POST localhost:54321/functions/v1/tick -H "x-cron-secret: $CRON_SECRET"
+```
+A lógica do `tick` está em `supabase/functions/_shared/runTick.ts` e é coberta por `npm test`; o I/O (banco, web-push) só se valida assim ou em produção.
