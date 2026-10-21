@@ -11,6 +11,7 @@ export interface ProfileRow {
   tz: string
   warn_min: number
   urgent_min: number
+  fixed_grace_min: number
 }
 
 export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'created_at'> & { id?: string }
@@ -32,6 +33,7 @@ export const calc = computed(() => {
     sleepMin: timeToMin(p.sleep_time),
     warnMin: p.warn_min,
     urgentMin: p.urgent_min,
+    graceMin: p.fixed_grace_min,
   })
 })
 

@@ -1,9 +1,9 @@
 // Roda a cada minuto (pg_cron). Recalcula tudo do zero e envia um push quando um nível é cruzado (ADR 0002).
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { calculateState, type Level } from '../_shared/calculateState.ts'
-import { toCalcItems, type CompletionRow, type ItemRow } from '../_shared/pending.ts'
+import type { CompletionRow, ItemRow } from '../_shared/pending.ts'
 import { configurePush, sendToUser } from '../_shared/push.ts'
-import { localTime, minToTime, timeToMin } from '../_shared/time.ts'
+import { runTick } from '../_shared/runTick.ts'
+import { localTime } from '../_shared/time.ts'
 
 Deno.serve(async (req) => {
   if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return new Response('forbidden', { status: 403 })
@@ -15,40 +15,24 @@ Deno.serve(async (req) => {
 
   const { data: profiles } = await db.from('profiles').select('*')
   for (const p of profiles ?? []) {
-    const now = localTime(nowDate, p.tz)
-    // Fora da janela acordado não avisa.
-    if (now.minutes < timeToMin(p.wake_time) || now.minutes >= timeToMin(p.sleep_time)) continue
-
+    const day = localTime(nowDate, p.tz).day
     const since = new Date(nowDate.getTime() - 90 * 86_400_000).toISOString().slice(0, 10)
-    const [{ data: items }, { data: completions }] = await Promise.all([
+    const [{ data: items }, { data: completions }, { data: log }] = await Promise.all([
       db.from('items').select('*').eq('user_id', p.user_id).eq('archived', false),
       db.from('item_completions').select('*').eq('user_id', p.user_id).gte('day', since),
+      db.from('notification_log').select('item_id, day, level').eq('day', day),
     ])
-    const result = calculateState(
-      toCalcItems((items ?? []) as ItemRow[], (completions ?? []) as CompletionRow[], now, nowDate.getTime()),
-      now.minutes,
-      { sleepMin: timeToMin(p.sleep_time), warnMin: p.warn_min, urgentMin: p.urgent_min },
-    )
+    const already = new Set((log ?? []).map((l) => `${l.item_id}:${l.day}:${l.level}`))
 
-    for (const s of result.states) {
-      if (s.level === 'normal') continue
-      // O log único (item, dia, nível) garante um envio por nível; só envia quem conseguiu inserir.
+    for (const push of runTick(p, (items ?? []) as ItemRow[], (completions ?? []) as CompletionRow[], already, nowDate)) {
+      // O log único (item, dia, nível) garante um envio por nível mesmo com execuções concorrentes.
       const { data: inserted } = await db
         .from('notification_log')
-        .upsert({ item_id: s.id, day: now.day, level: s.level }, { onConflict: 'item_id,day,level', ignoreDuplicates: true })
+        .upsert({ item_id: push.itemId, day: push.day, level: push.level }, { onConflict: 'item_id,day,level', ignoreDuplicates: true })
         .select()
       if (!inserted?.length) continue
-
-      const name = (items as ItemRow[]).find((i) => i.id === s.id)!.name
-      sent += await sendToUser(db, p.user_id, { ...message(s.level, name, s.minutesUntilDeadline, minToTime(s.deadlineMin), result.deficitMin), tag: s.id, level: s.level })
+      sent += await sendToUser(db, p.user_id, { title: push.title, body: push.body, tag: push.itemId, level: push.level, itemId: push.itemId })
     }
   }
   return Response.json({ sent })
 })
-
-function message(level: Exclude<Level, 'normal'>, name: string, minutes: number, deadline: string, deficit: number) {
-  if (level === 'overdue')
-    return { title: `${name}: atrasado`, body: deficit ? `Não cabe tudo antes de dormir: faltam ${deficit} min.` : `Era para começar até ${deadline}.` }
-  if (level === 'urgent') return { title: `${name}: urgente`, body: `Comece em ${minutes} min (até ${deadline}).` }
-  return { title: `${name}: está acabando o tempo`, body: `Comece até ${deadline} (em ${minutes} min).` }
-}

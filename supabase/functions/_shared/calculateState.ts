@@ -15,6 +15,7 @@ export interface Config {
   sleepMin: number
   warnMin: number
   urgentMin: number
+  graceMin?: number // tolerância após o horário de um item fixo antes de virar 'overdue'
 }
 
 export interface ItemState {
@@ -56,7 +57,7 @@ export function calculateState(items: Item[], nowMin: number, cfg: Config): Resu
     const deadlineMin = deadlines.get(i.id)!
     const delta = deadlineMin - nowMin
     const level: Level =
-      delta < 0 ? 'overdue'
+      delta < -(i.fixedMin !== undefined ? (cfg.graceMin ?? 0) : 0) ? 'overdue'
       : delta <= (i.urgentMin ?? cfg.urgentMin) ? 'urgent'
       : delta <= (i.warnMin ?? cfg.warnMin) ? 'attention'
       : 'normal'

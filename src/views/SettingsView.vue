@@ -30,6 +30,7 @@ const save = () => run(() => saveProfile({ ...form, wake_time: form.wake_time.sl
       <label>Atenção (min)<input v-model.number="form.warn_min" type="number" min="0" /></label>
       <label>Urgente (min)<input v-model.number="form.urgent_min" type="number" min="0" /></label>
     </div>
+    <label>Tolerância de hábito com horário fixo (min)<input v-model.number="form.fixed_grace_min" type="number" min="0" /></label>
     <button style="margin-top: 12px; width: 100%">Salvar</button>
   </form>
 
