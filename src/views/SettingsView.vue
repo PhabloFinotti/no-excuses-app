@@ -34,6 +34,9 @@ const save = () => run(() => {
 
 <template>
   <h1>Ajustes</h1>
+  <div class="settings-grid">
+    <section>
+  <h2 class="section">Rotina</h2>
   <form @submit.prevent="save">
     <div class="row">
       <label>Acordo<input v-model="form.wake_time" type="time" /></label>
@@ -52,6 +55,8 @@ const save = () => run(() => {
     <button style="margin-top: 12px; width: 100%">Salvar</button>
   </form>
 
+    </section>
+    <section>
   <h2 class="section">Notificações</h2>
   <div class="row">
     <button @click="run(enablePush, 'Notificações ativadas neste aparelho.')">Ativar</button>
@@ -62,6 +67,8 @@ const save = () => run(() => {
     e tire o app de “Apps em suspensão”.
   </p>
 
+    </section>
+    <section>
   <h2 class="section">Google Agenda</h2>
   <template v-if="profile!.calendar_connected">
     <p class="meta">Conectado. As tarefas avulsas aparecem no calendário “No Excuses” e acompanham edição, conclusão (✓) e exclusão. Hábitos não são enviados.</p>
@@ -75,6 +82,8 @@ const save = () => run(() => {
     <button style="margin-top: 10px" @click="run(connectCalendar, '')">Conectar Google Agenda</button>
   </template>
 
+    </section>
+    <section>
   <h2 class="section">Dados</h2>
   <div class="row">
     <button class="ghost" @click="run(exportCsv, 'CSV exportado.')">Exportar CSV</button>
@@ -85,4 +94,6 @@ const save = () => run(() => {
   </label>
 
   <button class="ghost" style="margin-top: 24px; width: 100%" @click="supabase.auth.signOut()">Sair</button>
+    </section>
+  </div>
 </template>

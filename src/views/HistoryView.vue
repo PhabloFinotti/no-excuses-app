@@ -78,7 +78,9 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </select>
   </div>
 
+  <div class="charts">
   <template v-if="detail && habit">
+    <section>
     <h2 class="section">{{ habit.name }}</h2>
     <div class="plain stat">
       <div class="stat-top">
@@ -97,20 +99,26 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
       </button>
     </div>
 
+    </section>
+    <section>
     <h2 class="section">Tempo por vez</h2>
     <div class="plain">
       <p class="meta" style="margin-bottom: 8px">Cada coluna é o tempo registrado no dia; a linha é a duração prevista.</p>
       <ColumnChart :values="detail.cells.map((c) => c.minutes)" :titles="detailTitles" :x-ticks="ticksFor(detail.cells)" value-name="min" :line="detail.cells.map(() => habit!.duration_min)" line-name="previsto" />
     </div>
 
+    </section>
+    <section>
     <h2 class="section">Cumprimento por dia da semana</h2>
     <div class="plain">
       <p class="meta" style="margin-bottom: 8px">{{ bestWeekdaysText }}</p>
       <ColumnChart :values="detail.weekdayRate" :titles="weekdayTitles" :x-ticks="WEEKDAYS.map((d, i) => ({ i, text: d.slice(0, 3) }))" value-name="% dos dias" :highlight="bestWeekdays.length === 1 ? bestWeekdays[0] : undefined" />
     </div>
+    </section>
   </template>
 
   <template v-else>
+    <section>
   <h2 class="section">Itens feitos por dia</h2>
   <div class="plain">
     <p class="meta" style="margin-bottom: 8px">
@@ -119,20 +127,26 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <ColumnChart :values="stats.cells.map((c) => c.done)" :titles="titles" :x-ticks="xTicks" value-name="feitos" :line="stats.average7" line-name="média de 7 dias" :highlight="stats.best.done ? bestIndex : undefined" />
   </div>
 
+    </section>
+    <section>
   <h2 class="section">Tempo dedicado por dia</h2>
   <div class="plain">
     <p class="meta" style="margin-bottom: 8px">{{ hm(stats.totalMinutes) }} no período · média {{ hm(stats.totalMinutes / stats.cells.length) }} por dia. Inclui o previsto de itens concluídos sem cronômetro.</p>
     <ColumnChart :values="stats.cells.map((c) => c.minutes)" :titles="titles" :x-ticks="xTicks" value-name="min" :line="stats.minutesAvg7" line-name="média de 7 dias" />
   </div>
 
+    </section>
+    <section>
   <h2 class="section">Média por dia da semana</h2>
   <div class="plain">
     <p class="meta" style="margin-bottom: 8px">Você rende mais {{ bestWeekday === 0 || bestWeekday === 6 ? 'no' : 'na' }} {{ WEEKDAYS[bestWeekday]!.toLowerCase() }}{{ bestWeekday === 0 || bestWeekday === 6 ? '' : '-feira' }}.</p>
     <ColumnChart :values="stats.weekdayAvg" :titles="WEEKDAYS" :x-ticks="WEEKDAYS.map((d, i) => ({ i, text: d.slice(0, 3) }))" value-name="feitos por dia" :highlight="stats.weekdayAvg[bestWeekday] ? bestWeekday : undefined" />
   </div>
 
+    </section>
   </template>
 
+    <section>
   <h2 class="section">Calendário</h2>
   <div class="cells">
     <div v-for="(d, i) in DOW" :key="`d${i}`" class="dow">{{ d }}</div>
@@ -156,8 +170,12 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <span><i style="background: var(--urgent)" />Nada feito</span>
   </p>
 
+    </section>
+  </div>
+
   <template v-if="!detail">
   <h2 class="section">Hábitos</h2>
+  <div class="habit-grid">
   <div v-for="h in stats.habitStats" :key="h.id" class="plain stat">
     <div class="stat-top">
       <strong>{{ h.name }}</strong>
@@ -172,6 +190,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
       <button class="ghost" @click="pick(h.id)">Ver histórico</button>
       <button v-if="h.suggestedDurationMin" class="ghost" @click="act(() => setDuration(h.id, h.suggestedDurationMin!))">Ajustar para {{ h.suggestedDurationMin }} min</button>
     </div>
+  </div>
   </div>
   <p v-if="!stats.habitStats.length" class="meta">Nenhum hábito ainda.</p>
   <p class="meta">Tarefas concluídas: {{ stats.tasksDone }}</p>

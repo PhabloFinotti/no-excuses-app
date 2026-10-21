@@ -96,14 +96,29 @@ class Query {
 
 export function createFake() {
   const db = seed()
-  const session = { user: { id: 'demo', email: 'demo@local' } }
+  const demoSession = { user: { id: 'demo', email: 'demo@local' } }
+  let session: typeof demoSession | null = demoSession
+  const listeners: ((e: string, s: typeof session) => void)[] = []
+  const emit = (e: string) => listeners.forEach((l) => l(e, session))
   return {
     from: (t: string) => new Query(db as Record<string, Row[]>, t),
     auth: {
-      getSession: async () => ({ data: { session } }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-      signInWithPassword: async () => ({ error: null }),
-      signOut: async () => ({ error: null }),
+      getSession: async () => ({ data: { session: new URLSearchParams(location.search).has('login') ? null : session } }),
+      onAuthStateChange: (cb: (e: string, s: typeof session) => void) => {
+        listeners.push(cb)
+        return { data: { subscription: { unsubscribe() {} } } }
+      },
+      signInWithPassword: async ({ password }: { password: string }) => {
+        if (password === 'errada') return { error: { message: 'Invalid login credentials' } }
+        session = demoSession
+        emit('SIGNED_IN')
+        return { error: null }
+      },
+      signOut: async () => {
+        session = null
+        emit('SIGNED_OUT')
+        return { error: null }
+      },
     },
     channel: () => ({ on() { return this }, subscribe() { return this } }),
     removeChannel: () => {},

@@ -48,6 +48,7 @@ function archive(item: ItemRow) {
   </template>
 
   <h2 class="section">Cadastrados</h2>
+  <div class="list-grid">
   <div v-for="item in items" :key="item.id" class="plain item-row">
     <div class="grow">
       <strong>{{ item.name }}</strong>
@@ -60,6 +61,7 @@ function archive(item: ItemRow) {
       <button class="icon-btn" aria-label="Editar" title="Editar" @click="edit(item)"><Icon name="edit" /></button>
       <button class="icon-btn" aria-label="Arquivar" title="Arquivar" @click="archive(item)"><Icon name="archive" /></button>
     </div>
+  </div>
   </div>
   <p v-if="!items.length" class="empty">Nenhum item ainda. Adicione o primeiro acima.</p>
 </template>

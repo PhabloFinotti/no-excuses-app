@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
+import BrandMark from './components/BrandMark.vue'
 import Icon from './components/Icon.vue'
 import { act, notify, toast } from './lib/toast'
 import LoginView from './views/LoginView.vue'
@@ -69,7 +70,15 @@ onMounted(async () => {
 
 <template>
   <LoginView v-if="!session" />
-  <template v-else>
+  <div v-else class="shell">
+    <nav aria-label="Navegação principal">
+      <div class="brand"><BrandMark :size="36" /><span>No Excuses</span></div>
+      <div class="inner">
+        <button v-for="([label, icon], key) in tabs" :key="key" :class="{ on: tab === key }" :aria-current="tab === key ? 'page' : undefined" @click="tab = key">
+          <Icon :name="icon" :size="22" />{{ label }}
+        </button>
+      </div>
+    </nav>
     <main>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="!profile" class="empty">Carregando…</p>
@@ -85,10 +94,5 @@ onMounted(async () => {
       <button v-if="toast.action" @click="toast.action.run(); toast = null">{{ toast.action.label }}</button>
       <button v-if="toast.undo" @click="act(toast.undo); toast = null">Desfazer</button>
     </div>
-    <nav>
-      <div class="inner"><button v-for="([label, icon], key) in tabs" :key="key" :class="{ on: tab === key }" :aria-current="tab === key ? 'page' : undefined" @click="tab = key">
-        <Icon :name="icon" :size="22" />{{ label }}
-      </button></div>
-    </nav>
-  </template>
+  </div>
 </template>

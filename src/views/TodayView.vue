@@ -108,6 +108,8 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
   </section>
   <p v-else-if="!rows.length && !staleTasks.length" class="empty">Nada para hoje. Cadastre um hábito ou uma tarefa na aba Itens.</p>
 
+  <div class="split">
+  <div class="split-main">
   <template v-for="group in [{ title: 'Agora', rows: nowRows }, { title: 'Mais tarde', rows: laterRows }]" :key="group.title">
     <h2 v-if="group.rows.length" class="section">{{ group.title }}</h2>
     <TransitionGroup name="item" tag="div" @before-leave="leaveClass">
@@ -133,6 +135,8 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
     </TransitionGroup>
   </template>
 
+  </div>
+  <aside class="split-aside">
   <template v-if="staleTasks.length">
     <h2 class="section">Paradas há dias</h2>
     <div v-for="item in staleTasks" :key="item.id" class="plain">
@@ -160,4 +164,6 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
       </div>
     </TransitionGroup>
   </template>
+  </aside>
+  </div>
 </template>
