@@ -40,3 +40,6 @@ Nada disso foi executado contra um Supabase real nem num aparelho.
 - [ ] V5 Os 3 níveis chegam num dia real (M2.2) e não repetem.
 - [ ] V6 RLS: segundo usuário não lê dados do primeiro.
 - [ ] V7 Tarefa de ontem não feita aparece hoje e entra no déficit (M1.5b).
+
+## Próximas fases
+Ver `docs/ROADMAP.md` (Fases 0 a 4). Ao iniciar uma fase, copiar as tarefas para cá com critério de pronto.
