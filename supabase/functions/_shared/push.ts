@@ -19,7 +19,7 @@ export async function sendToUser(db: SupabaseClient, userId: string, payload: Pu
   for (const s of subs ?? []) {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), {
-        urgency: 'high', // evita que o Doze atrase o entrega
+        urgency: 'high', // evita que o Doze atrase a entrega
         TTL: 600, // alerta velho não vale a pena: descarta após 10 min
       })
       sent++
