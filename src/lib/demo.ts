@@ -35,7 +35,7 @@ function seed() {
     if ((d * 7 + h.name.length) % 5 === 0) continue
     completions.push({ item_id: h.id, day: addDays(now.day, -d), user_id: 'demo', done: true, skipped: false, spent_min: h.duration_min + 22 * +(h.name === 'Leitura'), timer_started_at: null, timer_accum_s: 0 })
   }
-  const profile = { user_id: 'demo', wake_time: `${minToTime(wake)}:00`, sleep_time: `${minToTime(sleep)}:00`, tz, warn_min: 30, urgent_min: 10, fixed_grace_min: 15, morning_summary: true, evening_summary: true, evening_min: 60 }
+  const profile = { user_id: 'demo', wake_time: `${minToTime(wake)}:00`, sleep_time: `${minToTime(sleep)}:00`, tz, warn_min: 30, urgent_min: 10, fixed_grace_min: 15, morning_summary: true, evening_summary: true, evening_min: 60, calendar_connected: false }
   return { items, item_completions: completions, profiles: [profile], push_subscriptions: [] as Row[] }
 }
 

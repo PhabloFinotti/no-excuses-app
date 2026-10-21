@@ -74,12 +74,13 @@ function tomorrow() {
           <button v-for="p in presets" :key="p" class="ghost" :class="{ on: minutes === p }" @click="minutes = p">{{ p }}{{ p === item.duration_min ? ' (previsto)' : '' }}</button>
         </div>
         <p class="meta">{{ hint }}</p>
+        <p v-if="item.kind === 'task' && profile?.calendar_connected" class="meta">Sincronizada com o Google Agenda.</p>
 
         <div class="stack-actions">
           <button v-if="!isDone" @click="emit('finish', clamp(minutes))"><Icon name="check" :size="20" />Concluir com {{ clamp(minutes) }} min</button>
           <button :class="{ ghost: !isDone }" @click="saveTime">{{ isDone ? 'Salvar tempo' : 'Só salvar o cronômetro' }}</button>
           <button v-if="item.kind === 'task' && !isDone" class="ghost" @click="tomorrow">Fazer amanhã</button>
-          <a v-if="calendarUrl" class="btn ghost" :href="calendarUrl" target="_blank" rel="noopener">Adicionar ao Google Agenda</a>
+          <a v-if="calendarUrl && !profile?.calendar_connected" class="btn ghost" :href="calendarUrl" target="_blank" rel="noopener">Adicionar ao Google Agenda</a>
         </div>
       </template>
 

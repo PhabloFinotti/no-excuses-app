@@ -30,7 +30,7 @@ async function submit() {
   error.value = ''
   try {
     await saveItem({ ...form, fixed_time: form.fixed_time || null, warn_min: num(form.warn_min), urgent_min: num(form.urgent_min) })
-    if (form.kind === 'task' && !props.item) {
+    if (form.kind === 'task' && !props.item && !profile.value?.calendar_connected) {
       const t = { name: form.name, due_date: form.due_date!, fixed_time: form.fixed_time || null, duration_min: form.duration_min }
       notify(`${form.name} adicionada.`, { action: { label: 'Agenda', run: () => window.open(googleCalendarUrl(t, profile.value?.tz ?? 'America/Sao_Paulo'), '_blank', 'noopener') } })
     }

@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { exportBackup, exportCsv, importBackup } from '../lib/backup'
 import { enablePush, sendTestPush } from '../lib/push'
-import { loadAll, profile, saveProfile } from '../lib/store'
+import { connectCalendar, disconnectCalendar, loadAll, profile, saveProfile, syncPendingTasks } from '../lib/store'
 import { supabase } from '../lib/supabase'
+import { notify } from '../lib/toast'
 
 const form = reactive({ ...profile.value! })
-const msg = ref('')
 
-async function run(fn: () => Promise<unknown>, ok: string) {
+async function run(fn: () => Promise<unknown>, ok: string | ((result: any) => string)) {
   try {
-    await fn()
-    msg.value = ok
+    const result = await fn()
+    const text = typeof ok === 'function' ? ok(result) : ok
+    if (text) notify(text)
   } catch (e) {
-    msg.value = (e as Error).message
+    notify((e as Error).message, { error: true })
   }
 }
 const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -60,7 +61,19 @@ const save = () => run(() => {
     No Samsung, para o alerta chegar no horário: Configurações → Aplicativos → este app → Bateria → “Sem restrições”,
     e tire o app de “Apps em suspensão”.
   </p>
-  <p v-if="msg">{{ msg }}</p>
+
+  <h2 class="section">Google Agenda</h2>
+  <template v-if="profile!.calendar_connected">
+    <p class="meta">Conectado. As tarefas avulsas aparecem no calendário “No Excuses” e acompanham edição, conclusão (✓) e exclusão. Hábitos não são enviados.</p>
+    <div class="row" style="margin-top: 10px">
+      <button class="ghost" @click="run(syncPendingTasks, (n) => `${n} tarefa(s) enviada(s).`)">Enviar tarefas pendentes</button>
+      <button class="ghost" @click="run(disconnectCalendar, 'Desconectado. Os eventos já criados continuam no Google Agenda.')">Desconectar</button>
+    </div>
+  </template>
+  <template v-else>
+    <p class="meta">Envie suas tarefas avulsas para um calendário próprio, “No Excuses”, no Google Agenda. O app só enxerga esse calendário, nunca os seus outros.</p>
+    <button style="margin-top: 10px" @click="run(connectCalendar, '')">Conectar Google Agenda</button>
+  </template>
 
   <h2 class="section">Dados</h2>
   <div class="row">

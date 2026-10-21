@@ -20,7 +20,7 @@ async function submit() {
   await act(async () => {
     const item = await addQuick(kind.value, text.value)
     notify(`${item.name} adicionado.`, {
-      action: item.due_date
+      action: item.due_date && !profile.value?.calendar_connected
         ? { label: 'Agenda', run: () => window.open(googleCalendarUrl({ name: item.name, due_date: item.due_date!, fixed_time: null, duration_min: item.durationMin }, profile.value?.tz ?? 'America/Sao_Paulo'), '_blank', 'noopener') }
         : undefined,
     })

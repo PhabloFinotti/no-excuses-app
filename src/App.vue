@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import Icon from './components/Icon.vue'
-import { act, toast } from './lib/toast'
+import { act, notify, toast } from './lib/toast'
 import LoginView from './views/LoginView.vue'
 import TodayView from './views/TodayView.vue'
 import ItemsView from './views/ItemsView.vue'
@@ -19,6 +19,14 @@ const refresh = () => session.value && loadAll().then(applyNotificationAction).c
 // Ação vinda de um botão da notificação (?action=done|snooze&item=ID).
 function applyNotificationAction() {
   const q = new URLSearchParams(location.search)
+  const cal = q.get('calendar') // retorno do consentimento do Google
+  if (cal) {
+    history.replaceState(null, '', '/')
+    tab.value = 'settings'
+    if (cal === 'connected') notify('Google Agenda conectado. Use “Enviar tarefas pendentes” para as que já existem.', {}, 8000)
+    else notify(cal === 'denied' ? 'Conexão cancelada.' : 'Não consegui conectar o Google Agenda. Tente de novo.', { error: cal !== 'denied' })
+    return
+  }
   const item = items.value.find((i) => i.id === q.get('item'))
   const action = q.get('action')
   if (!action) return

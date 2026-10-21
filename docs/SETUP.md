@@ -25,3 +25,22 @@ A lógica do `tick` está em `supabase/functions/_shared/runTick.ts` e é cobert
 
 ## Modo demo (UI sem backend)
 `npm run dev:demo` sobe o app com um Supabase falso em memória (`src/lib/demo.ts`), com dados relativos ao horário atual (itens urgentes, atrasados, histórico). Não precisa de login nem de `.env`. Os dados somem ao recarregar.
+
+## Google Agenda (sincronização das tarefas)
+O app cria um calendário próprio "No Excuses" e só mexe nele (escopo `calendar.app.created`); não enxerga seus outros calendários.
+
+1. **Google Cloud Console** → crie um projeto → *APIs e serviços* → ative a **Google Calendar API**.
+2. **Tela de consentimento OAuth**: tipo *Externo*, nome "No Excuses", seu e-mail como contato. Em *Escopos*, adicione `.../auth/calendar.app.created`.
+   - Em *Usuários de teste*, adicione o seu e-mail. **Atenção:** enquanto o app estiver em "Teste", o Google expira o refresh token em 7 dias e você terá que reconectar. Para uso contínuo, clique em *Publicar app* (aparecerá o aviso "app não verificado" só para você; a necessidade de verificação para esse escopo não foi confirmada, veja a tela de consentimento).
+3. **Credenciais** → *Criar credenciais* → *ID do cliente OAuth* → tipo *Aplicativo da Web*. Em *URIs de redirecionamento autorizados* coloque exatamente:
+   `https://<PROJECT_REF>.supabase.co/functions/v1/gcal-callback`
+   Guarde o **Client ID** e o **Client secret**.
+4. **Segredos e deploy** (Supabase CLI linkada):
+   ```
+   supabase secrets set GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... GCAL_STATE_SECRET=$(openssl rand -hex 24) APP_URL=https://<seu-app>.vercel.app
+   supabase db push
+   supabase functions deploy gcal-connect
+   supabase functions deploy gcal-sync
+   supabase functions deploy gcal-callback --no-verify-jwt
+   ```
+5. No app: **Ajustes → Google Agenda → Conectar**. Aprove no Google; você volta ao app já conectado. Use "Enviar tarefas pendentes" para as que já existiam.

@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { calculateState } from './calculateState'
 import { parseQuickAdd } from './quickAdd'
 import { must, supabase } from './supabase'
+import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
 import { completionDay, elapsedSeconds, finishMinutes, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
 
@@ -16,6 +17,7 @@ export interface ProfileRow {
   morning_summary: boolean
   evening_summary: boolean
   evening_min: number
+  calendar_connected: boolean
 }
 
 export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'created_at'> & { id?: string }
@@ -70,13 +72,16 @@ export async function saveProfile(patch: Partial<ProfileRow>) {
 }
 
 export async function saveItem(form: ItemForm) {
-  must(await supabase.from('items').upsert(form))
+  const row = must(await supabase.from('items').upsert(form).select().single()) as ItemRow
   await loadAll()
+  if (row.kind === 'task') syncCalendar(row.id)
 }
 
 export async function archiveItem(id: string) {
+  const wasTask = items.value.find((i) => i.id === id)?.kind === 'task'
   must(await supabase.from('items').update({ archived: true }).eq('id', id))
   await loadAll()
+  if (wasTask) syncCalendar(id)
 }
 
 // Otimista: a tela muda na hora e volta atrás se o servidor recusar.
@@ -87,6 +92,7 @@ async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   replace({ item_id: item.id, day, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...completionOf(item), ...patch })
   try {
     replace(must(await supabase.from('item_completions').upsert({ item_id: item.id, day, ...patch }, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)
+    if (item.kind === 'task' && ('done' in patch || 'skipped' in patch)) syncCalendar(item.id)
   } catch (e) {
     completions.value = before
     throw e
@@ -125,17 +131,20 @@ export const isSnoozed = (item: ItemRow) => Date.parse(completionOf(item)?.snooz
 export async function rescheduleTo(item: ItemRow, day: string) {
   must(await supabase.from('items').update({ due_date: day }).eq('id', item.id))
   await loadAll()
+  syncCalendar(item.id)
 }
 export const rescheduleToday = (item: ItemRow) => rescheduleTo(item, now.value.day)
 
 export async function unarchiveItem(id: string) {
   must(await supabase.from('items').update({ archived: false }).eq('id', id))
   await loadAll()
+  syncCalendar(id) // o servidor ignora se não for tarefa
 }
 
 export async function setDuration(id: string, durationMin: number) {
   must(await supabase.from('items').update({ duration_min: durationMin }).eq('id', id))
   await loadAll()
+  syncCalendar(id)
 }
 
 // Adicionar rápido: "Ler livro 45". Tarefa = hoje; hábito = todo dia.
@@ -148,4 +157,40 @@ export async function addQuick(kind: 'habit' | 'task', text: string) {
     weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date,
   })
   return { ...parsed, due_date }
+}
+
+// ---- Google Agenda -------------------------------------------------------------------------------
+// Não bloqueia a ação do usuário: se falhar, avisa e o app segue funcionando.
+export function syncCalendar(itemId: string) {
+  if (!profile.value?.calendar_connected) return
+  supabase.functions.invoke('gcal-sync', { body: { itemId } }).then(({ error }) => {
+    if (!error) return
+    const status = (error as { context?: Response }).context?.status
+    if (status === 409 && profile.value) {
+      profile.value = { ...profile.value, calendar_connected: false }
+      notify('O acesso ao Google Agenda foi revogado. Reconecte em Ajustes.', { error: true })
+    } else notify('Não consegui atualizar o Google Agenda. Tente de novo em instantes.', { error: true })
+  })
+}
+
+export async function connectCalendar() {
+  const { data, error } = await supabase.functions.invoke('gcal-connect')
+  if (error || !data?.url) throw new Error('Conexão com o Google indisponível (confira o deploy das functions).')
+  location.href = data.url
+}
+
+export async function disconnectCalendar() {
+  const { error } = await supabase.functions.invoke('gcal-sync', { body: { disconnect: true } })
+  if (error) throw new Error('Não consegui desconectar. Tente de novo.')
+  profile.value = { ...profile.value!, calendar_connected: false }
+}
+
+// Envia as tarefas pendentes que já existiam antes da conexão. Em série, para não estourar a cota do Google.
+export async function syncPendingTasks() {
+  const tasks = items.value.filter((i) => i.kind === 'task' && isItemPending(i))
+  for (const t of tasks) {
+    const { error } = await supabase.functions.invoke('gcal-sync', { body: { itemId: t.id } })
+    if (error) throw new Error('Parei no meio: não consegui enviar todas as tarefas.')
+  }
+  return tasks.length
 }
