@@ -41,5 +41,14 @@ Nada disso foi executado contra um Supabase real nem num aparelho.
 - [ ] V6 RLS: segundo usuário não lê dados do primeiro.
 - [ ] V7 Tarefa de ontem não feita aparece hoje e entra no déficit (M1.5b).
 
-## Próximas fases
-Ver `docs/ROADMAP.md` (Fases 0 a 4). Ao iniciar uma fase, copiar as tarefas para cá com critério de pronto.
+## Pós-MVP
+Ver `docs/ROADMAP.md` (status no topo). Fases 1 a 3 implementadas, exceto os itens marcados como não implementados.
+Novas migrações (`supabase db push`): `20261022_fixed_grace`, `20261023_snooze`, `20261024_summaries`, `20261025_realtime`.
+Rode de novo `supabase/cron.sql` só para o job `cleanup-logs` (o `tick-every-minute` já existe) e faça redeploy das functions (`supabase functions deploy tick --no-verify-jwt`).
+
+## Validação pendente adicional
+- [ ] V8 Botões Feito/Adiar da notificação funcionam no Android (abre o app e aplica).
+- [ ] V9 Adiar: silêncio por 10 min e um lembrete único depois.
+- [ ] V10 Resumos de manhã e de fim do dia chegam uma vez só.
+- [ ] V11 Realtime: marcar feito num aparelho atualiza o outro.
+- [ ] V12 Importar o backup exportado restaura itens e histórico.
