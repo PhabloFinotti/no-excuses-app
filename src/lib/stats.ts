@@ -1,6 +1,6 @@
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
-export interface DayCell { day: string; scheduled: number; done: number }
+export interface DayCell { day: string; scheduled: number; done: number; minutes: number }
 export interface HabitStats {
   id: string; name: string; durationMin: number; scheduled: number; done: number; rate: number
   avgSpentMin: number; samples: number; suggestedDurationMin?: number; streak: number
@@ -45,16 +45,19 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   const cells: DayCell[] = window.map((day) => {
     const scheduled = habits.filter((h) => day >= h.created_at.slice(0, 10) && h.weekdays.includes(weekdayOf(day)) && (day < today || doneOn(h.id, day)))
     const tasks = doneTasks.filter((c) => c.day === day).length
-    return { day, scheduled: scheduled.length + tasks, done: scheduled.filter((h) => doneOn(h.id, day)).length + tasks }
+    const minutes = completions.filter((c) => c.day === day && c.done).reduce((s, c) => s + c.spent_min, 0)
+    return { day, scheduled: scheduled.length + tasks, done: scheduled.filter((h) => doneOn(h.id, day)).length + tasks, minutes }
   })
 
   // Média móvel de 7 dias (só com janela completa) e média por dia da semana (dias com algo agendado).
-  const average7 = cells.map((_, i) => (i < 6 ? null : cells.slice(i - 6, i + 1).reduce((s, c) => s + c.done, 0) / 7))
+  const movingAvg = (pick: (c: DayCell) => number) => cells.map((_, i) => (i < 6 ? null : cells.slice(i - 6, i + 1).reduce((s, c) => s + pick(c), 0) / 7))
+  const average7 = movingAvg((c) => c.done)
+  const minutesAvg7 = movingAvg((c) => c.minutes)
   const sums = Array.from({ length: 7 }, () => ({ done: 0, days: 0 }))
   for (const c of cells) if (c.scheduled > 0) { const w = sums[weekdayOf(c.day)]!; w.done += c.done; w.days++ }
   const weekdayAvg = sums.map((w) => (w.days ? w.done / w.days : 0))
   const total = cells.reduce((s, c) => s + c.done, 0)
   const best = cells.reduce((b, c) => (c.done > b.done ? c : b), cells[0]!)
 
-  return { habitStats, cells, average7, weekdayAvg, total, avgPerDay: total / window.length, best, tasksDone: doneTasks.filter((c) => window.includes(c.day)).length }
+  return { habitStats, cells, average7, minutesAvg7, totalMinutes: cells.reduce((s, c) => s + c.minutes, 0), weekdayAvg, total, avgPerDay: total / window.length, best, tasksDone: doneTasks.filter((c) => window.includes(c.day)).length }
 }

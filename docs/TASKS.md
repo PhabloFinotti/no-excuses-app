@@ -43,7 +43,7 @@ Nada disso foi executado contra um Supabase real nem num aparelho.
 
 ## Pós-MVP
 Ver `docs/ROADMAP.md` (status no topo). Fases 1 a 3 implementadas, exceto os itens marcados como não implementados.
-Novas migrações (`supabase db push`): `20261022_fixed_grace`, `20261023_snooze`, `20261024_summaries`, `20261025_realtime`.
+Novas migrações (`supabase db push`): `20261022_fixed_grace`, `20261023_snooze`, `20261024_summaries`, `20261025_realtime`, `20261026_time_source`.
 Rode de novo `supabase/cron.sql` só para o job `cleanup-logs` (o `tick-every-minute` já existe) e faça redeploy das functions (`supabase functions deploy tick --no-verify-jwt`).
 
 ## Validação pendente adicional
@@ -52,3 +52,5 @@ Rode de novo `supabase/cron.sql` só para o job `cleanup-logs` (o `tick-every-mi
 - [ ] V10 Resumos de manhã e de fim do dia chegam uma vez só.
 - [ ] V11 Realtime: marcar feito num aparelho atualiza o outro.
 - [ ] V12 Importar o backup exportado restaura itens e histórico.
+
+- [ ] V13 Concluir sem timer grava o tempo previsto (badge "previsto") e o toast "Ajustar tempo" abre a folha; ajustar o tempo atualiza o gráfico "Tempo dedicado".

@@ -37,7 +37,7 @@ async function submit() {
 
 <template>
   <form @submit.prevent="submit">
-    <div class="chips">
+    <div v-if="!item" class="chips">
       <button type="button" :class="{ on: form.kind === 'habit' }" class="ghost" @click="setKind('habit')">Hábito</button>
       <button type="button" :class="{ on: form.kind === 'task' }" class="ghost" @click="setKind('task')">Tarefa avulsa</button>
     </div>

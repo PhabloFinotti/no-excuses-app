@@ -56,4 +56,10 @@ describe('computeStats', () => {
     expect(r.avgSpentMin).toBe(0)
     expect(r.suggestedDurationMin).toBeUndefined()
   })
+
+  it('minutes per day sum the recorded time of done items', () => {
+    const r = computeStats([habit], [done('2026-10-20', 35), done('2026-10-21', 40)], '2026-10-21', 3)
+    expect(r.cells.map((c) => c.minutes)).toEqual([0, 35, 40])
+    expect(r.totalMinutes).toBe(75)
+  })
 })

@@ -18,6 +18,7 @@ const xTicks = computed(() => {
   return [0, Math.floor((n - 1) / 2), n - 1].map((i) => ({ i, text: shortDate(stats.value.cells[i]!.day) }))
 })
 const bestWeekday = computed(() => stats.value.weekdayAvg.indexOf(Math.max(...stats.value.weekdayAvg)))
+const hm = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(Math.round(min % 60)).padStart(2, '0')}` : `${Math.round(min)} min`)
 const avgLabel = computed(() => stats.value.avgPerDay.toLocaleString('pt-BR', { maximumFractionDigits: 1 }))
 // Cor da célula: vazio (nada agendado) cinza, parcial âmbar, completo verde, nada feito vermelho.
 const DOW = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -38,6 +39,12 @@ const color = (c: { scheduled: number; done: number }) =>
       {{ stats.total }} no período · média <span class="num">{{ avgLabel }}</span> por dia<template v-if="stats.best.done"> · melhor dia {{ shortDate(stats.best.day) }} (<span class="num">{{ stats.best.done }}</span>)</template>
     </p>
     <ColumnChart :values="stats.cells.map((c) => c.done)" :titles="titles" :x-ticks="xTicks" value-name="feitos" :line="stats.average7" line-name="média de 7 dias" :highlight="stats.best.done ? bestIndex : undefined" />
+  </div>
+
+  <h2 class="section">Tempo dedicado por dia</h2>
+  <div class="plain">
+    <p class="meta" style="margin-bottom: 8px">{{ hm(stats.totalMinutes) }} no período · média {{ hm(stats.totalMinutes / stats.cells.length) }} por dia. Inclui o previsto de itens concluídos sem cronômetro.</p>
+    <ColumnChart :values="stats.cells.map((c) => c.minutes)" :titles="titles" :x-ticks="xTicks" value-name="min" :line="stats.minutesAvg7" line-name="média de 7 dias" />
   </div>
 
   <h2 class="section">Média por dia da semana</h2>

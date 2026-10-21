@@ -56,7 +56,7 @@ h3 { font-size: 1.125rem; line-height: 1.2; }
 .empty { color: var(--muted); text-align: center; padding: 40px 16px; }
 
 /* Controles */
-input, select { font: inherit; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: inherit; }
+input, select { font: inherit; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); }
 input[type='checkbox'] { width: 20px; min-height: 20px; accent-color: var(--accent); vertical-align: middle; }
 label { display: block; margin: 14px 0 6px; font-size: 0.875rem; color: var(--muted); }
 button, .btn {

@@ -19,7 +19,8 @@ const fmt = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 1 
 const top = computed(() => {
   const m = Math.max(2, ...props.values, ...(props.line ?? []).map((v) => v ?? 0))
   const c = Math.ceil(m)
-  return c + (c % 2) // par, para o tick do meio cair em inteiro
+  // Valores grandes (minutos): múltiplo de 20, para o tick do meio ser redondo; pequenos: par.
+  return c > 10 ? Math.ceil(c / 20) * 20 : c + (c % 2)
 })
 const y = (v: number) => T + plotH - (v / top.value) * plotH
 const slot = computed(() => plotW / props.values.length)
