@@ -3,3 +3,7 @@ project_id = "no-excuses"
 # O cron chama sem JWT; a função se protege com o header x-cron-secret.
 [functions.tick]
 verify_jwt = false
+
+# Google redireciona o navegador para cá, sem JWT; a função se protege com o `state` assinado.
+[functions.gcal-callback]
+verify_jwt = false
