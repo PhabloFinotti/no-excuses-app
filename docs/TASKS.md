@@ -12,7 +12,7 @@ Nada disso foi executado contra um Supabase real nem num aparelho.
 
 ## M1: núcleo
 - [x] M1.1 `calculateState` + testes.
-- [x] M1.2 Schema SQL + RLS (`supabase/migrations/0001_init.sql`; validado com PGlite, RLS não testada).
+- [x] M1.2 Schema SQL + RLS (`supabase/migrations/20261021000000_init.sql`; validado com PGlite, RLS não testada).
 - [x] M1.3 Login e-mail+senha.
 - [x] M1.4 Config global (acordar/dormir, fuso, limites).
 - [x] M1.5 CRUD de itens (hábito/tarefa, duração, fixo, dias, essencial, limites).

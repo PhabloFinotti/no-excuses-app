@@ -1,6 +1,6 @@
 # SETUP (o que só você pode fazer)
 
-1. **Supabase:** crie o projeto. No SQL Editor rode `supabase/migrations/0001_init.sql`.
+1. **Supabase:** crie o projeto, depois `supabase login && supabase link --project-ref <ref> && supabase db push` (aplica as migrações).
    Authentication → desative "Allow new users to sign up"; em Users, crie o seu usuário (auto confirm).
 2. **VAPID:** `npx web-push generate-vapid-keys` (guarde as duas chaves).
 3. **Segredos das functions** (Supabase CLI logado e linkado: `supabase login && supabase link --project-ref <ref>`):
