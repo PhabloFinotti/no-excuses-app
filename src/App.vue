@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import { act, toast } from './lib/toast'
@@ -25,6 +25,27 @@ function applyNotificationAction() {
   if (item && action === 'done') act(() => markDone(item))
   if (item && action === 'snooze') act(() => snoozeItem(item))
 }
+
+// Realtime: outro aparelho mudou algo, recarrega (com debounce, pois um upsert gera vários eventos).
+let channel: ReturnType<typeof supabase.channel> | undefined
+let debounce: ReturnType<typeof setTimeout>
+watch(
+  () => session.value?.user.id,
+  (id) => {
+    if (channel) supabase.removeChannel(channel)
+    channel = undefined
+    if (!id) return
+    const onChange = () => {
+      clearTimeout(debounce)
+      debounce = setTimeout(refresh, 300)
+    }
+    channel = supabase
+      .channel('changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'item_completions' }, onChange)
+      .subscribe()
+  },
+)
 
 onMounted(async () => {
   session.value = (await supabase.auth.getSession()).data.session
