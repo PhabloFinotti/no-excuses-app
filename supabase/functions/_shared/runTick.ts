@@ -1,6 +1,6 @@
 // Lógica pura do `tick`: decide quais pushes enviar agora. Separada do I/O para ser testável com relógio simulado.
 import { calculateState, type Level } from './calculateState.ts'
-import { toCalcItems, type CompletionRow, type ItemRow } from './pending.ts'
+import { completionDay, toCalcItems, type CompletionRow, type ItemRow } from './pending.ts'
 import { localTime, minToTime, timeToMin } from './time.ts'
 
 export interface TickProfile {
@@ -18,6 +18,8 @@ export interface PlannedPush {
   level: Exclude<Level, 'normal'>
   title: string
   body: string
+  // Lembrete após um adiar: o tick marca snooze_notified_for na completion deste dia.
+  snooze?: { completionDay: string; until: string }
 }
 
 // `sent` guarda chaves `${itemId}:${day}:${level}` já enviadas (notification_log).
@@ -35,9 +37,19 @@ export function runTick(profile: TickProfile, items: ItemRow[], completions: Com
 
   const pushes: PlannedPush[] = []
   for (const s of result.states) {
-    if (s.level === 'normal' || sent.has(`${s.id}:${now.day}:${s.level}`)) continue
-    const name = items.find((i) => i.id === s.id)!.name
-    pushes.push({ itemId: s.id, day: now.day, level: s.level, ...message(s.level, name, s.minutesUntilDeadline, minToTime(s.deadlineMin), result.deficitMin) })
+    if (s.level === 'normal') continue
+    const item = items.find((i) => i.id === s.id)!
+    const day = completionDay(item, now.day)
+    const c = completions.find((c) => c.item_id === s.id && c.day === day)
+    const until = c?.snoozed_until ? Date.parse(c.snoozed_until) : 0
+    if (until > nowDate.getTime()) continue // adiado
+    const reminder = !!until && c!.snooze_notified_for !== c!.snoozed_until
+    if (!reminder && sent.has(`${s.id}:${now.day}:${s.level}`)) continue
+    pushes.push({
+      itemId: s.id, day: now.day, level: s.level,
+      ...message(s.level, item.name, s.minutesUntilDeadline, minToTime(s.deadlineMin), result.deficitMin),
+      snooze: reminder ? { completionDay: day, until: c!.snoozed_until! } : undefined,
+    })
   }
   return pushes
 }

@@ -4,7 +4,7 @@ import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { minToTime } from '../../supabase/functions/_shared/time'
 import { act } from '../lib/toast'
-import { calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
+import { isSnoozed, snoozeItem, calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
   calc.value.states
@@ -46,12 +46,14 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
       {{ item.duration_min }} min · começar até {{ minToTime(s.deadlineMin) }}
       <template v-if="s.minutesUntilDeadline >= 0">(em {{ s.minutesUntilDeadline }} min)</template>
       <template v-if="overdueTask(item)"> · atrasada de ontem</template>
+      <template v-if="isSnoozed(item)"> · alerta adiado</template>
     </div>
     <div class="row" style="margin-top: 8px">
       <span v-if="hasTime(item)" class="timer" style="flex: 0 0 auto">⏱ {{ clock(item) }}</span>
       <button v-if="!running(item)" class="ghost" @click="act(() => startTimer(item))">Iniciar</button>
       <button v-else class="ghost" @click="act(() => pauseTimer(item))">Pausar</button>
       <button @click="act(() => markDone(item))">Feito</button>
+      <button v-if="s.level !== 'normal' && !isSnoozed(item)" class="ghost" @click="act(() => snoozeItem(item))">Adiar 10</button>
       <button class="ghost" @click="act(() => skipItem(item))">{{ item.kind === 'task' ? 'Descartar' : 'Pular' }}</button>
     </div>
   </div>

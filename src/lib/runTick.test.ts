@@ -41,3 +41,19 @@ describe('runTick', () => {
     expect(runTick(g, [fixed], [], new Set(), sp(20, 16))[0]!.level).toBe('overdue')
   })
 })
+
+describe('runTick snooze', () => {
+  const comp = (over: Partial<CompletionRow>): CompletionRow => ({ item_id: 'h', day: '2026-10-21', done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...over })
+  const until = sp(22, 40).toISOString() // adiado até 22:40
+
+  it('silent while snoozed', () => {
+    expect(runTick(profile, [item()], [comp({ snoozed_until: until })], new Set(), sp(22, 35))).toEqual([])
+  })
+  it('one reminder after expiry, even if the level was already sent', () => {
+    const sent = new Set(['h:2026-10-21:overdue'])
+    const [p] = runTick(profile, [item()], [comp({ snoozed_until: until })], sent, sp(22, 41))
+    expect(p).toMatchObject({ level: 'overdue', snooze: { completionDay: '2026-10-21', until } })
+    const after = comp({ snoozed_until: until, snooze_notified_for: until })
+    expect(runTick(profile, [item()], [after], sent, sp(22, 42))).toEqual([])
+  })
+})

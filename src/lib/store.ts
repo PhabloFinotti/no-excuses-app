@@ -95,3 +95,7 @@ export function markDone(item: ItemRow) {
 export const skipItem = (item: ItemRow) => patchCompletion(item, { skipped: true, timer_started_at: null })
 
 export const undoToday = (item: ItemRow) => patchCompletion(item, { done: false, skipped: false })
+
+export const SNOOZE_MIN = 10
+export const snoozeItem = (item: ItemRow) => patchCompletion(item, { snoozed_until: new Date(Date.now() + SNOOZE_MIN * 60_000).toISOString() })
+export const isSnoozed = (item: ItemRow) => Date.parse(completionOf(item)?.snoozed_until ?? '') > nowMs.value

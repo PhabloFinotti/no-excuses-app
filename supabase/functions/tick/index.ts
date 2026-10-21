@@ -30,7 +30,9 @@ Deno.serve(async (req) => {
         .from('notification_log')
         .upsert({ item_id: push.itemId, day: push.day, level: push.level }, { onConflict: 'item_id,day,level', ignoreDuplicates: true })
         .select()
-      if (!inserted?.length) continue
+      if (!inserted?.length && !push.snooze) continue
+      if (push.snooze)
+        await db.from('item_completions').update({ snooze_notified_for: push.snooze.until }).eq('item_id', push.itemId).eq('day', push.snooze.completionDay)
       sent += await sendToUser(db, p.user_id, { title: push.title, body: push.body, tag: push.itemId, level: push.level, itemId: push.itemId })
     }
   }

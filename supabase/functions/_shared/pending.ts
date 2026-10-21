@@ -25,6 +25,8 @@ export interface CompletionRow {
   spent_min: number
   timer_started_at: string | null
   timer_accum_s: number
+  snoozed_until?: string | null
+  snooze_notified_for?: string | null
 }
 
 // Hábito: completion do dia. Tarefa: sua única completion (day = due_date).
