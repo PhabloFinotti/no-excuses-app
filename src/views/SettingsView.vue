@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { exportBackup, exportCsv, importBackup } from '../lib/backup'
 import { enablePush, sendTestPush } from '../lib/push'
-import { profile, saveProfile } from '../lib/store'
+import { loadAll, profile, saveProfile } from '../lib/store'
 import { supabase } from '../lib/supabase'
 
 const form = reactive({ ...profile.value! })
@@ -60,6 +61,15 @@ const save = () => run(() => {
     e tire o app de “Apps em suspensão”.
   </p>
   <p v-if="msg">{{ msg }}</p>
+
+  <h2>Dados</h2>
+  <div class="row">
+    <button class="ghost" @click="run(exportCsv, 'CSV exportado.')">Exportar CSV</button>
+    <button class="ghost" @click="run(exportBackup, 'Backup exportado.')">Backup JSON</button>
+  </div>
+  <label>Restaurar backup JSON
+    <input type="file" accept="application/json" @change="(e) => run(async () => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) { await importBackup(f); await loadAll() } }, 'Backup restaurado.')" />
+  </label>
 
   <button class="ghost" style="margin-top: 24px; width: 100%" @click="supabase.auth.signOut()">Sair</button>
 </template>
