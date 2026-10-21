@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { loadAll, profile, session } from './lib/store'
+import { items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
-import { toast } from './lib/toast'
+import { act, toast } from './lib/toast'
 import LoginView from './views/LoginView.vue'
 import TodayView from './views/TodayView.vue'
 import ItemsView from './views/ItemsView.vue'
@@ -13,7 +13,18 @@ const tabs = { today: 'Hoje', items: 'Itens', history: 'Histórico', settings: '
 const tab = ref<keyof typeof tabs>('today')
 const error = ref('')
 
-const refresh = () => session.value && loadAll().catch((e) => (error.value = e.message))
+const refresh = () => session.value && loadAll().then(applyNotificationAction).catch((e) => (error.value = e.message))
+
+// Ação vinda de um botão da notificação (?action=done|snooze&item=ID).
+function applyNotificationAction() {
+  const q = new URLSearchParams(location.search)
+  const item = items.value.find((i) => i.id === q.get('item'))
+  const action = q.get('action')
+  if (!action) return
+  history.replaceState(null, '', '/')
+  if (item && action === 'done') act(() => markDone(item))
+  if (item && action === 'snooze') act(() => snoozeItem(item))
+}
 
 onMounted(async () => {
   session.value = (await supabase.auth.getSession()).data.session

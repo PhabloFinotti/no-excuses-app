@@ -16,6 +16,8 @@ sw.addEventListener('push', (e: any) => {
       icon: '/icon-192.png',
       silent: d.level === 'attention',
       vibrate: d.level === 'attention' ? undefined : [200, 100, 200, 100, 200],
+      data: { itemId: d.itemId },
+      actions: d.itemId ? [{ action: 'done', title: 'Feito' }, { action: 'snooze', title: 'Adiar 10 min' }] : [],
       requireInteraction: d.level === 'urgent' || d.level === 'overdue',
     }),
   )
@@ -23,7 +25,14 @@ sw.addEventListener('push', (e: any) => {
 
 sw.addEventListener('notificationclick', (e: any) => {
   e.notification.close()
+  // As ações abrem o app com ?action=...&item=...; a tela aplica com a sessão do usuário (sem token no SW).
+  const id = e.notification.data?.itemId
+  const url = e.action && id ? `/?action=${e.action}&item=${id}` : '/'
   e.waitUntil(
-    sw.clients.matchAll({ type: 'window' }).then((wins: any[]) => (wins[0] ? wins[0].focus() : sw.clients.openWindow('/'))),
+    sw.clients.matchAll({ type: 'window' }).then(async (wins: any[]) => {
+      if (!wins[0]) return sw.clients.openWindow(url)
+      await wins[0].navigate(url)
+      return wins[0].focus()
+    }),
   )
 })
