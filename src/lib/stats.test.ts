@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeStats } from './stats'
+import { computeHabitDetail, computeStats } from './stats'
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
 const habit: ItemRow = { id: 'h', kind: 'habit', name: 'Reading', duration_min: 30, fixed_time: null, weekdays: [0, 1, 2, 3, 4, 5, 6], due_date: null, essential: false, warn_min: null, urgent_min: null, archived: false, created_at: '2026-10-01T00:00:00Z' }
@@ -61,5 +61,31 @@ describe('computeStats', () => {
     const r = computeStats([habit], [done('2026-10-20', 35), done('2026-10-21', 40)], '2026-10-21', 3)
     expect(r.cells.map((c) => c.minutes)).toEqual([0, 35, 40])
     expect(r.totalMinutes).toBe(75)
+  })
+})
+
+describe('computeHabitDetail', () => {
+  const wed = { ...habit, weekdays: [3] } // quartas: 07, 14 e 21/10/2026
+  it('counts only scheduled days; today pending is not a miss', () => {
+    const d = computeHabitDetail(wed, [done('2026-10-07'), done('2026-10-14')], '2026-10-21')
+    expect(d.counted).toBe(2)
+    expect(d.rate).toBe(1)
+    expect(d.streak).toBe(2) // hoje (quarta) ainda pendente não quebra
+    expect(d.cells.find((c) => c.day === '2026-10-21')).toMatchObject({ scheduled: true, counted: false, done: false })
+  })
+  it('best streak survives a later miss; current streak resets', () => {
+    const c = [done('2026-10-01'), done('2026-10-02'), done('2026-10-03'), done('2026-10-05')]
+    const d = computeHabitDetail(habit, c, '2026-10-07')
+    expect(d.bestStreak).toBe(3)
+    expect(d.streak).toBe(0) // 06/10 sem feito quebra a atual
+  })
+  it('time: total includes planned, average ignores it; weekday rate per weekday', () => {
+    const c = [done('2026-10-20', 40), { ...done('2026-10-19', 35), time_source: 'planned' as const }]
+    const d = computeHabitDetail(habit, c, '2026-10-21', 7)
+    expect(d.totalMinutes).toBe(75)
+    expect(d.avgMinutes).toBe(40)
+    expect(d.timedSamples).toBe(1)
+    expect(d.weekdayRate).toHaveLength(7)
+    expect(d.weekdayRate[2]).toBe(100) // terça 20/10 feita
   })
 })

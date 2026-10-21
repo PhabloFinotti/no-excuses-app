@@ -61,3 +61,49 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
 
   return { habitStats, cells, average7, minutesAvg7, totalMinutes: cells.reduce((s, c) => s + c.minutes, 0), weekdayAvg, total, avgPerDay: total / window.length, best, tasksDone: doneTasks.filter((c) => window.includes(c.day)).length }
 }
+
+export interface HabitCell { day: string; scheduled: boolean; counted: boolean; done: boolean; skipped: boolean; minutes: number }
+
+// Histórico de UM hábito: dias agendados, cumprimento, sequências, tempo e taxa por dia da semana.
+export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], today: string, days = 30) {
+  const start = h.created_at.slice(0, 10)
+  const window = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1)).filter((d) => d >= start || d === today)
+  const mine = completions.filter((c) => c.item_id === h.id)
+
+  const cells: HabitCell[] = window.map((day) => {
+    const c = mine.find((c) => c.day === day)
+    const scheduled = h.weekdays.includes(weekdayOf(day))
+    const done = !!c?.done
+    // Hoje, pendente, não conta como falha (o dia ainda não acabou).
+    return { day, scheduled, counted: scheduled && (day < today || done), done, skipped: !!c?.skipped && !done, minutes: done ? c!.spent_min : 0 }
+  })
+
+  const counted = cells.filter((c) => c.counted)
+  const doneCount = counted.filter((c) => c.done).length
+  let best = 0, run = 0
+  for (const c of cells) {
+    if (!c.scheduled) continue
+    if (c.done) best = Math.max(best, ++run)
+    else if (c.day !== today) run = 0
+  }
+  let streak = 0
+  for (const c of [...cells].reverse()) {
+    if (!c.scheduled) continue
+    if (c.done) streak++
+    else if (c.day !== today) break
+  }
+
+  const timed = mine.filter((c) => c.done && c.spent_min > 0 && c.time_source !== 'planned' && window.includes(c.day))
+  const weekdayRate = Array.from({ length: 7 }, (_, w) => {
+    const ofDay = counted.filter((c) => weekdayOf(c.day) === w)
+    return ofDay.length ? Math.round((ofDay.filter((c) => c.done).length / ofDay.length) * 100) : 0
+  })
+  const total = cells.reduce((s, c) => s + c.minutes, 0)
+
+  return {
+    cells, counted: counted.length, done: doneCount, rate: counted.length ? doneCount / counted.length : 0,
+    streak, bestStreak: best, totalMinutes: total,
+    avgMinutes: timed.length ? Math.round(timed.reduce((s, c) => s + c.spent_min, 0) / timed.length) : 0, timedSamples: timed.length,
+    weekdayRate,
+  }
+}

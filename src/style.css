@@ -263,3 +263,6 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
 .time-chip { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); padding: 8px 0; }
 .planned { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 6px; background: var(--raised); }
 .done-name.link { flex: 1; min-width: 0; }
+
+.filters { display: grid; gap: 10px; margin-top: 14px; }
+.filters .range { margin: 0; }
