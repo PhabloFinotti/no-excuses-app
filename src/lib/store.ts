@@ -4,7 +4,7 @@ import { calculateState } from './calculateState'
 import { parseQuickAdd } from './quickAdd'
 import { must, supabase } from './supabase'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
-import { completionDay, elapsedSeconds, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { completionDay, elapsedSeconds, finishMinutes, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
 
 export interface ProfileRow {
   wake_time: string
@@ -100,9 +100,18 @@ export function pauseTimer(item: ItemRow) {
   return patchCompletion(item, { timer_accum_s: Math.round(elapsedSeconds(completionOf(item), Date.now())), timer_started_at: null })
 }
 
-export function markDone(item: ItemRow) {
-  const s = Math.round(elapsedSeconds(completionOf(item), Date.now()))
-  return patchCompletion(item, { done: true, skipped: false, timer_accum_s: s, timer_started_at: null, spent_min: Math.round(s / 60) })
+// Sem minutes: usa o timer ou, se não houve, o previsto. Com minutes: tempo informado à mão.
+export function markDone(item: ItemRow, minutes?: number) {
+  const c = completionOf(item)
+  if (minutes != null) return patchCompletion(item, { done: true, skipped: false, timer_accum_s: minutes * 60, timer_started_at: null, spent_min: minutes, time_source: 'manual' })
+  const f = finishMinutes(c, item.duration_min, Date.now())
+  const timer = f.source === 'timer' ? { timer_accum_s: Math.round(elapsedSeconds(c, Date.now())) } : {}
+  return patchCompletion(item, { done: true, skipped: false, timer_started_at: null, spent_min: f.minutes, time_source: f.source, ...timer })
+}
+
+// Corrige o cronômetro/tempo (item pendente ou já feito): vira o novo acumulado e o timer para.
+export function setSpent(item: ItemRow, minutes: number) {
+  return patchCompletion(item, { timer_accum_s: minutes * 60, timer_started_at: null, time_source: 'manual', ...(completionOf(item)?.done ? { spent_min: minutes } : {}) })
 }
 
 export const skipItem = (item: ItemRow) => patchCompletion(item, { skipped: true, timer_started_at: null })

@@ -21,7 +21,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
     // Hoje só conta se já foi feito, para não penalizar o dia em andamento.
     const scheduledDays = window.filter((d) => d >= start && h.weekdays.includes(weekdayOf(d)) && (d < today || doneOn(h.id, d)))
     const done = scheduledDays.filter((d) => doneOn(h.id, d)).length
-    const spent = completions.filter((c) => c.item_id === h.id && c.done && c.spent_min > 0 && window.includes(c.day))
+    const spent = completions.filter((c) => c.item_id === h.id && c.done && c.spent_min > 0 && c.time_source !== 'planned' && window.includes(c.day))
     let streak = 0
     for (const d of [...window].reverse()) {
       if (d < start || !h.weekdays.includes(weekdayOf(d))) continue

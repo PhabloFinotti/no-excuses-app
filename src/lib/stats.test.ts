@@ -49,4 +49,11 @@ describe('computeStats', () => {
     expect(r.cells).toHaveLength(21)
     expect(r.cells[0]!.day).toBe('2026-10-01')
   })
+
+  it('time recorded as "planned" does not feed the average or the duration suggestion', () => {
+    const planned = (day: string): CompletionRow => ({ ...done(day, 30), time_source: 'planned' })
+    const r = computeStats([habit], [planned('2026-10-18'), planned('2026-10-19'), planned('2026-10-20')], '2026-10-21').habitStats[0]!
+    expect(r.avgSpentMin).toBe(0)
+    expect(r.suggestedDurationMin).toBeUndefined()
+  })
 })

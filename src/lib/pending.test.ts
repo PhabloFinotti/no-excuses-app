@@ -60,3 +60,16 @@ describe('stale tasks', () => {
     expect(toCalcItems([old], [], now, at.getTime())).toEqual([])
   })
 })
+
+describe('finishMinutes', () => {
+  it('uses the planned time when no timer ran (never records 0)', async () => {
+    const { finishMinutes } = await import('../../supabase/functions/_shared/pending')
+    expect(finishMinutes(undefined, 35, at.getTime())).toEqual({ minutes: 35, source: 'planned' })
+    expect(finishMinutes(completion({ timer_accum_s: 40 }), 35, at.getTime())).toEqual({ minutes: 35, source: 'planned' }) // < 1 min
+  })
+  it('uses the timer once it passes one minute (paused + running)', async () => {
+    const { finishMinutes } = await import('../../supabase/functions/_shared/pending')
+    const c = completion({ timer_accum_s: 600, timer_started_at: new Date(at.getTime() - 900_000).toISOString() })
+    expect(finishMinutes(c, 35, at.getTime())).toEqual({ minutes: 25, source: 'timer' })
+  })
+})

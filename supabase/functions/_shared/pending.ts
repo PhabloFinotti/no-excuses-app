@@ -27,6 +27,7 @@ export interface CompletionRow {
   timer_accum_s: number
   snoozed_until?: string | null
   snooze_notified_for?: string | null
+  time_source?: 'timer' | 'manual' | 'planned' | null
 }
 
 // Hábito: completion do dia. Tarefa: sua única completion (day = due_date).
@@ -54,6 +55,12 @@ export function elapsedSeconds(c: CompletionRow | undefined, nowMs: number): num
   if (!c) return 0
   const running = c.timer_started_at ? Math.max(0, (nowMs - Date.parse(c.timer_started_at)) / 1000) : 0
   return c.timer_accum_s + running
+}
+
+// Tempo a registrar ao concluir: o timer, se passou de 1 min; senão o previsto (assim nunca vira 0).
+export function finishMinutes(c: CompletionRow | undefined, plannedMin: number, nowMs: number): { minutes: number; source: 'timer' | 'planned' } {
+  const s = elapsedSeconds(c, nowMs)
+  return s >= 60 ? { minutes: Math.round(s / 60), source: 'timer' } : { minutes: plannedMin, source: 'planned' }
 }
 
 export function toCalcItems(items: ItemRow[], completions: CompletionRow[], now: LocalTime, nowMs: number): CalcItem[] {
