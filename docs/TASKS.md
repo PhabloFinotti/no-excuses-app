@@ -1,10 +1,10 @@
 # TASKS
 
 ## Parei aqui
-Nada iniciado. Próxima tarefa: M0.1.
+M0.1 código pronto (build ok). Falta você publicar na Vercel e instalar no S21+ para fechar M0.1. Próxima: M0.2 (Supabase).
 
 ## M0: spike de push (valida o risco principal)
-- [ ] M0.1 Projeto Vite+Vue+TS+PWA criado e publicado em HTTPS. Pronto: instala no S21+ pelo Chrome ("Adicionar à tela inicial").
+- [~] M0.1 Projeto Vite+Vue+TS+PWA criado (feito) e publicado em HTTPS (pendente: Vercel, framework Vite, `npm run build`, saída `dist`). Pronto: instala no S21+ pelo Chrome ("Adicionar à tela inicial").
 - [ ] M0.2 Projeto Supabase criado; signup público desativado; usuário próprio criado.
 - [ ] M0.3 Subscription VAPID salva em `push_subscriptions`. Pronto: linha no banco após permitir notificações.
 - [ ] M0.4 Edge Function envia push de teste. Pronto: notificação chega com app fechado.
