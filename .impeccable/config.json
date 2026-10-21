@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/style.css"
+        ],
+        "createdAt": "2026-10-21T23:08:02.833Z",
+        "reason": "assistant decision, not user confirmed: single collapsing .slot, 420ms, avoids a 12px jump after the grid-template-rows collapse"
+      }
+    ]
+  }
+}
