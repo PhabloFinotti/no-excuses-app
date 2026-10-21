@@ -1,7 +1,10 @@
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
 export interface DayCell { day: string; scheduled: number; done: number }
-export interface HabitStats { id: string; name: string; scheduled: number; done: number; rate: number; avgSpentMin: number; streak: number }
+export interface HabitStats {
+  id: string; name: string; durationMin: number; scheduled: number; done: number; rate: number
+  avgSpentMin: number; samples: number; suggestedDurationMin?: number; streak: number
+}
 
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
 const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
@@ -23,10 +26,15 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
       if (doneOn(h.id, d)) streak++
       else if (d !== today) break
     }
+    const avgSpentMin = spent.length ? Math.round(spent.reduce((s, c) => s + c.spent_min, 0) / spent.length) : 0
+    // Com 3+ medições e desvio >= 25% do planejado, sugere ajustar (arredondado a 5 min).
+    const off = avgSpentMin && Math.abs(avgSpentMin - h.duration_min) / h.duration_min >= 0.25
     return {
-      id: h.id, name: h.name, scheduled: scheduledDays.length, done,
+      id: h.id, name: h.name, durationMin: h.duration_min, samples: spent.length,
+      suggestedDurationMin: spent.length >= 3 && off ? Math.max(5, Math.round(avgSpentMin / 5) * 5) : undefined,
+      scheduled: scheduledDays.length, done,
       rate: scheduledDays.length ? done / scheduledDays.length : 0,
-      avgSpentMin: spent.length ? Math.round(spent.reduce((s, c) => s + c.spent_min, 0) / spent.length) : 0,
+      avgSpentMin,
       streak,
     }
   })

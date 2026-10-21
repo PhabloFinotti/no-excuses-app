@@ -22,4 +22,12 @@ describe('computeStats', () => {
     const { habitStats } = computeStats([wed], [done('2026-10-21')], '2026-10-21')
     expect(habitStats[0]).toMatchObject({ scheduled: 3, done: 1, streak: 1 }) // quartas 07, 14 e 21/10
   })
+  it('suggests a new duration only with 3+ samples and a >= 25% gap', () => {
+    const two = computeStats([habit], [done('2026-10-19', 50), done('2026-10-20', 50)], '2026-10-21').habitStats[0]!
+    expect(two.suggestedDurationMin).toBeUndefined()
+    const three = computeStats([habit], [done('2026-10-18', 50), done('2026-10-19', 50), done('2026-10-20', 52)], '2026-10-21').habitStats[0]!
+    expect(three.suggestedDurationMin).toBe(50) // planejado 30
+    const close = computeStats([habit], [done('2026-10-18', 32), done('2026-10-19', 33), done('2026-10-20', 31)], '2026-10-21').habitStats[0]!
+    expect(close.suggestedDurationMin).toBeUndefined()
+  })
 })

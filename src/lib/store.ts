@@ -109,3 +109,8 @@ export async function rescheduleToday(item: ItemRow) {
   must(await supabase.from('items').update({ due_date: now.value.day }).eq('id', item.id))
   await loadAll()
 }
+
+export async function setDuration(id: string, durationMin: number) {
+  must(await supabase.from('items').update({ duration_min: durationMin }).eq('id', id))
+  await loadAll()
+}
