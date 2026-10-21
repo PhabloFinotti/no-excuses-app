@@ -1,7 +1,7 @@
 # TASKS
 
 ## Parei aqui
-M0.1 código pronto (build ok). Falta você publicar na Vercel e instalar no S21+ para fechar M0.1. Próxima: M0.2 (Supabase).
+M0.1 código pronto (build ok); falta você publicar na Vercel e instalar no S21+. M1.1 feito (`calcularEstado`, 6 testes). Próxima: M0.2 (Supabase, precisa de você) ou M1.2 (schema SQL).
 
 ## M0: spike de push (valida o risco principal)
 - [~] M0.1 Projeto Vite+Vue+TS+PWA criado (feito) e publicado em HTTPS (pendente: Vercel, framework Vite, `npm run build`, saída `dist`). Pronto: instala no S21+ pelo Chrome ("Adicionar à tela inicial").
@@ -12,7 +12,7 @@ M0.1 código pronto (build ok). Falta você publicar na Vercel e instalar no S21
 - [ ] M0.6 Anotar passos de bateria Samsung (sem restrições) para a tela de onboarding.
 
 ## M1: núcleo
-- [ ] M1.1 `calcularEstado` + testes Vitest: 1 hábito → alerta 22:15 (margem 15); 2 hábitos → limites 22:00/22:30; fixo; déficit.
+- [x] M1.1 `calcularEstado` + testes Vitest: 1 hábito → alerta 22:15 (margem 15); 2 hábitos → limites 22:00/22:30; fixo; déficit.
 - [ ] M1.2 Schema SQL + RLS + migrações versionadas. Pronto: usuário B não lê dados do A.
 - [ ] M1.3 Login e-mail+senha.
 - [ ] M1.4 Config global (acordar/dormir, limites).
