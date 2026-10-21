@@ -49,3 +49,14 @@ describe('toCalcItems', () => {
     expect(item!.fixedMin).toBe(1260)
   })
 })
+
+describe('stale tasks', () => {
+  it('task overdue > 3 days leaves the calculation but stays pending', async () => {
+    const { isStale } = await import('../../supabase/functions/_shared/pending')
+    const old = task({ due_date: '2026-10-17' }) // 4 dias antes de 21/10
+    expect(isStale(old, '2026-10-21')).toBe(true)
+    expect(isStale(task({ due_date: '2026-10-18' }), '2026-10-21')).toBe(false)
+    expect(isPending(old, [], now)).toBe(true)
+    expect(toCalcItems([old], [], now, at.getTime())).toEqual([])
+  })
+})

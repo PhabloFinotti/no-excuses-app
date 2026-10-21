@@ -43,6 +43,13 @@ export function isPending(item: ItemRow, completions: CompletionRow[], now: Loca
   return !(c?.done || c?.skipped)
 }
 
+// Tarefa rolada há mais de STALE_DAYS dias deixa de pesar no cálculo e pede decisão (reagendar ou descartar).
+export const STALE_DAYS = 3
+
+export function isStale(item: ItemRow, today: string): boolean {
+  return item.kind === 'task' && (Date.parse(today) - Date.parse(item.due_date!)) / 86_400_000 > STALE_DAYS
+}
+
 export function elapsedSeconds(c: CompletionRow | undefined, nowMs: number): number {
   if (!c) return 0
   const running = c.timer_started_at ? Math.max(0, (nowMs - Date.parse(c.timer_started_at)) / 1000) : 0
@@ -51,7 +58,7 @@ export function elapsedSeconds(c: CompletionRow | undefined, nowMs: number): num
 
 export function toCalcItems(items: ItemRow[], completions: CompletionRow[], now: LocalTime, nowMs: number): CalcItem[] {
   return items
-    .filter((i) => isPending(i, completions, now))
+    .filter((i) => isPending(i, completions, now) && !isStale(i, now.day))
     .map((i) => {
       const c = completions.find((c) => c.item_id === i.id && c.day === completionDay(i, now.day))
       const remaining = Math.max(0, Math.ceil(i.duration_min - elapsedSeconds(c, nowMs) / 60))

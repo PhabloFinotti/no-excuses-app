@@ -4,7 +4,7 @@ import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { minToTime } from '../../supabase/functions/_shared/time'
 import { act } from '../lib/toast'
-import { isSnoozed, snoozeItem, calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
+import { rescheduleToday, staleTasks, isSnoozed, snoozeItem, calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
   calc.value.states
@@ -57,6 +57,18 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
       <button class="ghost" @click="act(() => skipItem(item))">{{ item.kind === 'task' ? 'Descartar' : 'Pular' }}</button>
     </div>
   </div>
+
+  <template v-if="staleTasks.length">
+    <h2>Paradas há dias</h2>
+    <div v-for="item in staleTasks" :key="item.id" class="card">
+      <strong>{{ item.name }}</strong>
+      <div class="meta">Vencida em {{ item.due_date }}. Fora do cálculo de tempo até você decidir.</div>
+      <div class="row" style="margin-top: 8px">
+        <button @click="act(() => rescheduleToday(item))">Fazer hoje</button>
+        <button class="ghost" @click="act(() => skipItem(item))">Descartar</button>
+      </div>
+    </div>
+  </template>
 
   <template v-if="doneToday.length">
     <h2>Feitos hoje</h2>

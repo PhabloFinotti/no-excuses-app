@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { calculateState } from './calculateState'
 import { must, supabase } from './supabase'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
-import { completionDay, elapsedSeconds, isPending, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { completionDay, elapsedSeconds, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
 
 export interface ProfileRow {
   wake_time: string
@@ -44,6 +44,8 @@ export const doneToday = computed(() =>
     return c?.done && c.day === now.value.day
   }),
 )
+
+export const staleTasks = computed(() => items.value.filter((i) => isStale(i, now.value.day) && isPending(i, completions.value, now.value)))
 
 export const completionOf = (item: ItemRow) =>
   completions.value.find((c) => c.item_id === item.id && c.day === completionDay(item, now.value.day))
@@ -99,3 +101,8 @@ export const undoToday = (item: ItemRow) => patchCompletion(item, { done: false,
 export const SNOOZE_MIN = 10
 export const snoozeItem = (item: ItemRow) => patchCompletion(item, { snoozed_until: new Date(Date.now() + SNOOZE_MIN * 60_000).toISOString() })
 export const isSnoozed = (item: ItemRow) => Date.parse(completionOf(item)?.snoozed_until ?? '') > nowMs.value
+
+export async function rescheduleToday(item: ItemRow) {
+  must(await supabase.from('items').update({ due_date: now.value.day }).eq('id', item.id))
+  await loadAll()
+}
