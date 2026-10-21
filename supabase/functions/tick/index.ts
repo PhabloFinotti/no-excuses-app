@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import type { CompletionRow, ItemRow } from '../_shared/pending.ts'
 import { configurePush, sendToUser } from '../_shared/push.ts'
 import { runTick } from '../_shared/runTick.ts'
+import { planSummaries } from '../_shared/summaries.ts'
 import { localTime } from '../_shared/time.ts'
 
 Deno.serve(async (req) => {
@@ -17,12 +18,22 @@ Deno.serve(async (req) => {
   for (const p of profiles ?? []) {
     const day = localTime(nowDate, p.tz).day
     const since = new Date(nowDate.getTime() - 90 * 86_400_000).toISOString().slice(0, 10)
-    const [{ data: items }, { data: completions }, { data: log }] = await Promise.all([
+    const [{ data: items }, { data: completions }, { data: log }, { data: summaryLog }] = await Promise.all([
       db.from('items').select('*').eq('user_id', p.user_id).eq('archived', false),
       db.from('item_completions').select('*').eq('user_id', p.user_id).gte('day', since),
       db.from('notification_log').select('item_id, day, level').eq('day', day),
+      db.from('summary_log').select('day, kind').eq('user_id', p.user_id).eq('day', day),
     ])
     const already = new Set((log ?? []).map((l) => `${l.item_id}:${l.day}:${l.level}`))
+
+    const sentSummaries = new Set((summaryLog ?? []).map((l) => `${l.day}:${l.kind}`))
+    for (const sum of planSummaries(p, (items ?? []) as ItemRow[], (completions ?? []) as CompletionRow[], sentSummaries, nowDate)) {
+      const { data: inserted } = await db
+        .from('summary_log')
+        .upsert({ user_id: p.user_id, day: sum.day, kind: sum.kind }, { onConflict: 'user_id,day,kind', ignoreDuplicates: true })
+        .select()
+      if (inserted?.length) sent += await sendToUser(db, p.user_id, { title: sum.title, body: sum.body, tag: `summary-${sum.kind}`, level: 'summary' })
+    }
 
     for (const push of runTick(p, (items ?? []) as ItemRow[], (completions ?? []) as CompletionRow[], already, nowDate)) {
       // O log único (item, dia, nível) garante um envio por nível mesmo com execuções concorrentes.

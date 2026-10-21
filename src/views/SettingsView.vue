@@ -31,6 +31,9 @@ const save = () => run(() => saveProfile({ ...form, wake_time: form.wake_time.sl
       <label>Urgente (min)<input v-model.number="form.urgent_min" type="number" min="0" /></label>
     </div>
     <label>Tolerância de hábito com horário fixo (min)<input v-model.number="form.fixed_grace_min" type="number" min="0" /></label>
+    <label><input v-model="form.morning_summary" type="checkbox" style="width: auto" /> Resumo ao acordar</label>
+    <label><input v-model="form.evening_summary" type="checkbox" style="width: auto" /> Aviso antes de dormir</label>
+    <label>Aviso de fim do dia (min antes de dormir)<input v-model.number="form.evening_min" type="number" min="0" /></label>
     <button style="margin-top: 12px; width: 100%">Salvar</button>
   </form>
 

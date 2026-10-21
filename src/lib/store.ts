@@ -12,6 +12,9 @@ export interface ProfileRow {
   warn_min: number
   urgent_min: number
   fixed_grace_min: number
+  morning_summary: boolean
+  evening_summary: boolean
+  evening_min: number
 }
 
 export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'created_at'> & { id?: string }

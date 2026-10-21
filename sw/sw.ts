@@ -14,8 +14,8 @@ sw.addEventListener('push', (e: any) => {
       body: d.body,
       tag: d.tag, // mesmo tag substitui a notificação anterior do mesmo item
       icon: '/icon-192.png',
-      silent: d.level === 'attention',
-      vibrate: d.level === 'attention' ? undefined : [200, 100, 200, 100, 200],
+      silent: d.level === 'attention' || d.level === 'summary',
+      vibrate: d.level === 'attention' || d.level === 'summary' ? undefined : [200, 100, 200, 100, 200],
       data: { itemId: d.itemId },
       actions: d.itemId ? [{ action: 'done', title: 'Feito' }, { action: 'snooze', title: 'Adiar 10 min' }] : [],
       requireInteraction: d.level === 'urgent' || d.level === 'overdue',
