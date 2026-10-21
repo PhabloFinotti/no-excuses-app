@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import type { Session } from '@supabase/supabase-js'
 import { calculateState } from './calculateState'
+import { parseQuickAdd } from './quickAdd'
 import { must, supabase } from './supabase'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
 import { completionDay, elapsedSeconds, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
@@ -120,4 +121,15 @@ export async function rescheduleToday(item: ItemRow) {
 export async function setDuration(id: string, durationMin: number) {
   must(await supabase.from('items').update({ duration_min: durationMin }).eq('id', id))
   await loadAll()
+}
+
+// Adicionar rápido: "Ler livro 45". Tarefa = hoje; hábito = todo dia.
+export async function addQuick(kind: 'habit' | 'task', text: string) {
+  const parsed = parseQuickAdd(text)
+  if (!parsed) throw new Error('Digite um nome e, se quiser, a duração: "Ler 45"')
+  await saveItem({
+    kind, name: parsed.name, duration_min: parsed.durationMin, fixed_time: null, essential: false, warn_min: null, urgent_min: null,
+    weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date: kind === 'task' ? now.value.day : null,
+  })
+  return parsed
 }

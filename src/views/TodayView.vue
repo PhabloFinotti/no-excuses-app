@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import FocusMode from '../components/FocusMode.vue'
 import Icon from '../components/Icon.vue'
 import ItemCard from '../components/ItemCard.vue'
+import QuickAdd from '../components/QuickAdd.vue'
 import OnboardingCard from '../components/OnboardingCard.vue'
 import { shortDate } from '../lib/format'
 import { burst } from '../lib/confetti'
@@ -80,6 +81,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
   </header>
 
   <OnboardingCard />
+  <QuickAdd />
 
   <div v-if="calc.deficitMin" class="banner" role="alert">
     <Icon name="alert" />

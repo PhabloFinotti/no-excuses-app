@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { shortDate, weekdaysLabel } from '../lib/format'
-import { parseQuickAdd } from '../lib/quickAdd'
 import Icon from '../components/Icon.vue'
 import { act } from '../lib/toast'
-import { archiveItem, items, now, saveItem, type ItemForm } from '../lib/store'
+import { addQuick, archiveItem, items, now, saveItem, type ItemForm } from '../lib/store'
 
 const DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const blank = (): ItemForm => ({
@@ -30,16 +29,13 @@ function toggleDay(d: number) {
 }
 const quick = ref('')
 async function quickAdd(kind: 'habit' | 'task') {
-  const parsed = parseQuickAdd(quick.value)
-  if (!parsed) return void (error.value = 'Digite um nome e, opcionalmente, a duração: "Ler 45"')
   error.value = ''
-  await act(() =>
-    saveItem({
-      ...blank(), kind, name: parsed.name, duration_min: parsed.durationMin,
-      weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date: kind === 'task' ? now.value.day : null,
-    }),
-  )
-  quick.value = ''
+  try {
+    await addQuick(kind, quick.value)
+    quick.value = ''
+  } catch (e) {
+    error.value = (e as Error).message
+  }
 }
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
