@@ -1,0 +1,5 @@
+project_id = "no-excuses"
+
+# O cron chama sem JWT; a função se protege com o header x-cron-secret.
+[functions.tick]
+verify_jwt = false

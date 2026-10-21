@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'sw',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: 'No Excuses',
