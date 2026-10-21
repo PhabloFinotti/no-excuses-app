@@ -15,7 +15,19 @@ async function run(fn: () => Promise<unknown>, ok: string) {
     msg.value = (e as Error).message
   }
 }
-const save = () => run(() => saveProfile({ ...form, wake_time: form.wake_time.slice(0, 5), sleep_time: form.sleep_time.slice(0, 5) }), 'Salvo.')
+const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+function validTz(tz: string) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+const save = () => run(() => {
+  if (!validTz(form.tz)) throw new Error(`Fuso inválido: ${form.tz}`)
+  return saveProfile({ ...form, wake_time: form.wake_time.slice(0, 5), sleep_time: form.sleep_time.slice(0, 5) })
+}, 'Salvo.')
 </script>
 
 <template>
@@ -26,6 +38,7 @@ const save = () => run(() => saveProfile({ ...form, wake_time: form.wake_time.sl
       <label>Durmo<input v-model="form.sleep_time" type="time" /></label>
     </div>
     <label>Fuso horário<input v-model="form.tz" /></label>
+    <button v-if="form.tz !== deviceTz" type="button" class="ghost" @click="form.tz = deviceTz">Usar o do aparelho ({{ deviceTz }})</button>
     <div class="row">
       <label>Atenção (min)<input v-model.number="form.warn_min" type="number" min="0" /></label>
       <label>Urgente (min)<input v-model.number="form.urgent_min" type="number" min="0" /></label>
