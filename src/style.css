@@ -38,3 +38,4 @@ nav button.on { color: var(--accent); font-weight: 600; }
 .cells div { aspect-ratio: 1; border-radius: 6px; background: var(--line); font-size: .7rem; display: grid; place-items: center; color: #fff; }
 @keyframes shake { 0%, 100% { transform: none; } 10%, 30% { transform: translateX(-3px); } 20%, 40% { transform: translateX(3px); } 50% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .card.urgent { animation: none; } }
+.toast { position: fixed; left: 16px; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); background: var(--urgent); color: #fff; padding: 12px; border-radius: 10px; z-index: 10; }

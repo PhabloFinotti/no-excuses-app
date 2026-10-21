@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { act } from '../lib/toast'
 import { archiveItem, items, now, saveItem, type ItemForm } from '../lib/store'
 
 const DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -77,6 +78,6 @@ async function submit() {
       </div>
     </div>
     <button class="ghost" style="flex: 0 0 auto" @click="edit(item)">Editar</button>
-    <button class="ghost" style="flex: 0 0 auto" @click="archiveItem(item.id)">Arquivar</button>
+    <button class="ghost" style="flex: 0 0 auto" @click="act(() => archiveItem(item.id))">Arquivar</button>
   </div>
 </template>

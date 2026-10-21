@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { minToTime } from '../../supabase/functions/_shared/time'
+import { act } from '../lib/toast'
 import { calc, completionOf, doneToday, items, markDone, nowMs, now, pauseTimer, skipItem, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
@@ -30,7 +31,7 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
     Não cabe tudo antes de dormir: faltam {{ calc.deficitMin }} min.
     <template v-if="suggested">
       Sugestão: pular “{{ suggested.name }}”.
-      <button class="ghost" style="color: #fff; border-color: #fff; margin-top: 8px" @click="skipItem(suggested)">Pular</button>
+      <button class="ghost" style="color: #fff; border-color: #fff; margin-top: 8px" @click="act(() => skipItem(suggested!))">Pular</button>
     </template>
   </div>
 
@@ -48,10 +49,10 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
     </div>
     <div class="row" style="margin-top: 8px">
       <span v-if="hasTime(item)" class="timer" style="flex: 0 0 auto">⏱ {{ clock(item) }}</span>
-      <button v-if="!running(item)" class="ghost" @click="startTimer(item)">Iniciar</button>
-      <button v-else class="ghost" @click="pauseTimer(item)">Pausar</button>
-      <button @click="markDone(item)">Feito</button>
-      <button class="ghost" @click="skipItem(item)">{{ item.kind === 'task' ? 'Descartar' : 'Pular' }}</button>
+      <button v-if="!running(item)" class="ghost" @click="act(() => startTimer(item))">Iniciar</button>
+      <button v-else class="ghost" @click="act(() => pauseTimer(item))">Pausar</button>
+      <button @click="act(() => markDone(item))">Feito</button>
+      <button class="ghost" @click="act(() => skipItem(item))">{{ item.kind === 'task' ? 'Descartar' : 'Pular' }}</button>
     </div>
   </div>
 
@@ -59,7 +60,7 @@ const overdueTask = (item: ItemRow) => item.kind === 'task' && item.due_date! < 
     <h2>Feitos hoje</h2>
     <div v-for="item in doneToday" :key="item.id" class="card done row">
       <span>{{ item.name }}<span class="meta"> · {{ completionOf(item)?.spent_min }} min</span></span>
-      <button class="ghost" style="flex: 0 0 auto" @click="undoToday(item)">Desfazer</button>
+      <button class="ghost" style="flex: 0 0 auto" @click="act(() => undoToday(item))">Desfazer</button>
     </div>
   </template>
 </template>

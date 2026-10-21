@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { loadAll, profile, session } from './lib/store'
 import { supabase } from './lib/supabase'
+import { toast } from './lib/toast'
 import LoginView from './views/LoginView.vue'
 import TodayView from './views/TodayView.vue'
 import ItemsView from './views/ItemsView.vue'
@@ -38,6 +39,7 @@ onMounted(async () => {
         <SettingsView v-else />
       </template>
     </main>
+    <div v-if="toast" class="toast" role="alert">{{ toast }}</div>
     <nav>
       <button v-for="(label, key) in tabs" :key="key" :class="{ on: tab === key }" @click="tab = key">{{ label }}</button>
     </nav>
