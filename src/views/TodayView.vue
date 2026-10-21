@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import FocusMode from '../components/FocusMode.vue'
 import Icon from '../components/Icon.vue'
 import ItemCard from '../components/ItemCard.vue'
+import ItemSheet from '../components/ItemSheet.vue'
 import QuickAdd from '../components/QuickAdd.vue'
 import OnboardingCard from '../components/OnboardingCard.vue'
 import { shortDate } from '../lib/format'
@@ -33,6 +34,7 @@ const nowSec = computed(() => now.value.minutes * 60 + new Date(nowMs.value).get
 const allDone = computed(() => !rows.value.length && doneToday.value.length > 0)
 
 const focused = ref<ItemRow | null>(null)
+const detail = ref<ItemRow | null>(null) // item aberto na folha de detalhes (tempo/edição)
 const lastAction = ref<'done' | 'skip'>('done') // define a animação de saída do card
 
 const running = (item: ItemRow) => !!completionOf(item)?.timer_started_at
@@ -41,7 +43,7 @@ const hasTimer = (item: ItemRow) => running(item) || (completionOf(item)?.timer_
 const rolled = (item: ItemRow) => item.kind === 'task' && item.due_date! < now.value.day
 const warnOf = (item: ItemRow) => item.warn_min ?? profile.value?.warn_min ?? 30
 
-function complete(item: ItemRow, e?: MouseEvent) {
+function complete(item: ItemRow, e?: MouseEvent, minutes?: number) {
   const wasLast = rows.value.length === 1
   const el = e?.currentTarget as HTMLElement | undefined
   const r = el?.getBoundingClientRect()
@@ -49,8 +51,13 @@ function complete(item: ItemRow, e?: MouseEvent) {
   burst(r ? r.left + r.width / 2 : innerWidth / 2, r ? r.top + r.height / 2 : innerHeight / 2)
   if (wasLast) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.25, true), 280)
   navigator.vibrate?.(15) // retorno tátil curto no Android
-  act(() => markDone(item))
-  notify(`${item.name} feito.`, { undo: () => undoToday(item) })
+  // Sem timer nem minutos informados, o app grava o previsto: avisa e oferece corrigir.
+  const planned = minutes == null && elapsed(item) < 60
+  act(() => markDone(item, minutes))
+  notify(planned ? `${item.name} feito · ${item.duration_min} min (previsto).` : `${item.name} feito.`, {
+    undo: () => undoToday(item),
+    action: planned ? { label: 'Ajustar tempo', run: () => (detail.value = item) } : undefined,
+  }, planned ? 7000 : 5000)
 }
 function skip(item: ItemRow) {
   lastAction.value = 'skip'
@@ -70,6 +77,8 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
     @toggle="act(() => (running(focused!) ? pauseTimer(focused!) : startTimer(focused!)))"
     @done="complete(focused!); focused = null"
   />
+
+  <ItemSheet v-if="detail" :key="detail.id" :item="detail" @close="detail = null" @finish="(m) => { complete(detail!, undefined, m); detail = null }" />
 
   <header class="day">
     <p class="date">{{ dateLabel }}</p>
@@ -117,6 +126,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
         @done="complete(item, $event)"
         @timer="act(() => (running(item) ? pauseTimer(item) : startTimer(item)))"
         @focus="focused = item"
+        @open="detail = item"
         @snooze="act(() => snoozeItem(item))"
         @skip="skip(item)"
       />
@@ -141,8 +151,10 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
       <div v-for="item in doneToday" :key="item.id" class="slot">
         <div class="plain done-row">
           <span class="done-check"><Icon name="check" :size="16" /></span>
-          <span class="done-name">{{ item.name }}</span>
-          <span class="meta num">{{ completionOf(item)?.spent_min || item.duration_min }} min</span>
+          <button class="link done-name" @click="detail = item">{{ item.name }}</button>
+          <button class="link time-chip" aria-label="Ajustar o tempo registrado" @click="detail = item">
+            <span class="num">{{ completionOf(item)?.spent_min ?? 0 }} min</span><span v-if="completionOf(item)?.time_source === 'planned'" class="planned">previsto</span>
+          </button>
           <button class="icon-btn small" aria-label="Desfazer" title="Desfazer" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" /></button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export interface Toast { text: string; error?: boolean; undo?: () => Promise<unknown> }
+export interface Toast { text: string; error?: boolean; undo?: () => Promise<unknown>; action?: { label: string; run: () => void } }
 
 export const toast = ref<Toast | null>(null)
 let timer: ReturnType<typeof setTimeout>

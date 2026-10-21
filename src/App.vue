@@ -74,6 +74,7 @@ onMounted(async () => {
     </main>
     <div v-if="toast" class="toast" :class="{ error: toast.error }" :role="toast.error ? 'alert' : 'status'">
       <span>{{ toast.text }}</span>
+      <button v-if="toast.action" @click="toast.action.run(); toast = null">{{ toast.action.label }}</button>
       <button v-if="toast.undo" @click="act(toast.undo); toast = null">Desfazer</button>
     </div>
     <nav>

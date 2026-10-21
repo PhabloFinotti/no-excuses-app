@@ -16,7 +16,7 @@ const props = defineProps<{
   snoozed: boolean
   rolled: boolean
 }>()
-defineEmits<{ done: [e: MouseEvent]; timer: []; focus: []; snooze: []; skip: [] }>()
+defineEmits<{ done: [e: MouseEvent]; timer: []; focus: []; snooze: []; skip: []; open: [] }>()
 
 const LABEL = { normal: '', attention: 'Atenção', urgent: 'Urgente', overdue: 'Atrasado' } as const
 
@@ -40,7 +40,7 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
     <article class="card" :class="`lvl-${state.level}`" :aria-label="`${item.name}, ${LABEL[state.level] || 'no prazo'}`">
       <header class="card-head">
         <div class="card-title">
-          <h3>{{ item.name }}</h3>
+          <h3><button class="link" @click="$emit('open')">{{ item.name }}</button></h3>
           <Icon v-if="item.essential" name="star" :size="14" class="essential" aria-label="Essencial" />
         </div>
         <span v-if="state.level !== 'normal'" class="chip">
@@ -48,10 +48,13 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
         </span>
       </header>
 
-      <p class="meta">
-        {{ item.duration_min }} min · começar até <span class="num">{{ minToTime(state.deadlineMin) }}</span>
-        <template v-if="rolled"> · atrasada de ontem</template>
-        <template v-if="snoozed"> · alerta adiado</template>
+      <p class="meta meta-line">
+        <span>
+          {{ item.duration_min }} min · começar até <span class="num">{{ minToTime(state.deadlineMin) }}</span>
+          <template v-if="rolled"> · atrasada de ontem</template>
+          <template v-if="snoozed"> · alerta adiado</template>
+        </span>
+        <button class="link detail" aria-label="Detalhes: tempo e edição" @click="$emit('open')">Detalhes</button>
       </p>
 
       <div class="until" role="img" :aria-label="`Tempo até o limite de início: ${timeLabel}`">
@@ -61,7 +64,7 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
 
       <div v-if="hasTimer" class="timer-row">
         <div class="track thin"><div class="fill task" :style="{ transform: `scaleX(${taskFraction})` }" /></div>
-        <span class="num timer-label"><Icon name="clock" :size="13" />{{ clock }} / {{ item.duration_min }}:00</span>
+        <button class="link num timer-label" aria-label="Ajustar cronômetro" @click="$emit('open')"><Icon name="clock" :size="13" />{{ clock }} / {{ item.duration_min }}:00</button>
       </div>
 
       <div class="actions">

@@ -122,8 +122,14 @@ export const SNOOZE_MIN = 10
 export const snoozeItem = (item: ItemRow) => patchCompletion(item, { snoozed_until: new Date(Date.now() + SNOOZE_MIN * 60_000).toISOString() })
 export const isSnoozed = (item: ItemRow) => Date.parse(completionOf(item)?.snoozed_until ?? '') > nowMs.value
 
-export async function rescheduleToday(item: ItemRow) {
-  must(await supabase.from('items').update({ due_date: now.value.day }).eq('id', item.id))
+export async function rescheduleTo(item: ItemRow, day: string) {
+  must(await supabase.from('items').update({ due_date: day }).eq('id', item.id))
+  await loadAll()
+}
+export const rescheduleToday = (item: ItemRow) => rescheduleTo(item, now.value.day)
+
+export async function unarchiveItem(id: string) {
+  must(await supabase.from('items').update({ archived: false }).eq('id', id))
   await loadAll()
 }
 
