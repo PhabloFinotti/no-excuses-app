@@ -41,7 +41,7 @@ function seed() {
 const KEYS: Record<string, string[]> = { items: ['id'], item_completions: ['item_id', 'day'], profiles: ['user_id'] }
 
 // ?delay=400 simula a latência da rede (o demo responde na hora e esconde problemas de carregamento).
-const DELAY = Number(new URLSearchParams(location.search).get('delay')) || 0
+const DELAY = typeof location === 'undefined' ? 0 : Number(new URLSearchParams(location.search).get('delay')) || 0 // sem `location` nos testes (Node)
 const lag = () => new Promise((r) => setTimeout(r, DELAY))
 
 export class Query {
