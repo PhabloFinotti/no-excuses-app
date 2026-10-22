@@ -6,10 +6,8 @@ const b64 = (bytes: ArrayBuffer | string) => {
 }
 const unb64 = (s: string) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)))
 
-async function mac(secret: string, data: string) {
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  return b64(await crypto.subtle.sign('HMAC', key, enc.encode(data)))
-}
+const hmacKey = (secret: string) => crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify'])
+const mac = async (secret: string, data: string) => b64(await crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(data)))
 
 export async function signState(userId: string, secret: string, nowMs: number, ttlMs = 10 * 60_000): Promise<string> {
   const payload = `${userId}.${nowMs + ttlMs}`
@@ -22,7 +20,10 @@ export async function verifyState(state: string, secret: string, nowMs: number):
   if (!p || !sig) return null
   let payload: string
   try { payload = unb64(p) } catch { return null }
-  if ((await mac(secret, payload)) !== sig) return null
+  // `subtle.verify` compara em tempo constante (um `!==` em string vaza, em tese, o quanto a assinatura acertou).
+  let sigBytes: Uint8Array<ArrayBuffer>
+  try { sigBytes = Uint8Array.from(atob(sig.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)) } catch { return null }
+  if (!(await crypto.subtle.verify('HMAC', await hmacKey(secret), sigBytes, enc.encode(payload)))) return null
   const [userId, exp] = payload.split('.')
   return userId && Number(exp) > nowMs ? userId : null
 }

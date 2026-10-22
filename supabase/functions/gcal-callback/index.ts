@@ -4,8 +4,11 @@ import { createCalendar, exchangeCode, revoke } from '../_shared/google.ts'
 import { verifyState } from '../_shared/oauthState.ts'
 
 const back = (result: string) => Response.redirect(`${Deno.env.get('APP_URL')}/?calendar=${result}`, 302)
+const missing = ['APP_URL', 'GCAL_STATE_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'].filter((k) => !Deno.env.get(k))
 
 Deno.serve(async (req) => {
+  // Sem isso o redirect lançaria erro ("undefined/?calendar=…") e o usuário veria um 500 sem pista.
+  if (missing.length) return new Response(`Faltam segredos: ${missing.join(', ')}`, { status: 500 })
   const url = new URL(req.url)
   if (url.searchParams.get('error')) return back('denied')
   const code = url.searchParams.get('code')

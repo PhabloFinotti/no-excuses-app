@@ -213,12 +213,11 @@ export async function disconnectCalendar() {
   profile.value = { ...profile.value!, calendar_connected: false }
 }
 
-// Envia as tarefas pendentes que já existiam antes da conexão. Em série, para não estourar a cota do Google.
+// Envia as tarefas pendentes que já existiam antes da conexão: uma chamada só, com um refresh de token só.
 export async function syncPendingTasks() {
-  const tasks = items.value.filter((i) => i.kind === 'task' && isItemPending(i))
-  for (const t of tasks) {
-    const { error } = await supabase.functions.invoke('gcal-sync', { body: { itemId: t.id } })
-    if (error) throw new Error('Parei no meio: não consegui enviar todas as tarefas.')
-  }
-  return tasks.length
+  const ids = items.value.filter((i) => i.kind === 'task' && isItemPending(i)).map((i) => i.id)
+  if (!ids.length) return 0
+  const { error } = await supabase.functions.invoke('gcal-sync', { body: { itemIds: ids } })
+  if (error) throw new Error('Não consegui enviar todas as tarefas. Tente de novo.')
+  return ids.length
 }
