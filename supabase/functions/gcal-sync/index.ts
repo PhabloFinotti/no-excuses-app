@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
   }
 
   if (!item || item.kind !== 'task') { await removeEvent(); return json({ skipped: 'not a task' }) }
-  const { data: completion } = await db.from('item_completions').select('done, skipped').eq('item_id', itemId).eq('day', item.due_date).maybeSingle()
+  const { data: completion } = await db.from('item_completions').select('done, skipped').eq('item_id', itemId).order('day', { ascending: false }).limit(1).maybeSingle()
   if (item.archived || (completion?.skipped && !completion.done)) { await removeEvent(); return json({ removed: true }) }
 
   const { data: profile } = await db.from('profiles').select('tz').eq('user_id', user.id).maybeSingle()

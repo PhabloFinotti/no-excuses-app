@@ -73,3 +73,18 @@ describe('finishMinutes', () => {
     expect(finishMinutes(c, 35, at.getTime())).toEqual({ minutes: 25, source: 'timer' })
   })
 })
+
+describe('task completion lives on the day it was done (rolled-over tasks)', () => {
+  it('findCompletion for a task ignores the day; for a habit only today counts', async () => {
+    const { findCompletion } = await import('../../supabase/functions/_shared/pending')
+    const old = completion({ item_id: 't', day: '2026-10-20', timer_accum_s: 120 })
+    const newer = completion({ item_id: 't', day: '2026-10-21', done: true })
+    expect(findCompletion(task(), [old], '2026-10-21')).toBe(old)
+    expect(findCompletion(task(), [old, newer], '2026-10-22')).toBe(newer) // a mais recente
+    expect(findCompletion(habit(), [completion({ day: '2026-10-20' })], '2026-10-21')).toBeUndefined()
+  })
+  it('overdue task done today stops being pending even though it was due yesterday', () => {
+    const done = completion({ item_id: 't', day: '2026-10-21', done: true }) // gravada em hoje
+    expect(isPending(task({ due_date: '2026-10-19' }), [done], now)).toBe(false)
+  })
+})

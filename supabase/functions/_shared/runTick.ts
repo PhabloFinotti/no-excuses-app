@@ -1,6 +1,6 @@
 // Lógica pura do `tick`: decide quais pushes enviar agora. Separada do I/O para ser testável com relógio simulado.
 import { calculateState, type Level } from './calculateState.ts'
-import { completionDay, toCalcItems, type CompletionRow, type ItemRow } from './pending.ts'
+import { findCompletion, toCalcItems, type CompletionRow, type ItemRow } from './pending.ts'
 import { localTime, minToTime, timeToMin } from './time.ts'
 
 export interface TickProfile {
@@ -39,8 +39,7 @@ export function runTick(profile: TickProfile, items: ItemRow[], completions: Com
   for (const s of result.states) {
     if (s.level === 'normal') continue
     const item = items.find((i) => i.id === s.id)!
-    const day = completionDay(item, now.day)
-    const c = completions.find((c) => c.item_id === s.id && c.day === day)
+    const c = findCompletion(item, completions, now.day)
     const until = c?.snoozed_until ? Date.parse(c.snoozed_until) : 0
     if (until > nowDate.getTime()) continue // adiado
     const reminder = !!until && c!.snooze_notified_for !== c!.snoozed_until
@@ -48,7 +47,7 @@ export function runTick(profile: TickProfile, items: ItemRow[], completions: Com
     pushes.push({
       itemId: s.id, day: now.day, level: s.level,
       ...message(s.level, item.name, s.minutesUntilDeadline, minToTime(s.deadlineMin), result.deficitMin),
-      snooze: reminder ? { completionDay: day, until: c!.snoozed_until! } : undefined,
+      snooze: reminder ? { completionDay: c!.day, until: c!.snoozed_until! } : undefined,
     })
   }
   return pushes

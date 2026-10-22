@@ -30,9 +30,13 @@ export interface CompletionRow {
   time_source?: 'timer' | 'manual' | 'planned' | null
 }
 
-// Hábito: completion do dia. Tarefa: sua única completion (day = due_date).
-export function completionDay(item: ItemRow, today: string): string {
-  return item.kind === 'task' ? item.due_date! : today
+// Hábito: a conclusão de hoje. Tarefa: a única conclusão dela, de qualquer dia (a mais recente).
+// Assim uma tarefa atrasada concluída hoje é gravada em hoje, e timer/adiar sobrevivem a "Fazer amanhã".
+export function findCompletion(item: ItemRow, completions: CompletionRow[], today: string): CompletionRow | undefined {
+  if (item.kind === 'habit') return completions.find((c) => c.item_id === item.id && c.day === today)
+  let best: CompletionRow | undefined
+  for (const c of completions) if (c.item_id === item.id && (!best || c.day > best.day)) best = c
+  return best
 }
 
 // Tarefa vencida e não concluída rola para hoje ("atrasada de ontem").
@@ -40,7 +44,7 @@ export function isPending(item: ItemRow, completions: CompletionRow[], now: Loca
   if (item.archived) return false
   const due = item.kind === 'task' ? item.due_date! <= now.day : item.weekdays.includes(now.weekday)
   if (!due) return false
-  const c = completions.find((c) => c.item_id === item.id && c.day === completionDay(item, now.day))
+  const c = findCompletion(item, completions, now.day)
   return !(c?.done || c?.skipped)
 }
 
@@ -67,7 +71,7 @@ export function toCalcItems(items: ItemRow[], completions: CompletionRow[], now:
   return items
     .filter((i) => isPending(i, completions, now) && !isStale(i, now.day))
     .map((i) => {
-      const c = completions.find((c) => c.item_id === i.id && c.day === completionDay(i, now.day))
+      const c = findCompletion(i, completions, now.day)
       const remaining = Math.max(0, Math.ceil(i.duration_min - elapsedSeconds(c, nowMs) / 60))
       return {
         id: i.id,

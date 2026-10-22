@@ -5,7 +5,7 @@ import { parseQuickAdd } from './quickAdd'
 import { must, supabase } from './supabase'
 import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
-import { completionDay, elapsedSeconds, finishMinutes, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { elapsedSeconds, finishMinutes, findCompletion, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
 
 export interface ProfileRow {
   wake_time: string
@@ -54,8 +54,7 @@ export const doneToday = computed(() =>
 
 export const staleTasks = computed(() => items.value.filter((i) => isStale(i, now.value.day) && isPending(i, completions.value, now.value)))
 
-export const completionOf = (item: ItemRow) =>
-  completions.value.find((c) => c.item_id === item.id && c.day === completionDay(item, now.value.day))
+export const completionOf = (item: ItemRow) => findCompletion(item, completions.value, now.value.day)
 
 export const isItemPending = (item: ItemRow) => isPending(item, completions.value, now.value)
 
@@ -84,14 +83,36 @@ export async function archiveItem(id: string) {
   if (wasTask) syncCalendar(id)
 }
 
-// Otimista: a tela muda na hora e volta atrás se o servidor recusar.
-async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
-  const day = completionDay(item, now.value.day)
-  const before = completions.value
-  const replace = (row: CompletionRow) => (completions.value = [...completions.value.filter((c) => !(c.item_id === row.item_id && c.day === row.day)), row])
-  replace({ item_id: item.id, day, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...completionOf(item), ...patch })
+// Escritas em andamento (ou muito recentes): o Realtime ignora o próprio eco, para uma leitura antiga não desfazer a tela.
+let inflight = 0
+let lastWriteAt = 0
+export const isWriting = () => inflight > 0 || Date.now() - lastWriteAt < 1500
+async function tracked<T>(fn: () => Promise<T>): Promise<T> {
+  inflight++
   try {
-    replace(must(await supabase.from('item_completions').upsert({ item_id: item.id, day, ...patch }, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)
+    return await fn()
+  } finally {
+    inflight--
+    lastWriteAt = Date.now()
+  }
+}
+
+// Otimista: a tela muda na hora e volta atrás se o servidor recusar.
+// Sempre grava em "hoje"; se a tarefa tinha uma linha de outro dia, ela é movida (apagada) para não duplicar.
+async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
+  const day = now.value.day
+  const before = completions.value
+  const prev = completionOf(item)
+  const merged = { item_id: item.id, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...prev, ...patch, day }
+  // Só o que mudou vai ao servidor (o tick também escreve em snooze_notified_for); ao mover uma linha de outro dia, leva o estado dela junto.
+  const payload = { ...(prev && prev.day !== day ? prev : {}), item_id: item.id, day, ...patch }
+  const replace = (row: CompletionRow) => (completions.value = [...completions.value.filter((c) => c.item_id !== row.item_id || (item.kind === 'habit' && c.day !== row.day)), row])
+  replace(merged)
+  try {
+    await tracked(async () => {
+      replace(must(await supabase.from('item_completions').upsert(payload, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)
+      if (prev && prev.day !== day) must(await supabase.from('item_completions').delete().eq('item_id', item.id).eq('day', prev.day))
+    })
     if (item.kind === 'task' && ('done' in patch || 'skipped' in patch)) syncCalendar(item.id)
   } catch (e) {
     completions.value = before
