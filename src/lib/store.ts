@@ -61,7 +61,6 @@ export const completionOf = (item: ItemRow) => findCompletion(item, completions.
 export const isItemPending = (item: ItemRow) => isPending(item, completions.value, now.value)
 
 export async function loadAll() {
-  must(await supabase.from('profiles').upsert({}, { onConflict: 'user_id', ignoreDuplicates: true })) // cria o perfil padrão no 1º login
   profile.value = must(await supabase.from('profiles').select('*').single())
   items.value = must(await supabase.from('items').select('*').eq('archived', false).order('created_at')) as ItemRow[]
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
@@ -78,14 +77,14 @@ export async function saveProfile(patch: Partial<ProfileRow>) {
 }
 
 export async function saveItem(form: ItemForm) {
-  const row = must(await supabase.from('items').upsert(form).select().single()) as ItemRow
+  const row = (await tracked(async () => must(await supabase.from('items').upsert(form).select().single()))) as ItemRow
   await loadAll()
   if (row.kind === 'task') syncCalendar(row.id)
 }
 
 export async function archiveItem(id: string) {
   const wasTask = items.value.find((i) => i.id === id)?.kind === 'task'
-  must(await supabase.from('items').update({ archived: true }).eq('id', id))
+  await tracked(async () => must(await supabase.from('items').update({ archived: true }).eq('id', id)))
   await loadAll()
   if (wasTask) syncCalendar(id)
 }
@@ -157,20 +156,20 @@ export const snoozeItem = (item: ItemRow) => patchCompletion(item, { snoozed_unt
 export const isSnoozed = (item: ItemRow) => Date.parse(completionOf(item)?.snoozed_until ?? '') > nowMs.value
 
 export async function rescheduleTo(item: ItemRow, day: string) {
-  must(await supabase.from('items').update({ due_date: day }).eq('id', item.id))
+  await tracked(async () => must(await supabase.from('items').update({ due_date: day }).eq('id', item.id)))
   await loadAll()
   syncCalendar(item.id)
 }
 export const rescheduleToday = (item: ItemRow) => rescheduleTo(item, now.value.day)
 
 export async function unarchiveItem(id: string) {
-  must(await supabase.from('items').update({ archived: false }).eq('id', id))
+  await tracked(async () => must(await supabase.from('items').update({ archived: false }).eq('id', id)))
   await loadAll()
   syncCalendar(id) // o servidor ignora se não for tarefa
 }
 
 export async function setDuration(id: string, durationMin: number) {
-  must(await supabase.from('items').update({ duration_min: durationMin }).eq('id', id))
+  await tracked(async () => must(await supabase.from('items').update({ duration_min: durationMin }).eq('id', id)))
   await loadAll()
   syncCalendar(id)
 }
@@ -185,6 +184,21 @@ export async function addQuick(kind: 'habit' | 'task', text: string) {
     weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date,
   })
   return { ...parsed, due_date }
+}
+
+// Sair: apaga a inscrição de push deste aparelho (senão ele segue recebendo alertas da conta) e limpa o que está em memória.
+export async function signOut() {
+  try {
+    const sub = await (await navigator.serviceWorker?.getRegistration())?.pushManager.getSubscription()
+    if (sub) {
+      await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+      await sub.unsubscribe()
+    }
+  } catch { /* sem push neste aparelho: segue para o logout */ }
+  await supabase.auth.signOut()
+  profile.value = null
+  items.value = []
+  completions.value = []
 }
 
 // ---- Google Agenda -------------------------------------------------------------------------------

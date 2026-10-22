@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
+import { isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import BrandMark from './components/BrandMark.vue'
 import Icon from './components/Icon.vue'
@@ -15,7 +15,14 @@ const tabs = { today: ['Hoje', 'target'], items: ['Itens', 'list'], history: ['H
 const tab = ref<keyof typeof tabs>('today')
 const error = ref('')
 
-const refresh = () => session.value && loadAll().then(applyNotificationAction).catch((e) => (error.value = e.message))
+const refresh = () =>
+  session.value &&
+  loadAll()
+    .then(() => {
+      error.value = '' // um erro passageiro (rede) não pode ficar na tela depois que voltou a funcionar
+      applyNotificationAction()
+    })
+    .catch((e) => (error.value = e.message))
 
 // Ação vinda de um botão da notificação (?action=done|snooze&item=ID).
 function applyNotificationAction() {
@@ -45,9 +52,10 @@ watch(
     if (channel) supabase.removeChannel(channel)
     channel = undefined
     if (!id) return
+    // Eco das nossas próprias escritas: espera ficar quieto, para uma leitura antiga não desfazer a tela.
     const onChange = () => {
       clearTimeout(debounce)
-      debounce = setTimeout(refresh, 300)
+      debounce = setTimeout(() => (isWriting() ? onChange() : refresh()), 300)
     }
     channel = supabase
       .channel('changes')

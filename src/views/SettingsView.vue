@@ -2,8 +2,7 @@
 import { reactive } from 'vue'
 import { exportBackup, exportCsv, importBackup } from '../lib/backup'
 import { enablePush, sendTestPush } from '../lib/push'
-import { connectCalendar, disconnectCalendar, loadAll, profile, saveProfile, syncPendingTasks } from '../lib/store'
-import { supabase } from '../lib/supabase'
+import { connectCalendar, disconnectCalendar, loadAll, profile, saveProfile, signOut, syncPendingTasks } from '../lib/store'
 import { notify } from '../lib/toast'
 
 const form = reactive({ ...profile.value! })
@@ -95,7 +94,7 @@ const save = () => run(() => {
     <input type="file" accept="application/json" @change="(e) => run(async () => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) { await importBackup(f); await loadAll() } }, 'Backup restaurado.')" />
   </label>
 
-  <button class="ghost" style="margin-top: 24px; width: 100%" @click="supabase.auth.signOut()">Sair</button>
+  <button class="ghost" style="margin-top: 24px; width: 100%" @click="signOut()">Sair</button>
     </section>
   </div>
 </template>
