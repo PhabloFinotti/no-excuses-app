@@ -55,6 +55,15 @@ function show(i: number) {
   active.value = i
   tipX.value = Math.max(70, Math.min((cx(i) / W) * (wrap.value?.clientWidth ?? W), (wrap.value?.clientWidth ?? W) - 70))
 }
+// Uma parada de teclado por gráfico; as setas percorrem as colunas (antes cada coluna era uma parada: até 90 por gráfico).
+function onKey(e: KeyboardEvent) {
+  const n = props.values.length
+  const i = active.value ?? n
+  const next = e.key === 'ArrowRight' ? Math.min(n - 1, i + 1) : e.key === 'ArrowLeft' ? Math.max(0, i - 1) : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1
+  if (next < 0) return
+  e.preventDefault()
+  show(next)
+}
 function hide(e?: PointerEvent) {
   if (e?.pointerType === 'touch') hideTimer = setTimeout(() => (active.value = null), 2500) // no toque, deixa ler
   else active.value = null
@@ -68,7 +77,11 @@ function hide(e?: PointerEvent) {
       <span><i class="key-line" />{{ lineName }}</span>
     </div>
 
-    <svg :viewBox="`0 0 ${W} ${H}`" role="img" :aria-label="`Gráfico de colunas: ${valueName}`">
+    <svg
+      :viewBox="`0 0 ${W} ${H}`" role="img" tabindex="0"
+      :aria-label="`Gráfico de colunas: ${valueName}. Use as setas para percorrer os valores.`"
+      @keydown="onKey" @focus="active === null && show(values.length - 1)" @blur="hide()"
+    >
       <g class="grid">
         <template v-for="t in [0, top / 2, top]" :key="t">
           <line :x1="L" :x2="W - R" :y1="y(t)" :y2="y(t)" />
@@ -89,9 +102,8 @@ function hide(e?: PointerEvent) {
       <!-- hit targets: coluna inteira, bem mais larga que a marca -->
       <rect
         v-for="(_, i) in values" :key="`h${i}`"
-        :x="L + slot * i" :y="T" :width="slot" :height="plotH" class="hit" tabindex="0"
-        :aria-label="`${titles[i]}: ${fmt(values[i]!)} ${valueName}`"
-        @pointerenter="show(i)" @pointerleave="hide($event)" @focus="show(i)" @blur="hide()"
+        :x="L + slot * i" :y="T" :width="slot" :height="plotH" class="hit"
+        @pointerenter="show(i)" @pointerleave="hide($event)"
       />
     </svg>
 
