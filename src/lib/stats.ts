@@ -26,11 +26,13 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   const window = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1)).filter((d) => d >= firstDay || d === today)
   // Índices em vez de varrer as conclusões a cada dia × hábito (o Histórico recalcula ao abrir e a cada mudança).
   const doneKeys = new Set<string>()
+  const skippedKeys = new Set<string>() // pulado de propósito: não é falha nem quebra a sequência
   const minutesByDay = new Map<string, number>()
   const spentByItem = new Map<string, CompletionRow[]>()
   const taskIds = new Set(items.filter((i) => i.kind === 'task').map((i) => i.id))
   const doneTasksByDay = new Map<string, number>()
   for (const c of completions) {
+    if (c.skipped && !c.done) skippedKeys.add(`${c.item_id}|${c.day}`)
     if (!c.done) continue
     doneKeys.add(`${c.item_id}|${c.day}`)
     minutesByDay.set(c.day, (minutesByDay.get(c.day) ?? 0) + c.spent_min)
@@ -38,18 +40,19 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
     if (c.spent_min > 0 && c.time_source !== 'planned') spentByItem.set(c.item_id, [...(spentByItem.get(c.item_id) ?? []), c])
   }
   const doneOn = (id: string, day: string) => doneKeys.has(`${id}|${day}`)
+  const skippedOn = (id: string, day: string) => skippedKeys.has(`${id}|${day}`)
   const inWindow = new Set(window)
   const habits = items.filter((i) => i.kind === 'habit')
 
   const habitStats: HabitStats[] = habits.map((h) => {
     const start = h.created_at.slice(0, 10)
     // Hoje só conta se já foi feito, para não penalizar o dia em andamento.
-    const scheduledDays = window.filter((d) => d >= start && (d < lastDayOf(h) || doneOn(h.id, d)) && h.weekdays.includes(weekdayOf(d)) && (d < today || doneOn(h.id, d)))
+    const scheduledDays = window.filter((d) => d >= start && (d < lastDayOf(h) || doneOn(h.id, d)) && h.weekdays.includes(weekdayOf(d)) && !skippedOn(h.id, d) && (d < today || doneOn(h.id, d)))
     const done = scheduledDays.filter((d) => doneOn(h.id, d)).length
     const spent = (spentByItem.get(h.id) ?? []).filter((c) => inWindow.has(c.day))
     let streak = 0
     for (const d of [...window].reverse()) {
-      if (d < start || !h.weekdays.includes(weekdayOf(d))) continue
+      if (d < start || !h.weekdays.includes(weekdayOf(d)) || skippedOn(h.id, d)) continue
       if (doneOn(h.id, d)) streak++
       else if (d !== today) break
     }
@@ -68,7 +71,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   })
 
   const cells: DayCell[] = window.map((day) => {
-    const scheduled = habits.filter((h) => day >= h.created_at.slice(0, 10) && (day < lastDayOf(h) || doneOn(h.id, day)) && h.weekdays.includes(weekdayOf(day)) && (day < today || doneOn(h.id, day)))
+    const scheduled = habits.filter((h) => day >= h.created_at.slice(0, 10) && (day < lastDayOf(h) || doneOn(h.id, day)) && h.weekdays.includes(weekdayOf(day)) && !skippedOn(h.id, day) && (day < today || doneOn(h.id, day)))
     const tasks = doneTasksByDay.get(day) ?? 0
     const minutes = minutesByDay.get(day) ?? 0
     return { day, scheduled: scheduled.length + tasks, done: scheduled.filter((h) => doneOn(h.id, day)).length + tasks, minutes }
@@ -100,20 +103,21 @@ export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], tod
     const scheduled = h.weekdays.includes(weekdayOf(day))
     const done = !!c?.done
     // Hoje, pendente, não conta como falha (o dia ainda não acabou).
-    return { day, scheduled, counted: scheduled && (day < today || done), done, skipped: !!c?.skipped && !done, minutes: done ? c!.spent_min : 0 }
+    const skipped = !!c?.skipped && !done
+    return { day, scheduled, counted: scheduled && !skipped && (day < today || done), done, skipped, minutes: done ? c!.spent_min : 0 }
   })
 
   const counted = cells.filter((c) => c.counted)
   const doneCount = counted.filter((c) => c.done).length
   let best = 0, run = 0
   for (const c of cells) {
-    if (!c.scheduled) continue
+    if (!c.scheduled || c.skipped) continue
     if (c.done) best = Math.max(best, ++run)
     else if (c.day !== today) run = 0
   }
   let streak = 0
   for (const c of [...cells].reverse()) {
-    if (!c.scheduled) continue
+    if (!c.scheduled || c.skipped) continue
     if (c.done) streak++
     else if (c.day !== today) break
   }

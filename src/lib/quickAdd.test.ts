@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseDuration, parseQuickAdd } from './quickAdd'
+import { parseDuration, parseQuickAdd, quickAddError } from './quickAdd'
 
 describe('parseQuickAdd', () => {
   it('name and duration', () => expect(parseQuickAdd('Ler livro 45')).toEqual({ name: 'Ler livro', durationMin: 45 }))
@@ -23,4 +23,21 @@ describe('parseQuickAdd', () => {
     expect(parseDuration('Ler 10 páginas')).toBeNull()
   })
   it('rejects durations above 24h', () => expect(parseQuickAdd('Ler 25h')).toBeNull())
+
+  it('understands decimal hours and "hs"', () => {
+    expect(parseQuickAdd('Ler 1,5h')).toEqual({ name: 'Ler', durationMin: 90 })
+    expect(parseQuickAdd('Ler 2 hs')).toEqual({ name: 'Ler', durationMin: 120 })
+  })
+  it('without bare numbers, a trailing number stays in the name', () => {
+    expect(parseDuration('Ler capítulo 3', { bare: false })).toBeNull()
+    expect(parseDuration('Ler capítulo 3 min', { bare: false })).toEqual({ name: 'Ler capítulo', durationMin: 3 })
+  })
+  it('explains why a text was refused', () => {
+    expect(quickAddError('')).toMatch(/Digite um nome/)
+    expect(quickAddError('45')).toMatch(/Falta o nome/)
+    expect(quickAddError('Ler 25h')).toMatch(/máxima/)
+    expect(quickAddError('Ler 1h75')).toMatch(/0 a 59/)
+    expect(quickAddError('Ler 0')).toMatch(/maior que zero/)
+    expect(quickAddError('Ler 45')).toBeNull()
+  })
 })

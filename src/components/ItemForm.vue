@@ -30,7 +30,7 @@ function toggleDay(d: number) {
 // "Ler por 60 minutos" vira nome "Ler" + 60 min, como na adição rápida (só ao criar, para não mexer em item existente).
 function readDuration() {
   if (props.item) return
-  const parsed = parseDuration(form.name)
+  const parsed = parseDuration(form.name, { bare: false }) // só com unidade: "Ler capítulo 3" continua sendo o nome
   if (parsed && parsed.durationMin >= 1 && parsed.durationMin <= 1440) {
     form.name = parsed.name
     form.duration_min = parsed.durationMin
@@ -43,6 +43,11 @@ const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 async function submit() {
   if (busy.value) return // Enter repetido ou toque duplo não envia de novo
   error.value = ''
+  form.name = form.name.trim()
+  if (!form.name) {
+    error.value = 'Dê um nome ao item.'
+    return
+  }
   if (!Number.isInteger(form.duration_min) || form.duration_min < 1 || form.duration_min > 1440) {
     error.value = 'A duração precisa ser um número inteiro de 1 a 1440 minutos.'
     return
@@ -77,8 +82,9 @@ async function submit() {
         <option :value="NO_CATEGORY">Sem categoria</option>
       </select>
     </label>
-    <label>Duração prevista (min)<input v-model.number="form.duration_min" type="number" min="1" max="1440" step="1" required /></label>
+    <label>Duração estimada (min)<input v-model.number="form.duration_min" type="number" min="1" max="1440" step="1" required /></label>
     <label>Horário fixo (opcional)<input v-model="form.fixed_time" type="time" /></label>
+    <p class="meta hint">Preencha só se o item tem hora marcada. Sem horário, o app calcula o último momento para começar.</p>
     <template v-if="form.kind === 'habit'">
       <label>Dias</label>
       <div class="chips">
@@ -86,11 +92,15 @@ async function submit() {
       </div>
     </template>
     <label v-else>Data<input v-model="form.due_date" type="date" required /></label>
-    <label><input v-model="form.essential" type="checkbox" /> Essencial (último a ser pulado)</label>
-    <div class="row">
-      <label>Atenção (min antes)<input v-model="form.warn_min" type="number" min="0" placeholder="padrão" /></label>
-      <label>Urgente (min antes)<input v-model="form.urgent_min" type="number" min="0" placeholder="padrão" /></label>
-    </div>
+    <label><input v-model="form.essential" type="checkbox" /> Essencial (o app nunca sugere pular este)</label>
+    <details class="fold">
+      <summary>Avisos próprios (opcional)</summary>
+      <p class="meta">Deixe em branco para usar os valores de Ajustes.</p>
+      <div class="row">
+        <label>Avisar com quantos min de folga<input v-model="form.warn_min" type="number" min="0" placeholder="padrão" /></label>
+        <label>Marcar urgente com quantos min<input v-model="form.urgent_min" type="number" min="0" placeholder="padrão" /></label>
+      </div>
+    </details>
     <p v-if="error" class="error">{{ error }}</p>
     <div class="row" style="margin-top: 14px">
       <button :disabled="busy || (form.kind === 'habit' && !form.weekdays.length)">Salvar</button>

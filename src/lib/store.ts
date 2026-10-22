@@ -58,6 +58,13 @@ export const doneToday = computed(() =>
   }),
 )
 
+export const skippedToday = computed(() =>
+  items.value.filter((i) => {
+    const c = completionOf(i)
+    return !!c && c.skipped && !c.done && c.day === now.value.day
+  }),
+)
+
 export const staleTasks = computed(() => items.value.filter((i) => isStale(i, now.value.day) && isPending(i, completions.value, now.value)))
 
 export const completionOf = (item: ItemRow) => findCompletion(item, completions.value, now.value.day)
@@ -164,7 +171,12 @@ async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
 }
 
 // O timer vive no banco (started_at + acumulado), então sobrevive ao app fechado.
-export const startTimer = (item: ItemRow) => patchCompletion(item, { timer_started_at: new Date().toISOString() })
+// Um cronômetro por vez: dois rodando juntos somariam mais minutos do que o relógio tem.
+export async function startTimer(item: ItemRow) {
+  const others = items.value.filter((i) => i.id !== item.id && !!completionOf(i)?.timer_started_at)
+  await Promise.all([...others.map(pauseTimer), patchCompletion(item, { timer_started_at: new Date().toISOString() })])
+  if (others.length) notify(`Cronômetro de ${others.map((i) => i.name).join(', ')} pausado.`)
+}
 
 export function pauseTimer(item: ItemRow) {
   return patchCompletion(item, { timer_accum_s: Math.round(elapsedSeconds(completionOf(item), Date.now())), timer_started_at: null })
@@ -220,7 +232,7 @@ export async function addQuick(kind: 'habit' | 'task', text: string) {
     kind, name: parsed.name, duration_min: parsed.durationMin, category: null, fixed_time: null, essential: false, warn_min: null, urgent_min: null,
     weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date,
   })
-  return { ...parsed, due_date }
+  return { ...parsed, due_date, kind }
 }
 
 // Sair: apaga a inscrição de push deste aparelho (senão ele segue recebendo alertas da conta) e limpa o que está em memória.
@@ -255,7 +267,7 @@ export function syncCalendar(itemId: string) {
 
 export async function connectCalendar() {
   const { data, error } = await supabase.functions.invoke('gcal-connect')
-  if (error || !data?.url) throw new Error('Conexão com o Google indisponível (confira o deploy das functions).')
+  if (error || !data?.url) throw new Error('Não consegui falar com o Google agora. Tente de novo em instantes.')
   location.href = data.url
 }
 

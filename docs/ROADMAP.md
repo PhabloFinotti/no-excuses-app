@@ -16,6 +16,10 @@ Adiados de propósito: dormir após a meia-noite, preferências de ordem, estado
 Categorias fixas (Estudo, Leitura, Exercício, Saúde, Mente, Trabalho, Casa, Finanças, Social, Criação) descobertas pelo nome (`src/lib/categories.ts`), com escolha manual ou "sem categoria" no formulário. Histórico por categoria: um dia conta se qualquer item dela foi feito, e itens arquivados continuam valendo. Duração no nome ("Ler por 60 minutos", "Estudar 1h30") vira nome + duração no formulário e na adição rápida.
 Adiado: categorias criadas pelo usuário (exigiria tabela própria e escolha de chave), filtro por categoria na tela Hoje.
 
+## Revisão por roteiros de uso (implementado)
+Arquivados e pulados com tela para restaurar; tarefas concluídas fora da lista principal; toasts empilhados (cada um com seu Desfazer); ações do card com texto (Timer, Foco, Adiar alerta, Pular hoje); prévia e mensagens de erro na adição rápida, tipo (hábito/tarefa) lembrado e avisado; número solto no fim do nome só vira duração na adição rápida; horas decimais (1,5h); pulado não conta como falha nem quebra a sequência; calendário da categoria usa "algum item feito"; um cronômetro por vez; "Ajustar duração" com desfazer; backup inclui a rotina e informa o que restaurou; CSV com BOM; legenda "Como ler esta tela"; jargão trocado (previsto→estimado, avançado recolhido); alvos de toque de 44 px; tarefa atrasada mostra quantos dias; toque fora não fecha a edição.
+Fora de propósito: dormir depois da meia-noite (mudança profunda no motor, rotina atual não precisa); timer que atravessa a meia-noite.
+
 ## Fase 0: validar o que existe (gate para o resto)
 Já listado em `TASKS.md` (V1 a V7). Acrescento:
 - [ ] F0.1 Usar o app 2 a 3 dias reais e anotar atritos em `docs/NOTES.md`. Pronto: lista de problemas reais priorizada.

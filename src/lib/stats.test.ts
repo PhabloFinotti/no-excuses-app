@@ -125,4 +125,15 @@ describe('archived habits and categories', () => {
   it('items without a category do not show up', () => {
     expect(computeCategoryStats([{ ...habit, name: 'Xablau' }], [], '2026-10-21')).toEqual([])
   })
+
+  it('a skipped day is neither a failure nor a streak breaker', () => {
+    const skip = (day: string): CompletionRow => ({ ...done(day), done: false, skipped: true, spent_min: 0 })
+    const c = [done('2026-10-18'), skip('2026-10-19'), done('2026-10-20')]
+    const s = computeStats([habit], c, '2026-10-21').habitStats[0]!
+    expect(s.streak).toBe(2)
+    expect(s.scheduled).toBe(19) // 01..20/10 sem o dia pulado
+    const d = computeHabitDetail(habit, c, '2026-10-21')
+    expect(d.streak).toBe(2)
+    expect(d.cells.find((x) => x.day === '2026-10-19')).toMatchObject({ skipped: true, counted: false })
+  })
 })

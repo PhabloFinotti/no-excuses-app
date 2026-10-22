@@ -2,11 +2,17 @@
 import { computed, ref } from 'vue'
 import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
-import { act } from '../lib/toast'
+import { act, notify } from '../lib/toast'
 import { archivedItems, completions, items, setDuration, today } from '../lib/store'
 import { categoryOf } from '../lib/categories'
 import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
 import { computeCategoryStats, computeHabitDetail, computeStats } from '../lib/stats'
+
+// Aplica a duração sugerida e deixa desfazer (era uma mudança silenciosa).
+function applyDuration(id: string, name: string, oldMin: number, newMin: number) {
+  act(() => setDuration(id, newMin))
+  notify(`${name}: duração ajustada para ${newMin} min.`, { undo: () => setDuration(id, oldMin) })
+}
 
 const RANGES = [7, 30, 90] as const
 const days = ref<(typeof RANGES)[number]>(30)
@@ -65,6 +71,12 @@ const calendar = computed(() => {
       bg: c.done ? 'var(--ok)' : c.skipped ? 'var(--attention)' : c.counted ? 'var(--urgent)' : '',
       title: c.done ? `Feito (${c.minutes} min)` : c.skipped ? 'Pulado' : c.counted ? 'Não feito' : c.scheduled ? 'Hoje' : 'Sem agenda',
     }))
+  if (catKey.value)
+    return stats.value.cells.map((c) => ({
+      day: c.day, has: c.scheduled > 0 || c.done > 0,
+      bg: c.done > 0 ? 'var(--ok)' : c.scheduled > 0 ? 'var(--urgent)' : '',
+      title: c.done > 0 ? `${c.done} feito(s)` : c.scheduled > 0 ? 'Nada feito' : 'Sem agenda',
+    }))
   return stats.value.cells.map((c) => ({
     day: c.day, has: c.scheduled > 0,
     bg: !c.scheduled ? '' : c.done === c.scheduled ? 'var(--ok)' : c.done ? 'var(--attention)' : 'var(--urgent)',
@@ -91,6 +103,9 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </select>
   </div>
 
+  <p v-if="stats.cells.length < days" class="meta">O período mostra só os {{ stats.cells.length }} dias desde o primeiro item cadastrado.</p>
+  <p class="meta">Itens pulados de propósito não contam como falha nem quebram a sequência. Sequências valem dentro do período escolhido.</p>
+
   <div class="charts">
   <template v-if="detail && habit">
     <section>
@@ -105,10 +120,10 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
         {{ detail.done }} de {{ detail.counted }} dias agendados · sequência atual <span class="num">{{ detail.streak }}</span> · melhor <span class="num">{{ detail.bestStreak }}</span>
       </p>
       <p class="meta">
-        Tempo total {{ hm(detail.totalMinutes) }}<template v-if="detail.avgMinutes"> · média por vez {{ detail.avgMinutes }} min (previsto {{ habit.duration_min }})</template>
+        Tempo total {{ hm(detail.totalMinutes) }}<template v-if="detail.avgMinutes"> · média por vez {{ detail.avgMinutes }} min (estimado {{ habit.duration_min }})</template>
         <template v-if="habitCard && habitCard.samples >= 3"> · 80% das vezes leva até {{ habitCard.p80Min }} min</template>
       </p>
-      <button v-if="habitCard?.suggestedDurationMin" class="ghost" style="margin-top: 8px" @click="act(() => setDuration(habit!.id, habitCard!.suggestedDurationMin!))">
+      <button v-if="habitCard?.suggestedDurationMin" class="ghost" style="margin-top: 8px" @click="applyDuration(habit!.id, habit!.name, habit!.duration_min, habitCard!.suggestedDurationMin!)">
         Ajustar duração para {{ habitCard.suggestedDurationMin }} min
       </button>
     </div>
@@ -117,8 +132,8 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <section>
     <h2 class="section">Tempo por vez</h2>
     <div class="plain">
-      <p class="meta" style="margin-bottom: 8px">Cada coluna é o tempo registrado no dia; a linha é a duração prevista.</p>
-      <ColumnChart :values="detail.cells.map((c) => c.minutes)" :titles="detailTitles" :x-ticks="ticksFor(detail.cells)" value-name="min" :line="detail.cells.map(() => habit!.duration_min)" line-name="previsto" />
+      <p class="meta" style="margin-bottom: 8px">Cada coluna é o tempo registrado no dia; a linha é a duração estimada.</p>
+      <ColumnChart :values="detail.cells.map((c) => c.minutes)" :titles="detailTitles" :x-ticks="ticksFor(detail.cells)" value-name="min" :line="detail.cells.map(() => habit!.duration_min)" line-name="estimado" />
     </div>
 
     </section>
@@ -167,7 +182,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <section>
   <h2 class="section">Tempo dedicado por dia</h2>
   <div class="plain">
-    <p class="meta" style="margin-bottom: 8px">{{ hm(stats.totalMinutes) }} no período · média {{ hm(stats.totalMinutes / stats.cells.length) }} por dia. Inclui o previsto de itens concluídos sem cronômetro.</p>
+    <p class="meta" style="margin-bottom: 8px">{{ hm(stats.totalMinutes) }} no período · média {{ hm(stats.totalMinutes / stats.cells.length) }} por dia. Inclui o tempo estimado dos itens concluídos sem cronômetro.</p>
     <ColumnChart :values="stats.cells.map((c) => c.minutes)" :titles="titles" :x-ticks="xTicks" value-name="min" :line="stats.minutesAvg7" line-name="média de 7 dias" />
   </div>
 
@@ -200,6 +215,10 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <span><i style="background: var(--attention)" />Pulado</span>
     <span><i style="background: var(--urgent)" />Não feito</span>
   </p>
+  <p v-else-if="catKey" class="legend">
+    <span><i style="background: var(--ok)" />Algum item feito</span>
+    <span><i style="background: var(--urgent)" />Nada feito</span>
+  </p>
   <p v-else class="legend">
     <span><i style="background: var(--ok)" />Tudo feito</span>
     <span><i style="background: var(--attention)" />Parcial</span>
@@ -225,7 +244,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </div>
     <div class="row" style="margin-top: 8px">
       <button class="ghost" @click="pick(h.id)">Ver histórico</button>
-      <button v-if="h.suggestedDurationMin" class="ghost" @click="act(() => setDuration(h.id, h.suggestedDurationMin!))">Ajustar para {{ h.suggestedDurationMin }} min</button>
+      <button v-if="h.suggestedDurationMin" class="ghost" @click="applyDuration(h.id, h.name, h.durationMin, h.suggestedDurationMin!)">Ajustar para {{ h.suggestedDurationMin }} min</button>
     </div>
   </div>
   </div>

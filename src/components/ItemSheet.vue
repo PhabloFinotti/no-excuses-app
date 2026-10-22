@@ -18,7 +18,7 @@ const tab = ref<'time' | 'edit'>('time')
 const c = computed(() => completionOf(props.item))
 const isDone = computed(() => !!c.value?.done)
 
-// Valor inicial fixado na abertura: tempo registrado, senão o cronômetro, senão o previsto.
+// Valor inicial fixado na abertura: tempo registrado, senão o cronômetro, senão o estimado.
 const elapsedMin = Math.round(elapsedSeconds(completionOf(props.item), nowMs.value) / 60)
 const minutes = ref(isDone.value ? c.value!.spent_min : elapsedMin >= 1 ? elapsedMin : props.item.duration_min)
 const hasTimer = elapsedMin >= 1
@@ -30,9 +30,9 @@ const presets = computed(() => [...new Set([props.item.duration_min, 15, 30, 45,
 const hint = computed(() => {
   if (isDone.value) {
     const src = c.value?.time_source
-    return `Registrado: ${c.value!.spent_min} min${src === 'planned' ? ' (era o previsto, sem cronômetro)' : src === 'manual' ? ' (ajustado à mão)' : ''}.`
+    return `Registrado: ${c.value!.spent_min} min${src === 'planned' ? ' (era o estimado, sem cronômetro)' : src === 'manual' ? ' (ajustado à mão)' : ''}.`
   }
-  return hasTimer ? `O cronômetro marcou ${elapsedMin} min. Corrija se precisar.` : `Sem cronômetro: o previsto é ${props.item.duration_min} min.`
+  return hasTimer ? `O cronômetro marcou ${elapsedMin} min. Corrija se precisar.` : `Sem cronômetro: o estimado é ${props.item.duration_min} min.`
 })
 
 const calendarUrl = computed(() =>
@@ -53,7 +53,7 @@ function tomorrow() {
 </script>
 
 <template>
-  <Sheet :title="item.name" @close="emit('close')">
+  <Sheet :title="item.name" :persistent="tab === 'edit'" @close="emit('close')">
     <div class="stack">
       <h2>{{ item.name }}</h2>
       <div class="chips" role="tablist">
@@ -72,7 +72,7 @@ function tomorrow() {
           <button class="icon-btn" aria-label="Mais 5 minutos" @click="step(5)"><span aria-hidden="true">+5</span></button>
         </div>
         <div class="chips">
-          <button v-for="p in presets" :key="p" class="ghost" :class="{ on: minutes === p }" @click="minutes = p">{{ p }}{{ p === item.duration_min ? ' (previsto)' : '' }}</button>
+          <button v-for="p in presets" :key="p" class="ghost" :class="{ on: minutes === p }" @click="minutes = p">{{ p }}{{ p === item.duration_min ? ' (estimado)' : '' }}</button>
         </div>
         <p class="meta">{{ hint }}</p>
         <p v-if="item.kind === 'task' && profile?.calendar_connected" class="meta">Sincronizada com o Google Agenda.</p>

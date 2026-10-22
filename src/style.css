@@ -75,7 +75,7 @@ button.ghost:hover { background: var(--raised); }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .row > * { flex: 1; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chips button { flex: none; min-height: 40px; padding: 0 14px; }
+.chips button { flex: none; min-height: 44px; padding: 0 14px; }
 .chips button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 
 /* Cabeçalho do dia */
@@ -168,9 +168,11 @@ nav button.on svg { transform: translateY(-1px) scale(1.08); }
 nav svg { transition: transform 200ms var(--ease); }
 
 /* Toast */
-.toast { position: fixed; left: 16px; right: 16px; bottom: calc(152px + env(safe-area-inset-bottom)); max-width: 528px; margin: 0 auto; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 14px; background: var(--text); color: var(--bg); box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.4); animation: rise 300ms var(--ease) both; }
+.toasts { position: fixed; left: 16px; right: 16px; bottom: calc(152px + env(safe-area-inset-bottom)); max-width: 528px; margin: 0 auto; z-index: 30; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toasts > * { pointer-events: auto; }
+.toast { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 14px; background: var(--text); color: var(--bg); box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.4); animation: rise 300ms var(--ease) both; }
 .toast.error { background: var(--overdue); color: var(--on-accent); padding: 12px 16px; }
-.toast button { background: transparent; color: inherit; border-color: color-mix(in srgb, currentColor 40%, transparent); min-height: 40px; }
+.toast button { background: transparent; color: inherit; border-color: color-mix(in srgb, currentColor 40%, transparent); min-height: 44px; }
 @keyframes rise { from { transform: translateY(12px); opacity: 0; } }
 
 /* Foco */
@@ -253,8 +255,8 @@ nav svg { transition: transform 200ms var(--ease); }
 .link:hover { text-decoration: underline; text-underline-offset: 3px; }
 h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; letter-spacing: inherit; }
 .meta-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.meta-line .detail { color: var(--accent); font-size: 0.875rem; font-weight: 600; flex: none; padding: 6px 0 6px 8px; }
-.timer-label.link { display: inline-flex; padding: 6px 0; }
+.meta-line .detail { color: var(--accent); font-size: 0.875rem; font-weight: 600; flex: none; min-height: 44px; display: inline-flex; align-items: center; padding: 0 0 0 8px; }
+.timer-label.link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; }
 .stack { display: grid; gap: 14px; }
 .stack-actions { display: grid; gap: 8px; margin-top: 4px; }
 .stepper { display: grid; grid-template-columns: 56px 1fr 56px; gap: 10px; align-items: center; }
@@ -286,7 +288,7 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
   .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fab { right: max(24px, calc(50% - 336px)); }
   .sheet { inset: 0; margin: auto; width: min(520px, 92vw); height: fit-content; max-height: 86dvh; border-radius: 22px; border: 1px solid var(--line); padding-bottom: 24px; }
-  .toast { max-width: 560px; }
+  .toasts { max-width: 560px; }
 }
 
 /* Desktop: barra lateral, conteúdo largo, painel lateral no Hoje */
@@ -312,7 +314,7 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
   .filters { grid-template-columns: auto minmax(200px, 320px); align-items: center; gap: 16px; }
   .habit-grid, .list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fab { right: 40px; bottom: 36px; }
-  .toast { left: calc(248px + 24px); right: 24px; bottom: 32px; margin: 0; max-width: 520px; }
+  .toasts { left: calc(248px + 24px); right: 24px; bottom: 32px; margin: 0; max-width: 520px; }
   .cells { max-width: 520px; }
   .day { margin-bottom: 28px; }
   .day-progress { max-width: 520px; }
@@ -355,3 +357,16 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
   .login-form h2 { font-size: 1.75rem; }
 }
 @media (prefers-reduced-motion: reduce) { .hero-clock .fill { transition: none; } }
+
+/* Ações secundárias do card, com texto (só ícone não explica nada no celular) */
+.tools-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.tools-row .sub { min-height: 44px; padding: 0 8px; font-size: 0.8125rem; font-weight: 600; gap: 6px; color: var(--muted); }
+.tools-row .sub:hover { color: var(--text); }
+
+/* Seções recolhíveis (arquivados, avançado, ajuda) */
+.fold, .howto { margin: 12px 0; }
+.fold > summary, .howto > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--muted); }
+.fold > summary:hover, .howto > summary:hover { color: var(--text); }
+.howto { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 0 16px; }
+.howto ul { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 0.9375rem; }
+.hint { margin: -4px 0 8px; }

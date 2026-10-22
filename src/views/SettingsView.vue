@@ -18,6 +18,19 @@ async function run(fn: () => Promise<unknown>, ok: string | ((result: any) => st
 }
 const diag = ref<PushDiagnostics>()
 const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'nunca')
+async function restore(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  await run(async () => {
+    const b = await importBackup(file)
+    if (b.profile) await saveProfile(b.profile as never)
+    await loadAll()
+    Object.assign(form, profile.value) // o formulário é uma cópia: sem isto salvar de novo desfaria o que foi restaurado
+    return b
+  }, (b) => `Backup restaurado: ${b.items.length} itens e ${b.completions.length} conclusões${b.profile ? ', além da rotina' : ''}.`)
+  input.value = '' // permite escolher o mesmo arquivo de novo
+}
 const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 function validTz(tz: string) {
   try {
@@ -45,16 +58,19 @@ const save = () => run(() => {
       <label>Acordo<input v-model="form.wake_time" type="time" /></label>
       <label>Durmo<input v-model="form.sleep_time" type="time" /></label>
     </div>
-    <label>Fuso horário<input v-model="form.tz" /></label>
-    <button v-if="form.tz !== deviceTz" type="button" class="ghost" @click="form.tz = deviceTz">Usar o do aparelho ({{ deviceTz }})</button>
-    <div class="row">
-      <label>Atenção (min)<input v-model.number="form.warn_min" type="number" min="0" /></label>
-      <label>Urgente (min)<input v-model.number="form.urgent_min" type="number" min="0" /></label>
-    </div>
-    <label>Tolerância de hábito com horário fixo (min)<input v-model.number="form.fixed_grace_min" type="number" min="0" /></label>
     <label><input v-model="form.morning_summary" type="checkbox" style="width: auto" /> Resumo ao acordar</label>
     <label><input v-model="form.evening_summary" type="checkbox" style="width: auto" /> Aviso antes de dormir</label>
-    <label>Aviso de fim do dia (min antes de dormir)<input v-model.number="form.evening_min" type="number" min="0" /></label>
+    <label>Avisar antes de dormir com quantos min de folga<input v-model.number="form.evening_min" type="number" min="0" /></label>
+    <details class="fold">
+      <summary>Avançado: fuso e limites dos alertas</summary>
+      <label>Fuso horário<input v-model="form.tz" /></label>
+      <button v-if="form.tz !== deviceTz" type="button" class="ghost" @click="form.tz = deviceTz">Usar o do aparelho ({{ deviceTz }})</button>
+      <div class="row">
+        <label>Alerta de atenção quando faltar (min)<input v-model.number="form.warn_min" type="number" min="0" /></label>
+        <label>Alerta urgente quando faltar (min)<input v-model.number="form.urgent_min" type="number" min="0" /></label>
+      </div>
+      <label>Atraso permitido em itens com horário marcado (min)<input v-model.number="form.fixed_grace_min" type="number" min="0" /></label>
+    </details>
     <button style="margin-top: 12px; width: 100%">Salvar</button>
   </form>
 
@@ -98,11 +114,12 @@ const save = () => run(() => {
   <h2 class="section">Dados</h2>
   <div class="row">
     <button class="ghost" @click="run(exportCsv, 'CSV exportado.')">Exportar CSV</button>
-    <button class="ghost" @click="run(exportBackup, 'Backup exportado.')">Backup JSON</button>
+    <button class="ghost" @click="run(exportBackup, 'Backup exportado (itens, conclusões e rotina).')">Backup JSON</button>
   </div>
   <label>Restaurar backup JSON
-    <input type="file" accept="application/json" @change="(e) => run(async () => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) { await importBackup(f); await loadAll() } }, 'Backup restaurado.')" />
+    <input type="file" accept="application/json" @change="restore" />
   </label>
+  <p class="meta">Restaurar mistura o backup com o que já existe: itens e conclusões com o mesmo código são substituídos pelos do arquivo; o resto fica como está.</p>
 
   <button class="ghost" style="margin-top: 24px; width: 100%" @click="signOut()">Sair</button>
     </section>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { shortDate, weekdaysLabel } from '../lib/format'
+import { addedText, shortDate, weekdaysLabel } from '../lib/format'
 import Icon from '../components/Icon.vue'
 import ItemForm from '../components/ItemForm.vue'
 import { CATEGORIES, categoryLabel, categoryOf } from '../lib/categories'
 import { act, notify } from '../lib/toast'
-import { addQuick, archiveItem, items, unarchiveItem } from '../lib/store'
+import { describeQuickAdd } from '../lib/quickAdd'
+import { addQuick, archiveItem, archivedItems, completionOf, items, unarchiveItem } from '../lib/store'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 
 const editing = ref<ItemRow | undefined>()
@@ -16,7 +17,13 @@ const adding = ref(false)
 const filter = ref('')
 // Só as categorias que têm item, para o filtro não listar opções vazias.
 const present = computed(() => CATEGORIES.filter((c) => items.value.some((i) => categoryOf(i) === c.key)))
-const shown = computed(() => (filter.value ? items.value.filter((i) => categoryOf(i) === filter.value) : items.value))
+const matchesFilter = (i: ItemRow) => !filter.value || categoryOf(i) === filter.value
+// Tarefa concluída sai da lista principal (senão ela só cresce); fica numa seção recolhida, de onde pode ser arquivada.
+const isDoneTask = (i: ItemRow) => i.kind === 'task' && !!completionOf(i)?.done
+const shown = computed(() => items.value.filter((i) => matchesFilter(i) && !isDoneTask(i)))
+const doneTasks = computed(() => items.value.filter((i) => matchesFilter(i) && isDoneTask(i)))
+const archived = computed(() => archivedItems.value.filter(matchesFilter))
+const preview = computed(() => describeQuickAdd(quick.value))
 
 function edit(item?: ItemRow) {
   editing.value = item
@@ -27,8 +34,9 @@ async function quickAdd(kind: 'habit' | 'task') {
   adding.value = true
   error.value = ''
   try {
-    await addQuick(kind, quick.value)
+    const added = await addQuick(kind, quick.value)
     quick.value = ''
+    notify(addedText(added))
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -37,7 +45,11 @@ async function quickAdd(kind: 'habit' | 'task') {
 }
 function archive(item: ItemRow) {
   act(() => archiveItem(item.id))
-  notify(`${item.name} arquivado.`, { undo: () => unarchiveItem(item.id) })
+  notify(`${item.name} arquivado. Ele fica em “Arquivados”, no fim desta lista.`, { undo: () => unarchiveItem(item.id) })
+}
+function restore(item: ItemRow) {
+  act(() => unarchiveItem(item.id))
+  notify(`${item.name} restaurado.`)
 }
 </script>
 
@@ -48,7 +60,8 @@ function archive(item: ItemRow) {
     <ItemForm :key="editing?.id ?? 'new'" :item="editing" @saved="open = false" @cancel="open = false" />
   </div>
   <template v-else>
-    <input v-model="quick" placeholder="Adicionar rápido: Ler por 45 minutos" @keydown.enter.prevent="quickAdd('task')" />
+    <input v-model="quick" placeholder="Adicionar rápido: Ler por 45 minutos" aria-describedby="quick-preview" @keydown.enter.prevent="quickAdd('task')" />
+    <p v-if="preview" id="quick-preview" class="meta" :class="{ error: !preview.ok }">{{ preview.ok ? `Vai criar → ${preview.text}` : preview.text }}</p>
     <div class="row" style="margin: 8px 0">
       <button class="ghost" :disabled="adding" @click="quickAdd('task')">+ Tarefa hoje</button>
       <button class="ghost" :disabled="adding" @click="quickAdd('habit')">+ Hábito diário</button>
@@ -73,9 +86,30 @@ function archive(item: ItemRow) {
     </div>
     <div class="tools">
       <button class="icon-btn" aria-label="Editar" title="Editar" @click="edit(item)"><Icon name="edit" /></button>
-      <button class="icon-btn" aria-label="Arquivar" title="Arquivar" @click="archive(item)"><Icon name="archive" /></button>
+      <button class="icon-btn" aria-label="Arquivar: tira da lista, mas dá para restaurar" title="Arquivar (dá para restaurar)" @click="archive(item)"><Icon name="archive" /></button>
     </div>
   </div>
   </div>
   <p v-if="!items.length" class="empty">Nenhum item ainda. Adicione o primeiro acima.</p>
+
+  <details v-if="doneTasks.length" class="fold">
+    <summary>Tarefas concluídas ({{ doneTasks.length }})</summary>
+    <div class="list-grid">
+      <div v-for="item in doneTasks" :key="item.id" class="plain item-row">
+        <div class="grow"><strong>{{ item.name }}</strong><div class="meta">{{ item.duration_min }} min · concluída</div></div>
+        <div class="tools"><button class="ghost" @click="archive(item)"><Icon name="archive" :size="16" />Arquivar</button></div>
+      </div>
+    </div>
+  </details>
+
+  <details v-if="archived.length" class="fold">
+    <summary>Arquivados ({{ archived.length }})</summary>
+    <p class="meta">Itens arquivados não aparecem em Hoje, mas o que você já fez neles continua no histórico.</p>
+    <div class="list-grid">
+      <div v-for="item in archived" :key="item.id" class="plain item-row">
+        <div class="grow"><strong>{{ item.name }}</strong><div class="meta">{{ item.kind === 'task' ? 'Tarefa' : 'Hábito' }} · {{ item.duration_min }} min</div></div>
+        <div class="tools"><button class="ghost" @click="restore(item)"><Icon name="undo" :size="16" />Restaurar</button></div>
+      </div>
+    </div>
+  </details>
 </template>

@@ -9,3 +9,7 @@ export function weekdaysLabel(days: number[]): string {
   if (key === '06') return 'fins de semana'
   return [...days].sort().map((d) => LETTERS[d]).join(' ')
 }
+
+// Onde o item recém-criado foi parar, para o aviso não deixar dúvida.
+export const addedText = (r: { name: string; kind: 'habit' | 'task'; durationMin: number }) =>
+  r.kind === 'habit' ? `${r.name} adicionado como hábito diário (${r.durationMin} min).` : `${r.name} adicionada como tarefa de hoje (${r.durationMin} min).`

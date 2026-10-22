@@ -4,7 +4,10 @@ export interface Backup {
   version: 1
   items: Record<string, unknown>[]
   completions: Record<string, unknown>[]
+  profile?: Record<string, unknown> // rotina e alertas (opcional: backups antigos não têm)
 }
+
+const PROFILE_FIELDS = ['wake_time', 'sleep_time', 'tz', 'warn_min', 'urgent_min', 'fixed_grace_min', 'morning_summary', 'evening_summary', 'evening_min']
 
 // Texto que começa com = + - @ vira fórmula no Excel/Sheets: o apóstrofo mantém como texto.
 const csvCell = (v: unknown) => {
@@ -32,7 +35,8 @@ export function parseBackup(text: string): Backup {
   if (!data.items.every((i) => ok(i, ['id', 'kind', 'name', 'duration_min']))) throw new Error('Backup com itens inválidos')
   if (!data.completions.every((c) => ok(c, ['item_id', 'day']))) throw new Error('Backup com conclusões inválidas')
   const strip = (r: Record<string, unknown>) => Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'user_id'))
-  return { version: 1, items: data.items.map(strip), completions: data.completions.map(strip) }
+  const profile = data.profile && typeof data.profile === 'object' ? Object.fromEntries(PROFILE_FIELDS.filter((k) => k in data.profile!).map((k) => [k, data.profile![k]])) : undefined
+  return { version: 1, items: data.items.map(strip), completions: data.completions.map(strip), profile }
 }
 
 async function fetchAll() {
@@ -51,12 +55,13 @@ function download(name: string, text: string, type: string) {
 
 export async function exportCsv() {
   const { items, completions } = await fetchAll()
-  download('no-excuses.csv', buildCsv(items as never, completions as never), 'text/csv')
+  download('no-excuses.csv', `\uFEFF${buildCsv(items as never, completions as never)}`, 'text/csv;charset=utf-8') // BOM: o Excel abre os acentos certos
 }
 
 export async function exportBackup() {
   const { items, completions } = await fetchAll()
-  download('no-excuses-backup.json', JSON.stringify({ version: 1, items, completions } satisfies Backup, null, 2), 'application/json')
+  const profile = must(await supabase.from('profiles').select(PROFILE_FIELDS.join(',')).single()) as unknown as Record<string, unknown>
+  download('no-excuses-backup.json', JSON.stringify({ version: 1, items, completions, profile } satisfies Backup, null, 2), 'application/json')
 }
 
 export async function importBackup(file: File) {
@@ -64,4 +69,5 @@ export async function importBackup(file: File) {
   // Itens primeiro: as conclusões dependem deles (FK).
   must(await supabase.from('items').upsert(b.items))
   must(await supabase.from('item_completions').upsert(b.completions, { onConflict: 'item_id,day' }))
+  return b
 }

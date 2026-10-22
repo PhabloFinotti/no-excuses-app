@@ -15,7 +15,7 @@ const props = defineProps<{
   hasTimer: boolean
   running: boolean
   snoozed: boolean
-  rolled: boolean
+  rolledDays: number // dias de atraso de uma tarefa rolada (0 = não rolada)
 }>()
 defineEmits<{ done: [e: MouseEvent]; timer: []; focus: []; snooze: []; skip: []; open: [] }>()
 
@@ -28,7 +28,7 @@ const fraction = computed(() => Math.max(0, Math.min(1, secondsLeft.value / (Mat
 
 const span = (sec: number) => hm(Math.max(1, Math.ceil(sec / 60)))
 const timeLabel = computed(() =>
-  secondsLeft.value > 0 ? span(secondsLeft.value) : props.state.level === 'overdue' ? `há ${span(-secondsLeft.value)}` : 'agora',
+  secondsLeft.value > 0 ? `em ${span(secondsLeft.value)}` : props.state.level === 'overdue' ? `há ${span(-secondsLeft.value)}` : 'agora',
 )
 const clock = computed(() => `${Math.floor(props.elapsedS / 60)}:${String(Math.floor(props.elapsedS % 60)).padStart(2, '0')}`)
 const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.duration_min * 60)))
@@ -50,7 +50,7 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
       <p class="meta meta-line">
         <span>
           {{ item.duration_min }} min<template v-if="category"> · {{ category }}</template> · começar até <span class="num">{{ minToTime(state.deadlineMin) }}</span>
-          <template v-if="rolled"> · atrasada de ontem</template>
+          <template v-if="rolledDays"> · {{ rolledDays === 1 ? 'atrasada de ontem' : `atrasada há ${rolledDays} dias` }}</template>
           <template v-if="snoozed"> · alerta adiado</template>
         </span>
         <button class="link detail" aria-label="Detalhes: tempo e edição" @click="$emit('open')">Detalhes</button>
@@ -68,12 +68,14 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
 
       <div class="actions">
         <button class="btn primary done" @click="$emit('done', $event)"><Icon name="check" :size="20" />Feito</button>
-        <button class="icon-btn" :aria-label="running ? 'Pausar timer' : 'Iniciar timer'" :title="running ? 'Pausar' : 'Iniciar'" @click="$emit('timer')">
-          <Icon :name="running ? 'pause' : 'play'" />
+      </div>
+      <div class="tools-row">
+        <button class="ghost sub" :aria-label="running ? 'Pausar timer' : 'Iniciar timer'" @click="$emit('timer')">
+          <Icon :name="running ? 'pause' : 'play'" :size="18" />{{ running ? 'Pausar' : 'Timer' }}
         </button>
-        <button class="icon-btn" aria-label="Modo foco" title="Foco" @click="$emit('focus')"><Icon name="focus" /></button>
-        <button v-if="state.level !== 'normal' && !snoozed" class="icon-btn" aria-label="Adiar alerta em 10 minutos" title="Adiar 10 min" @click="$emit('snooze')"><Icon name="snooze" /></button>
-        <button class="icon-btn" :aria-label="item.kind === 'task' ? 'Descartar tarefa' : 'Pular hoje'" :title="item.kind === 'task' ? 'Descartar' : 'Pular hoje'" @click="$emit('skip')"><Icon name="skip" /></button>
+        <button class="ghost sub" aria-label="Modo foco: timer em tela cheia" @click="$emit('focus')"><Icon name="focus" :size="18" />Foco</button>
+        <button v-if="state.level !== 'normal' && !snoozed" class="ghost sub" aria-label="Adiar o alerta em 10 minutos (o item continua na lista)" @click="$emit('snooze')"><Icon name="snooze" :size="18" />Adiar alerta</button>
+        <button class="ghost sub" :aria-label="item.kind === 'task' ? 'Descartar tarefa' : 'Pular hoje'" @click="$emit('skip')"><Icon name="skip" :size="18" />{{ item.kind === 'task' ? 'Descartar' : 'Pular hoje' }}</button>
       </div>
     </article>
   </div>

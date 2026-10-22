@@ -4,7 +4,7 @@ import { authReady, isWriting, items, loadAll, markDone, profile, session, snooz
 import { supabase } from './lib/supabase'
 import BrandMark from './components/BrandMark.vue'
 import Icon from './components/Icon.vue'
-import { act, notify, toast } from './lib/toast'
+import { act, dismiss, notify, toasts } from './lib/toast'
 import LoginView from './views/LoginView.vue'
 import TodayView from './views/TodayView.vue'
 import ItemsView from './views/ItemsView.vue'
@@ -101,10 +101,12 @@ onMounted(async () => {
         <SettingsView v-else />
       </template>
     </main>
-    <div v-if="toast" class="toast" :class="{ error: toast.error }" :role="toast.error ? 'alert' : 'status'">
-      <span>{{ toast.text }}</span>
-      <button v-if="toast.action" @click="toast.action.run(); toast = null">{{ toast.action.label }}</button>
-      <button v-if="toast.undo" @click="act(toast.undo); toast = null">Desfazer</button>
+    <div class="toasts" aria-live="polite">
+      <div v-for="t in toasts" :key="t.id" class="toast" :class="{ error: t.error }" :role="t.error ? 'alert' : 'status'">
+        <span>{{ t.text }}</span>
+        <button v-if="t.action" @click="t.action.run(); dismiss(t.id)">{{ t.action.label }}</button>
+        <button v-if="t.undo" @click="act(t.undo); dismiss(t.id)">Desfazer</button>
+      </div>
     </div>
   </div>
 </template>

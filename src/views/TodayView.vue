@@ -12,7 +12,7 @@ import { act, notify } from '../lib/toast'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { formatMinutes as hm, timeToMin } from '../../supabase/functions/_shared/time'
-import { calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, rescheduleToday, skipItem, snoozeItem, staleTasks, startTimer, undoToday } from '../lib/store'
+import { calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, rescheduleToday, skipItem, skippedToday, snoozeItem, staleTasks, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
   calc.value.states
@@ -39,7 +39,8 @@ const lastAction = ref<'done' | 'skip'>('done') // define a animação de saída
 const running = (item: ItemRow) => !!completionOf(item)?.timer_started_at
 const elapsed = (item: ItemRow) => elapsedSeconds(completionOf(item), nowMs.value)
 const hasTimer = (item: ItemRow) => running(item) || (completionOf(item)?.timer_accum_s ?? 0) > 0
-const rolled = (item: ItemRow) => item.kind === 'task' && item.due_date! < now.value.day
+// Dias de atraso de uma tarefa rolada (0 = vence hoje ou depois).
+const rolledDays = (item: ItemRow) => (item.kind === 'task' && item.due_date! < now.value.day ? Math.round((Date.parse(now.value.day) - Date.parse(item.due_date!)) / 86_400_000) : 0)
 const warnOf = (item: ItemRow) => item.warn_min ?? profile.value?.warn_min ?? 30
 
 function complete(item: ItemRow, e?: MouseEvent, minutes?: number) {
@@ -53,7 +54,7 @@ function complete(item: ItemRow, e?: MouseEvent, minutes?: number) {
   // Sem timer nem minutos informados, o app grava o previsto: avisa e oferece corrigir.
   const planned = minutes == null && elapsed(item) < 60
   act(() => markDone(item, minutes))
-  notify(planned ? `${item.name} feito · ${item.duration_min} min (previsto).` : `${item.name} feito.`, {
+  notify(planned ? `${item.name} feito · ${item.duration_min} min (estimado, sem timer).` : `${item.name} feito.`, {
     undo: () => undoToday(item),
     action: planned ? { label: 'Ajustar tempo', run: () => (detail.value = item) } : undefined,
   }, planned ? 7000 : 5000)
@@ -111,7 +112,17 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
     <h2>Dia fechado.</h2>
     <p>Tudo feito. Sem desculpas.</p>
   </section>
-  <p v-else-if="!rows.length && !staleTasks.length" class="empty">Nada para hoje. Cadastre um hábito ou uma tarefa na aba Itens.</p>
+  <p v-else-if="!rows.length && !staleTasks.length" class="empty">Nada para hoje. Toque em + para adicionar o primeiro item.</p>
+
+  <details v-if="rows.length" class="howto">
+    <summary>Como ler esta tela</summary>
+    <ul>
+      <li><strong>Começar até</strong> é o último momento em que dá para iniciar o item e ainda terminar tudo antes de dormir.</li>
+      <li>A <strong>barra</strong> esvazia até esse momento. Quando acaba, o item está atrasado.</li>
+      <li><strong>Neutro</strong>: tem tempo. <strong>Amarelo</strong>: atenção. <strong>Vermelho vivo</strong>: urgente. <strong>Vermelho escuro</strong>: atrasado.</li>
+      <li><strong>Adiar alerta</strong> só silencia o aviso por 10 min. <strong>Pular hoje</strong> tira o item do dia.</li>
+    </ul>
+  </details>
 
   <div class="split">
   <div class="split-main">
@@ -129,7 +140,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
         :has-timer="hasTimer(item)"
         :running="running(item)"
         :snoozed="isSnoozed(item)"
-        :rolled="rolled(item)"
+        :rolled-days="rolledDays(item)"
         @done="complete(item, $event)"
         @timer="act(() => (running(item) ? pauseTimer(item) : startTimer(item)))"
         @focus="focused = item"
@@ -154,6 +165,14 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
     </div>
   </template>
 
+  <template v-if="skippedToday.length">
+    <h2 class="section">Pulados hoje</h2>
+    <div v-for="item in skippedToday" :key="item.id" class="plain done-row">
+      <span class="done-name meta">{{ item.name }}</span>
+      <button class="btn ghost" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" />Voltar para a lista</button>
+    </div>
+  </template>
+
   <template v-if="doneToday.length">
     <h2 class="section">Feitos hoje</h2>
     <TransitionGroup name="item" tag="div">
@@ -162,7 +181,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
           <span class="done-check"><Icon name="check" :size="16" /></span>
           <button class="link done-name" @click="detail = item">{{ item.name }}</button>
           <button class="link time-chip" aria-label="Ajustar o tempo registrado" @click="detail = item">
-            <span class="num">{{ completionOf(item)?.spent_min ?? 0 }} min</span><span v-if="completionOf(item)?.time_source === 'planned'" class="planned">previsto</span>
+            <span class="num">{{ completionOf(item)?.spent_min ?? 0 }} min</span><span v-if="completionOf(item)?.time_source === 'planned'" class="planned">estimado</span>
           </button>
           <button class="icon-btn small" aria-label="Desfazer" title="Desfazer" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" /></button>
         </div>
