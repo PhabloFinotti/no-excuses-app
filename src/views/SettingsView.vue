@@ -28,6 +28,8 @@ function validTz(tz: string) {
 }
 const save = () => run(() => {
   if (!validTz(form.tz)) throw new Error(`Fuso inválido: ${form.tz}`)
+  if (form.sleep_time.slice(0, 5) <= form.wake_time.slice(0, 5)) throw new Error('O horário de dormir precisa ser depois do de acordar (no mesmo dia).')
+  if ([form.warn_min, form.urgent_min, form.fixed_grace_min, form.evening_min].some((n) => !Number.isFinite(n) || n < 0)) throw new Error('Os minutos precisam ser números a partir de 0.')
   return saveProfile({ ...form, wake_time: form.wake_time.slice(0, 5), sleep_time: form.sleep_time.slice(0, 5) })
 }, 'Salvo.')
 </script>

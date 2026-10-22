@@ -68,8 +68,13 @@ export async function loadAll() {
   completions.value = must(await supabase.from('item_completions').select('*').gte('day', since)) as CompletionRow[]
 }
 
+// Só os campos editáveis em Ajustes: o formulário guarda uma cópia do perfil, e mandar a linha inteira
+// desfaria mudanças feitas em outro aparelho (ex.: calendar_connected).
+const EDITABLE = ['wake_time', 'sleep_time', 'tz', 'warn_min', 'urgent_min', 'fixed_grace_min', 'morning_summary', 'evening_summary', 'evening_min'] as const
+
 export async function saveProfile(patch: Partial<ProfileRow>) {
-  profile.value = must(await supabase.from('profiles').update(patch).eq('user_id', session.value!.user.id).select().single())
+  const fields = Object.fromEntries(EDITABLE.filter((k) => k in patch).map((k) => [k, patch[k]]))
+  profile.value = must(await tracked(async () => supabase.from('profiles').update(fields).eq('user_id', session.value!.user.id).select().single()))
 }
 
 export async function saveItem(form: ItemForm) {

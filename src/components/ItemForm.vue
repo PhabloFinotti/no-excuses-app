@@ -28,6 +28,10 @@ const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
 async function submit() {
   error.value = ''
+  if (!Number.isInteger(form.duration_min) || form.duration_min < 1 || form.duration_min > 1440) {
+    error.value = 'A duração precisa ser um número inteiro de 1 a 1440 minutos.'
+    return
+  }
   try {
     await saveItem({ ...form, fixed_time: form.fixed_time || null, warn_min: num(form.warn_min), urgent_min: num(form.urgent_min) })
     if (form.kind === 'task' && !props.item && !profile.value?.calendar_connected) {
@@ -48,7 +52,7 @@ async function submit() {
       <button type="button" :class="{ on: form.kind === 'task' }" class="ghost" @click="setKind('task')">Tarefa avulsa</button>
     </div>
     <label>Nome<input v-model="form.name" required /></label>
-    <label>Duração prevista (min)<input v-model.number="form.duration_min" type="number" min="1" required /></label>
+    <label>Duração prevista (min)<input v-model.number="form.duration_min" type="number" min="1" max="1440" step="1" required /></label>
     <label>Horário fixo (opcional)<input v-model="form.fixed_time" type="time" /></label>
     <template v-if="form.kind === 'habit'">
       <label>Dias</label>
