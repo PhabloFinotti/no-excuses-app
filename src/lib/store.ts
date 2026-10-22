@@ -32,6 +32,8 @@ setInterval(() => !document.hidden && (nowMs.value = Date.now()), 1000)
 
 const tz = () => profile.value?.tz ?? 'America/Sao_Paulo'
 export const now = computed(() => localTime(new Date(nowMs.value), tz()))
+// Só o dia: texto igual de um segundo para o outro, então quem usa `today` não recalcula a cada tick (`now` é um objeto novo por segundo).
+export const today = computed(() => now.value.day)
 
 export const calc = computed(() => {
   const p = profile.value

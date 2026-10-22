@@ -3,12 +3,12 @@ import { computed, ref } from 'vue'
 import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
 import { act } from '../lib/toast'
-import { completions, items, now, setDuration } from '../lib/store'
+import { completions, items, setDuration, today } from '../lib/store'
 import { computeHabitDetail, computeStats } from '../lib/stats'
 
 const RANGES = [7, 30, 90] as const
 const days = ref<(typeof RANGES)[number]>(30)
-const stats = computed(() => computeStats(items.value, completions.value, now.value.day, days.value))
+const stats = computed(() => computeStats(items.value, completions.value, today.value, days.value))
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const dayTitle = (day: string) => `${WEEKDAYS[new Date(`${day}T00:00:00Z`).getUTCDay()]!.slice(0, 3)}, ${shortDate(day)}`
@@ -24,7 +24,7 @@ const xTicks = computed(() => ticksFor(stats.value.cells))
 const habits = computed(() => items.value.filter((i) => i.kind === 'habit'))
 const selectedId = ref('')
 const habit = computed(() => habits.value.find((h) => h.id === selectedId.value))
-const detail = computed(() => (habit.value ? computeHabitDetail(habit.value, completions.value, now.value.day, days.value) : null))
+const detail = computed(() => (habit.value ? computeHabitDetail(habit.value, completions.value, today.value, days.value) : null))
 const habitCard = computed(() => stats.value.habitStats.find((h) => h.id === habit.value?.id))
 const detailTitles = computed(() => detail.value?.cells.map((c) => dayTitle(c.day)) ?? [])
 // Melhores dias (pode haver empate): só entre os dias em que o hábito é agendado.
@@ -154,7 +154,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <div
       v-for="c in calendar"
       :key="c.day"
-      :class="{ has: c.has, today: c.day === now.day }"
+      :class="{ has: c.has, today: c.day === today }"
       :style="{ background: c.bg }"
       :title="c.title"
     >{{ Number(c.day.slice(8)) }}</div>
