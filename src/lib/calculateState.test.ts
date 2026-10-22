@@ -69,4 +69,12 @@ describe('calculateState', () => {
     expect(r.suggestSkips).toEqual(['a'])
     expect(r.unavoidableMin).toBeGreaterThan(0)
   })
+
+  it('recovery: one skip that covers the deficit leaves nothing unavoidable', () => {
+    const items = [{ id: 'a', durationMin: 60 }, { id: 'b', durationMin: 60 }, { id: 'c', durationMin: 60 }]
+    const r = calculateState(items, h(19, 30), { ...cfg, sleepMin: h(22) })
+    expect(r.deficitMin).toBe(30)
+    expect(r.suggestSkips).toHaveLength(1)
+    expect(r.unavoidableMin).toBe(0)
+  })
 })

@@ -73,7 +73,10 @@ export function calculateState(items: Item[], nowMin: number, cfg: Config): Resu
   const single = candidates.find((i) => i.durationMin >= deficitMin)
   const suggestSkips: string[] = []
   let left = deficitMin
-  if (deficitMin && single) suggestSkips.push(single.id)
+  if (deficitMin && single) {
+    suggestSkips.push(single.id)
+    left = 0 // um só cobre tudo: não sobra déficit
+  }
   else
     for (const i of [...candidates].reverse()) {
       if (left <= 0) break
