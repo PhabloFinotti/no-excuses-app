@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// O módulo real cria o cliente do Supabase ao ser importado e exige as variáveis VITE_*; aqui só se testam funções puras.
+vi.mock('./supabase', () => ({ supabase: {}, must: (r: unknown) => r }))
 import { buildCsv, parseBackup } from './backup'
 
 describe('buildCsv', () => {
