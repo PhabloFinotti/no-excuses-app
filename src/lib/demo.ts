@@ -41,8 +41,8 @@ function seed() {
 
 const KEYS: Record<string, string[]> = { items: ['id'], item_completions: ['item_id', 'day'], profiles: ['user_id'] }
 
-class Query {
-  private op: 'select' | 'upsert' | 'update' = 'select'
+export class Query {
+  private op: 'select' | 'upsert' | 'update' | 'delete' = 'select'
   private payload: Row | Row[] = {}
   private filters: ((r: Row) => boolean)[] = []
   private conflict: string[]
@@ -67,6 +67,7 @@ class Query {
     return this
   }
   update(p: Row) { this.op = 'update'; this.payload = p; return this }
+  delete() { this.op = 'delete'; return this }
   then(ok?: (v: { data: any; error: null }) => unknown, bad?: (e: unknown) => unknown) {
     return Promise.resolve().then(() => this.run()).then(ok, bad)
   }
@@ -77,8 +78,10 @@ class Query {
       out = []
       for (const p of Array.isArray(this.payload) ? this.payload : [this.payload]) {
         const hit = rows.find((r) => this.conflict.every((k) => r[k] === p[k] || (k === 'user_id' && p[k] === undefined)))
-        if (hit && !this.ignoreDup) Object.assign(hit, p)
-        if (hit) { out.push(hit); continue }
+        if (hit) {
+          if (!this.ignoreDup) { Object.assign(hit, p); out.push(hit) } // ignoreDuplicates devolve só o que foi inserido, como o PostgREST
+          continue
+        }
         const base: Row = { user_id: 'demo', created_at: new Date().toISOString(), archived: false, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0 }
         if (this.table === 'items') base.id = uid()
         const row = { ...base, ...p }
@@ -88,11 +91,15 @@ class Query {
     } else {
       out = rows.filter((r) => this.filters.every((f) => f(r)))
       if (this.op === 'update') out.forEach((r) => Object.assign(r, this.payload))
+      if (this.op === 'delete') for (const r of out) rows.splice(rows.indexOf(r), 1)
       if (this.orderCol) out.sort((a, b) => String(a[this.orderCol!]).localeCompare(String(b[this.orderCol!])))
     }
     return { data: this.one ? (out[0] ? { ...out[0] } : null) : out.map((r) => ({ ...r })), error: null }
   }
 }
+
+// Banco falso para testes: `fakeDb({ tabela: [linhas] })`.
+export const fakeDb = (data: Record<string, Row[]>) => ({ from: (t: string) => new Query(data, t) })
 
 export function createFake() {
   const db = seed()

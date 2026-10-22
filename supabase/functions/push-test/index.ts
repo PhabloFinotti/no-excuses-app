@@ -16,6 +16,6 @@ Deno.serve(async (req) => {
   configurePush()
   // Compare esta hora com a de chegada na tela do celular para medir o atraso.
   const sentAt = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-  const sent = await sendToUser(db, user.id, { title: 'Teste de push', body: `Enviado às ${sentAt}`, tag: 'test', level: 'test' })
+  const { sent } = await sendToUser(db, user.id, { title: 'Teste de push', body: `Enviado às ${sentAt}`, tag: 'test', level: 'test' })
   return Response.json({ sent }, { headers: cors })
 })

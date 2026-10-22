@@ -15,3 +15,14 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: ci
           VITE_VAPID_PUBLIC_KEY: ci
+
+  # Confere os tipos das Edge Functions (o `tsc` do app não enxerga o Deno). Não bloqueia enquanto
+  # não rodou uma vez de ponta a ponta; tire o continue-on-error depois do primeiro verde.
+  functions-typecheck:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: deno check supabase/functions/*/index.ts
