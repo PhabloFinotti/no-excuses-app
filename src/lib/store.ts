@@ -21,11 +21,12 @@ export interface ProfileRow {
   calendar_connected: boolean
 }
 
-export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'created_at'> & { id?: string }
+export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'archived_at' | 'created_at'> & { id?: string }
 
 export const session = ref<Session | null>(null)
 export const profile = ref<ProfileRow | null>(null)
 export const items = ref<ItemRow[]>([])
+export const archivedItems = ref<ItemRow[]>([]) // só para o histórico: o que foi feito antes de arquivar continua contando
 export const completions = ref<CompletionRow[]>([])
 export const nowMs = ref(Date.now())
 // 1s para a barra de tempo e o timer andarem suaves; parado com a aba oculta.
@@ -64,6 +65,7 @@ export const isItemPending = (item: ItemRow) => isPending(item, completions.valu
 export async function loadAll() {
   profile.value = must(await supabase.from('profiles').select('*').single())
   items.value = must(await supabase.from('items').select('*').eq('archived', false).order('created_at')) as ItemRow[]
+  archivedItems.value = must(await supabase.from('items').select('*').eq('archived', true)) as ItemRow[]
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
   completions.value = must(await supabase.from('item_completions').select('*').gte('day', since)) as CompletionRow[]
 }
@@ -85,7 +87,7 @@ export async function saveItem(form: ItemForm) {
 
 export async function archiveItem(id: string) {
   const wasTask = items.value.find((i) => i.id === id)?.kind === 'task'
-  await tracked(async () => must(await supabase.from('items').update({ archived: true }).eq('id', id)))
+  await tracked(async () => must(await supabase.from('items').update({ archived: true, archived_at: new Date().toISOString() }).eq('id', id)))
   await loadAll()
   if (wasTask) syncCalendar(id)
 }
@@ -165,7 +167,7 @@ export async function rescheduleTo(item: ItemRow, day: string) {
 export const rescheduleToday = (item: ItemRow) => rescheduleTo(item, now.value.day)
 
 export async function unarchiveItem(id: string) {
-  await tracked(async () => must(await supabase.from('items').update({ archived: false }).eq('id', id)))
+  await tracked(async () => must(await supabase.from('items').update({ archived: false, archived_at: null }).eq('id', id)))
   await loadAll()
   syncCalendar(id) // o servidor ignora se não for tarefa
 }
@@ -182,7 +184,7 @@ export async function addQuick(kind: 'habit' | 'task', text: string) {
   if (!parsed) throw new Error('Digite um nome e, se quiser, a duração: "Ler 45"')
   const due_date = kind === 'task' ? now.value.day : null
   await saveItem({
-    kind, name: parsed.name, duration_min: parsed.durationMin, fixed_time: null, essential: false, warn_min: null, urgent_min: null,
+    kind, name: parsed.name, duration_min: parsed.durationMin, category: null, fixed_time: null, essential: false, warn_min: null, urgent_min: null,
     weekdays: kind === 'habit' ? [0, 1, 2, 3, 4, 5, 6] : [], due_date,
   })
   return { ...parsed, due_date }
@@ -200,6 +202,7 @@ export async function signOut() {
   await supabase.auth.signOut()
   profile.value = null
   items.value = []
+  archivedItems.value = []
   completions.value = []
 }
 

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { ItemState } from '../lib/calculateState'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { formatMinutes as hm, minToTime } from '../../supabase/functions/_shared/time'
+import { categoryLabel, categoryOf } from '../lib/categories'
 import Icon from './Icon.vue'
 
 const props = defineProps<{
@@ -18,6 +19,7 @@ const props = defineProps<{
 }>()
 defineEmits<{ done: [e: MouseEvent]; timer: []; focus: []; snooze: []; skip: []; open: [] }>()
 
+const category = computed(() => categoryLabel(categoryOf(props.item)))
 const LABEL = { normal: '', attention: 'Atenção', urgent: 'Urgente', overdue: 'Atrasado' } as const
 
 // A barra drena até o limite de início: começa a esvaziar 2x a janela de atenção antes.
@@ -47,7 +49,7 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
 
       <p class="meta meta-line">
         <span>
-          {{ item.duration_min }} min · começar até <span class="num">{{ minToTime(state.deadlineMin) }}</span>
+          {{ item.duration_min }} min<template v-if="category"> · {{ category }}</template> · começar até <span class="num">{{ minToTime(state.deadlineMin) }}</span>
           <template v-if="rolled"> · atrasada de ontem</template>
           <template v-if="snoozed"> · alerta adiado</template>
         </span>

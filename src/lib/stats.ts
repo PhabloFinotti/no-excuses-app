@@ -1,10 +1,11 @@
 import { addDays } from '../../supabase/functions/_shared/time'
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
+import { categoryOf, CATEGORIES } from './categories'
 
 export interface DayCell { day: string; scheduled: number; done: number; minutes: number }
 export interface HabitStats {
   id: string; name: string; durationMin: number; scheduled: number; done: number; rate: number
-  avgSpentMin: number; p50Min: number; p80Min: number; samples: number; suggestedDurationMin?: number; streak: number
+  archived: boolean; avgSpentMin: number; p50Min: number; p80Min: number; samples: number; suggestedDurationMin?: number; streak: number
 }
 
 // Percentil por posto mais próximo (sem interpolar): com poucas amostras é o valor realmente medido.
@@ -15,6 +16,9 @@ export const percentile = (values: number[], p: number) => {
 }
 
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
+
+// Hábito arquivado só conta como agendado antes do dia em que foi arquivado (nesse dia, só se foi feito).
+const lastDayOf = (h: ItemRow) => h.archived_at?.slice(0, 10) ?? '9999-12-31'
 
 export function computeStats(items: ItemRow[], completions: CompletionRow[], today: string, days = 30) {
   // Antes do primeiro item cadastrado não há dado: esses dias ficam fora da série (não são "zero").
@@ -40,7 +44,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   const habitStats: HabitStats[] = habits.map((h) => {
     const start = h.created_at.slice(0, 10)
     // Hoje só conta se já foi feito, para não penalizar o dia em andamento.
-    const scheduledDays = window.filter((d) => d >= start && h.weekdays.includes(weekdayOf(d)) && (d < today || doneOn(h.id, d)))
+    const scheduledDays = window.filter((d) => d >= start && (d < lastDayOf(h) || doneOn(h.id, d)) && h.weekdays.includes(weekdayOf(d)) && (d < today || doneOn(h.id, d)))
     const done = scheduledDays.filter((d) => doneOn(h.id, d)).length
     const spent = (spentByItem.get(h.id) ?? []).filter((c) => inWindow.has(c.day))
     let streak = 0
@@ -53,7 +57,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
     // Com 3+ medições e desvio >= 25% do planejado, sugere ajustar (arredondado a 5 min).
     const off = avgSpentMin && Math.abs(avgSpentMin - h.duration_min) / h.duration_min >= 0.25
     return {
-      id: h.id, name: h.name, durationMin: h.duration_min, samples: spent.length,
+      id: h.id, name: h.name, archived: h.archived, durationMin: h.duration_min, samples: spent.length,
       suggestedDurationMin: spent.length >= 3 && off ? Math.max(5, Math.round(avgSpentMin / 5) * 5) : undefined,
       scheduled: scheduledDays.length, done,
       rate: scheduledDays.length ? done / scheduledDays.length : 0,
@@ -64,7 +68,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   })
 
   const cells: DayCell[] = window.map((day) => {
-    const scheduled = habits.filter((h) => day >= h.created_at.slice(0, 10) && h.weekdays.includes(weekdayOf(day)) && (day < today || doneOn(h.id, day)))
+    const scheduled = habits.filter((h) => day >= h.created_at.slice(0, 10) && (day < lastDayOf(h) || doneOn(h.id, day)) && h.weekdays.includes(weekdayOf(day)) && (day < today || doneOn(h.id, day)))
     const tasks = doneTasksByDay.get(day) ?? 0
     const minutes = minutesByDay.get(day) ?? 0
     return { day, scheduled: scheduled.length + tasks, done: scheduled.filter((h) => doneOn(h.id, day)).length + tasks, minutes }
@@ -127,4 +131,34 @@ export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], tod
     avgMinutes: timed.length ? Math.round(timed.reduce((s, c) => s + c.spent_min, 0) / timed.length) : 0, timedSamples: timed.length,
     weekdayRate,
   }
+}
+
+
+export interface CategoryStat { key: string; label: string; itemCount: number; activeDays: number; days: number; streak: number; minutes: number; done: number }
+
+// Por categoria, sem olhar o item: um dia conta se QUALQUER item da categoria foi feito ("Ler 10 páginas" e "Ler livro tal" somam).
+export function computeCategoryStats(items: ItemRow[], completions: CompletionRow[], today: string, days = 30): CategoryStat[] {
+  const byItem = new Map<string, string>()
+  for (const i of items) {
+    const key = categoryOf(i)
+    if (key) byItem.set(i.id, key)
+  }
+  const window = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1))
+  return CATEGORIES.flatMap((c) => {
+    const mine = items.filter((i) => byItem.get(i.id) === c.key)
+    if (!mine.length) return []
+    const first = mine.map((i) => i.created_at.slice(0, 10)).sort()[0]!
+    const range = window.filter((d) => d >= first || d === today)
+    const inRange = new Set(range)
+    const ids = new Set(mine.map((i) => i.id))
+    const rows = completions.filter((r) => r.done && ids.has(r.item_id) && inRange.has(r.day))
+    const active = new Set(rows.map((r) => r.day))
+    // Sequência: dias seguidos com atividade até hoje; hoje ainda sem nada não quebra.
+    let streak = 0
+    for (const d of [...range].reverse()) {
+      if (active.has(d)) streak++
+      else if (d !== today) break
+    }
+    return [{ key: c.key, label: c.label, itemCount: mine.filter((i) => !i.archived).length, activeDays: active.size, days: range.length, streak, minutes: rows.reduce((s, r) => s + r.spent_min, 0), done: rows.length }]
+  })
 }

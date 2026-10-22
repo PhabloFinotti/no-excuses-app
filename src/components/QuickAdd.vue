@@ -36,8 +36,8 @@ async function submit() {
   <Sheet v-if="open" title="Adicionar rápido" @close="close">
     <form class="stack" @submit.prevent="submit">
       <h2>Adicionar rápido</h2>
-      <input v-model="text" placeholder="Ler livro 45" aria-label="Nome e duração em minutos" autocomplete="off" required />
-      <p class="meta">Escreva o nome e, no fim, a duração em minutos. Sem número, vale 30.</p>
+      <input v-model="text" placeholder="Ler por 45 minutos" aria-label="Nome e duração em minutos" autocomplete="off" required />
+      <p class="meta">Escreva o nome e, no fim, a duração: 45, 45 min, 1h30 ou “por 2 horas”. Sem duração, vale 30 min. A categoria (Leitura, Estudo…) é descoberta pelo nome.</p>
       <div class="chips">
         <button type="button" class="ghost" :class="{ on: kind === 'task' }" @click="kind = 'task'">Tarefa de hoje</button>
         <button type="button" class="ghost" :class="{ on: kind === 'habit' }" @click="kind = 'habit'">Hábito todo dia</button>

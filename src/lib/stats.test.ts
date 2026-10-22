@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeHabitDetail, computeStats, percentile } from './stats'
+import { computeCategoryStats, computeHabitDetail, computeStats, percentile } from './stats'
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
 const habit: ItemRow = { id: 'h', kind: 'habit', name: 'Reading', duration_min: 30, fixed_time: null, weekdays: [0, 1, 2, 3, 4, 5, 6], due_date: null, essential: false, warn_min: null, urgent_min: null, archived: false, created_at: '2026-10-01T00:00:00Z' }
@@ -96,5 +96,33 @@ describe('percentile', () => {
     expect(percentile([20, 25, 30, 40, 60], 50)).toBe(30)
     expect(percentile([20, 25, 30, 40, 60], 80)).toBe(40)
     expect(percentile([45], 80)).toBe(45)
+  })
+})
+
+describe('archived habits and categories', () => {
+  const pages = { ...habit, id: 'p', name: 'Ler 10 páginas' }
+  const book = { ...habit, id: 'b', name: 'Ler livro tal' }
+  const rows = (id: string, days: string[]) => days.map((day): CompletionRow => ({ ...done(day), item_id: id }))
+
+  it('an archived habit stops counting as scheduled after the day it was archived', () => {
+    const old = { ...habit, archived: true, archived_at: '2026-10-10T12:00:00Z' }
+    const s = computeStats([old], [], '2026-10-21').habitStats[0]!
+    expect(s.scheduled).toBe(9) // 01..09/10; o dia do arquivamento não conta como falha
+  })
+
+  it('groups habits of the same category: a day counts if any of them was done', () => {
+    const c = [...rows('p', ['2026-10-18', '2026-10-19']), ...rows('b', ['2026-10-19', '2026-10-20'])]
+    const [reading] = computeCategoryStats([pages, book], c, '2026-10-21')
+    expect(reading).toMatchObject({ key: 'reading', itemCount: 2, activeDays: 3, streak: 3, done: 4 })
+  })
+
+  it('keeps the history of an archived item in its category', () => {
+    const gone = { ...pages, archived: true, archived_at: '2026-10-19T00:00:00Z' }
+    const [reading] = computeCategoryStats([gone, book], [...rows('p', ['2026-10-17']), ...rows('b', ['2026-10-18'])], '2026-10-21')
+    expect(reading).toMatchObject({ itemCount: 1, activeDays: 2 })
+  })
+
+  it('items without a category do not show up', () => {
+    expect(computeCategoryStats([{ ...habit, name: 'Xablau' }], [], '2026-10-21')).toEqual([])
   })
 })

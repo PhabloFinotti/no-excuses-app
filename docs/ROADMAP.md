@@ -12,6 +12,10 @@ Decisões tomadas: tolerância de hábito fixo 15 min (configurável); tarefa pa
 Alerta some da bandeja ao concluir, pular ou adiar; diagnóstico de push em Ajustes; percentis P50/P80 no histórico; modo de recuperação (sugere pular quantos itens forem preciso e mostra o déficit que sobra); `notification_log` filtrado por perfil; constraints validadas; `scripts/rls-check.mjs`.
 Adiados de propósito: dormir após a meia-noite, preferências de ordem, estado "received" do push, e2e completo, revisão semanal (esperar uso real).
 
+## Categorias (implementado)
+Categorias fixas (Estudo, Leitura, Exercício, Saúde, Mente, Trabalho, Casa, Finanças, Social, Criação) descobertas pelo nome (`src/lib/categories.ts`), com escolha manual ou "sem categoria" no formulário. Histórico por categoria: um dia conta se qualquer item dela foi feito, e itens arquivados continuam valendo. Duração no nome ("Ler por 60 minutos", "Estudar 1h30") vira nome + duração no formulário e na adição rápida.
+Adiado: categorias criadas pelo usuário (exigiria tabela própria e escolha de chave), filtro por categoria na tela Hoje.
+
 ## Fase 0: validar o que existe (gate para o resto)
 Já listado em `TASKS.md` (V1 a V7). Acrescento:
 - [ ] F0.1 Usar o app 2 a 3 dias reais e anotar atritos em `docs/NOTES.md`. Pronto: lista de problemas reais priorizada.

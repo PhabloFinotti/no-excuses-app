@@ -3,13 +3,22 @@ import { computed, ref } from 'vue'
 import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
 import { act } from '../lib/toast'
-import { completions, items, setDuration, today } from '../lib/store'
+import { archivedItems, completions, items, setDuration, today } from '../lib/store'
+import { categoryOf } from '../lib/categories'
 import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
-import { computeHabitDetail, computeStats } from '../lib/stats'
+import { computeCategoryStats, computeHabitDetail, computeStats } from '../lib/stats'
 
 const RANGES = [7, 30, 90] as const
 const days = ref<(typeof RANGES)[number]>(30)
-const stats = computed(() => computeStats(items.value, completions.value, today.value, days.value))
+// Escopo: todos, uma categoria ("cat:reading") ou um hábito (id). Itens arquivados entram só com o que já aconteceu.
+const selectedId = ref('')
+const catKey = computed(() => (selectedId.value.startsWith('cat:') ? selectedId.value.slice(4) : ''))
+const everything = computed(() => [...items.value, ...archivedItems.value])
+const scoped = computed(() => (catKey.value ? everything.value.filter((i) => categoryOf(i) === catKey.value) : everything.value))
+const stats = computed(() => computeStats(scoped.value, completions.value, today.value, days.value))
+const categories = computed(() => computeCategoryStats(everything.value, completions.value, today.value, days.value))
+const catCard = computed(() => categories.value.find((c) => c.key === catKey.value))
+const activeHabitStats = computed(() => stats.value.habitStats.filter((h) => !h.archived))
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const dayTitle = (day: string) => `${WEEKDAYS[new Date(`${day}T00:00:00Z`).getUTCDay()]!.slice(0, 3)}, ${shortDate(day)}`
@@ -23,7 +32,6 @@ const xTicks = computed(() => ticksFor(stats.value.cells))
 
 // Escopo: todos os itens ou um hábito específico.
 const habits = computed(() => items.value.filter((i) => i.kind === 'habit'))
-const selectedId = ref('')
 const habit = computed(() => habits.value.find((h) => h.id === selectedId.value))
 const detail = computed(() => (habit.value ? computeHabitDetail(habit.value, completions.value, today.value, days.value) : null))
 const habitCard = computed(() => stats.value.habitStats.find((h) => h.id === habit.value?.id))
@@ -74,7 +82,12 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </div>
     <select v-model="selectedId" aria-label="Escopo do histórico">
       <option value="">Todos os itens</option>
-      <option v-for="h in habits" :key="h.id" :value="h.id">{{ h.name }}</option>
+      <optgroup v-if="categories.length" label="Categorias">
+        <option v-for="c in categories" :key="c.key" :value="`cat:${c.key}`">{{ c.label }}</option>
+      </optgroup>
+      <optgroup label="Hábitos">
+        <option v-for="h in habits" :key="h.id" :value="h.id">{{ h.name }}</option>
+      </optgroup>
     </select>
   </div>
 
@@ -119,6 +132,28 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
   </template>
 
   <template v-else>
+    <section v-if="catCard">
+  <h2 class="section">{{ catCard.label }}</h2>
+  <div class="plain stat">
+    <div class="stat-top">
+      <strong>Dias com {{ catCard.label.toLowerCase() }}</strong>
+      <span class="stat-rate">{{ catCard.activeDays }}/{{ catCard.days }}</span>
+    </div>
+    <div class="track"><div class="fill ok" :style="{ transform: `scaleX(${catCard.activeDays / catCard.days})` }" /></div>
+    <p class="meta">Um dia conta se qualquer item desta categoria foi feito · sequência <span class="num">{{ catCard.streak }}</span> · {{ hm(catCard.minutes) }} no período · {{ catCard.done }} conclusões</p>
+    <p class="meta">Inclui os itens arquivados: o que você já fez continua valendo.</p>
+  </div>
+    </section>
+    <section v-else-if="categories.length">
+  <h2 class="section">Por categoria</h2>
+  <div class="habit-grid">
+    <button v-for="c in categories" :key="c.key" class="plain stat cat-card" @click="pick(`cat:${c.key}`)">
+      <div class="stat-top"><strong>{{ c.label }}</strong><span class="stat-rate">{{ c.activeDays }}/{{ c.days }}</span></div>
+      <div class="track"><div class="fill ok" :style="{ transform: `scaleX(${c.activeDays / c.days})` }" /></div>
+      <span class="meta">dias com atividade · sequência <span class="num">{{ c.streak }}</span> · {{ hm(c.minutes) }}</span>
+    </button>
+  </div>
+    </section>
     <section>
   <h2 class="section">Itens feitos por dia</h2>
   <div class="plain">
@@ -177,7 +212,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
   <template v-if="!detail">
   <h2 class="section">Hábitos</h2>
   <div class="habit-grid">
-  <div v-for="h in stats.habitStats" :key="h.id" class="plain stat">
+  <div v-for="h in activeHabitStats" :key="h.id" class="plain stat">
     <div class="stat-top">
       <strong>{{ h.name }}</strong>
       <span class="stat-rate">{{ Math.round(h.rate * 100) }}%</span>
@@ -194,7 +229,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </div>
   </div>
   </div>
-  <p v-if="!stats.habitStats.length" class="meta">Nenhum hábito ainda.</p>
+  <p v-if="!activeHabitStats.length" class="meta">Nenhum hábito ainda.</p>
   <p class="meta">Tarefas concluídas: {{ stats.tasksDone }}</p>
   </template>
 </template>
