@@ -21,7 +21,7 @@ const rows = computed(() =>
 )
 const nowRows = computed(() => rows.value.filter((r) => r.state.level !== 'normal'))
 const laterRows = computed(() => rows.value.filter((r) => r.state.level === 'normal'))
-const suggested = computed(() => items.value.find((i) => i.id === calc.value.suggestSkip))
+const suggestedSkips = computed(() => calc.value.suggestSkips.map((id) => items.value.find((i) => i.id === id)!).filter(Boolean))
 
 const total = computed(() => rows.value.length + doneToday.value.length)
 const pct = computed(() => (total.value ? doneToday.value.length / total.value : 0))
@@ -63,6 +63,11 @@ function skip(item: ItemRow) {
   act(() => skipItem(item))
   notify(`${item.name}: ${item.kind === 'task' ? 'descartada' : 'pulado hoje'}.`, { undo: () => undoToday(item) })
 }
+function skipMany(list: ItemRow[]) {
+  lastAction.value = 'skip'
+  act(() => Promise.all(list.map(skipItem)))
+  notify(`${list.length} ${list.length > 1 ? 'itens pulados' : 'item pulado'} hoje.`, { undo: () => Promise.all(list.map(undoToday)) })
+}
 const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`)
 </script>
 
@@ -95,9 +100,10 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
     <Icon name="alert" />
     <div>
       <strong>Não cabe tudo antes de dormir.</strong> Faltam {{ hm(calc.deficitMin) }}.
-      <template v-if="suggested">Sugestão: pular “{{ suggested.name }}”.</template>
+      <template v-if="suggestedSkips.length">Sugestão: pular {{ suggestedSkips.map((i) => `“${i.name}”`).join(' e ') }}.</template>
+      <template v-if="calc.unavoidableMin"> Mesmo assim faltam {{ hm(calc.unavoidableMin) }}: só sobram itens essenciais ou com horário fixo.</template>
     </div>
-    <button v-if="suggested" class="btn ghost on-banner" @click="skip(suggested!)">Pular</button>
+    <button v-if="suggestedSkips.length" class="btn ghost on-banner" @click="skipMany(suggestedSkips)">Pular</button>
   </div>
 
   <section v-if="allDone" class="closed">

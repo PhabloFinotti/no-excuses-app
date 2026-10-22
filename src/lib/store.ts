@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import type { Session } from '@supabase/supabase-js'
 import { calculateState } from './calculateState'
 import { parseQuickAdd } from './quickAdd'
+import { clearNotification } from './push'
 import { must, supabase } from './supabase'
 import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
@@ -37,7 +38,7 @@ export const today = computed(() => now.value.day)
 
 export const calc = computed(() => {
   const p = profile.value
-  if (!p) return { states: [], deficitMin: 0, suggestSkip: undefined }
+  if (!p) return { states: [], deficitMin: 0, suggestSkip: undefined, suggestSkips: [] as string[], unavoidableMin: 0 }
   return calculateState(toCalcItems(items.value, completions.value, now.value, nowMs.value), now.value.minutes, {
     sleepMin: timeToMin(p.sleep_time),
     warnMin: p.warn_min,
@@ -114,6 +115,7 @@ async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   const payload = { ...(prev && prev.day !== day ? prev : {}), item_id: item.id, day, ...patch }
   const replace = (row: CompletionRow) => (completions.value = [...completions.value.filter((c) => c.item_id !== row.item_id || (item.kind === 'habit' && c.day !== row.day)), row])
   replace(merged)
+  if (patch.done || patch.skipped || patch.snoozed_until) clearNotification(item.id) // o alerta já respondido some da bandeja
   try {
     await tracked(async () => {
       replace(must(await supabase.from('item_completions').upsert(payload, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)

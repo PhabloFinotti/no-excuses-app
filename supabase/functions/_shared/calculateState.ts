@@ -28,7 +28,9 @@ export interface ItemState {
 export interface Result {
   states: ItemState[]
   deficitMin: number // quanto falta de tempo para caber tudo antes de dormir
-  suggestSkip?: string // item não essencial candidato a ficar de fora
+  suggestSkip?: string // primeiro candidato a ficar de fora (atalho de suggestSkips[0])
+  suggestSkips: string[] // itens não essenciais que, pulados, devolvem o horário de dormir
+  unavoidableMin: number // déficit que sobra mesmo pulando todos os candidatos (essenciais e fixos não cabem)
 }
 
 export function calculateState(items: Item[], nowMin: number, cfg: Config): Result {
@@ -67,9 +69,18 @@ export function calculateState(items: Item[], nowMin: number, cfg: Config): Resu
   const earliest = Math.min(...flex.map((i) => deadlines.get(i.id)!))
   const deficitMin = flex.length ? Math.max(0, nowMin - earliest) : 0
   const candidates = flex.filter((i) => !i.essential).sort((a, b) => a.durationMin - b.durationMin)
-  const suggestSkip = deficitMin
-    ? (candidates.find((i) => i.durationMin >= deficitMin) ?? candidates.at(-1))?.id
-    : undefined
+  // Um item que cobre o déficit sozinho vence; senão, tira os maiores até caber.
+  const single = candidates.find((i) => i.durationMin >= deficitMin)
+  const suggestSkips: string[] = []
+  let left = deficitMin
+  if (deficitMin && single) suggestSkips.push(single.id)
+  else
+    for (const i of [...candidates].reverse()) {
+      if (left <= 0) break
+      suggestSkips.push(i.id)
+      left -= i.durationMin
+    }
+  const unavoidableMin = deficitMin ? Math.max(0, left) : 0
 
-  return { states, deficitMin, suggestSkip }
+  return { states, deficitMin, suggestSkip: suggestSkips[0], suggestSkips, unavoidableMin }
 }

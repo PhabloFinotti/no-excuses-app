@@ -50,6 +50,23 @@ describe('calculateState', () => {
   })
 
   it('no items: no deficit', () => {
-    expect(calculateState([], h(12), cfg)).toEqual({ states: [], deficitMin: 0, suggestSkip: undefined })
+    expect(calculateState([], h(12), cfg)).toEqual({ states: [], deficitMin: 0, suggestSkip: undefined, suggestSkips: [], unavoidableMin: 0 })
+  })
+
+  it('recovery: suggests as many non-essential skips as needed, never the essential', () => {
+    // 22:15, 75 min pendentes, só 45 até dormir: faltam 30 min.
+    const items = [{ id: 'e', durationMin: 30, essential: true }, { id: 'a', durationMin: 15 }, { id: 'b', durationMin: 15 }, { id: 'c', durationMin: 15 }]
+    const r = calculateState(items, h(22, 15), cfg)
+    expect(r.deficitMin).toBe(30)
+    expect(r.suggestSkips).toHaveLength(2)
+    expect(r.suggestSkips).not.toContain('e')
+    expect(r.unavoidableMin).toBe(0)
+  })
+
+  it('recovery: reports what is left when skipping everything optional is not enough', () => {
+    const items = [{ id: 'e', durationMin: 60, essential: true }, { id: 'a', durationMin: 10 }]
+    const r = calculateState(items, h(22, 30), cfg)
+    expect(r.suggestSkips).toEqual(['a'])
+    expect(r.unavoidableMin).toBeGreaterThan(0)
   })
 })
