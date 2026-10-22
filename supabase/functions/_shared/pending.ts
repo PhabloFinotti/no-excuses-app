@@ -14,6 +14,8 @@ export interface ItemRow {
   warn_min: number | null
   urgent_min: number | null
   archived: boolean
+  archived_at?: string | null // fim do período em que um hábito arquivado conta no histórico
+  category?: string | null // null = automática pelo nome; ver src/lib/categories.ts
   created_at: string
 }
 
