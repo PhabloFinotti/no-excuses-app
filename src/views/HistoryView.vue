@@ -93,6 +93,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
       </p>
       <p class="meta">
         Tempo total {{ hm(detail.totalMinutes) }}<template v-if="detail.avgMinutes"> · média por vez {{ detail.avgMinutes }} min (previsto {{ habit.duration_min }})</template>
+        <template v-if="habitCard && habitCard.samples >= 3"> · 80% das vezes leva até {{ habitCard.p80Min }} min</template>
       </p>
       <button v-if="habitCard?.suggestedDurationMin" class="ghost" style="margin-top: 8px" @click="act(() => setDuration(habit!.id, habitCard!.suggestedDurationMin!))">
         Ajustar duração para {{ habitCard.suggestedDurationMin }} min
@@ -185,6 +186,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <div class="meta">
       {{ h.done }}/{{ h.scheduled }} dias · sequência <span class="num">{{ h.streak }}</span>
       <template v-if="h.avgSpentMin"> · média {{ h.avgSpentMin }} min (planejado {{ h.durationMin }})</template>
+      <template v-if="h.samples >= 3"> · metade leva até {{ h.p50Min }} min, 80% até {{ h.p80Min }} min</template>
     </div>
     <div class="row" style="margin-top: 8px">
       <button class="ghost" @click="pick(h.id)">Ver histórico</button>

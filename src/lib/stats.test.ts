@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeHabitDetail, computeStats } from './stats'
+import { computeHabitDetail, computeStats, percentile } from './stats'
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
 const habit: ItemRow = { id: 'h', kind: 'habit', name: 'Reading', duration_min: 30, fixed_time: null, weekdays: [0, 1, 2, 3, 4, 5, 6], due_date: null, essential: false, warn_min: null, urgent_min: null, archived: false, created_at: '2026-10-01T00:00:00Z' }
@@ -87,5 +87,14 @@ describe('computeHabitDetail', () => {
     expect(d.timedSamples).toBe(1)
     expect(d.weekdayRate).toHaveLength(7)
     expect(d.weekdayRate[2]).toBe(100) // terça 20/10 feita
+  })
+})
+
+describe('percentile', () => {
+  it('uses nearest rank over the measured values', () => {
+    expect(percentile([], 80)).toBe(0)
+    expect(percentile([20, 25, 30, 40, 60], 50)).toBe(30)
+    expect(percentile([20, 25, 30, 40, 60], 80)).toBe(40)
+    expect(percentile([45], 80)).toBe(45)
   })
 })

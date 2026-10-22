@@ -4,7 +4,14 @@ import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pe
 export interface DayCell { day: string; scheduled: number; done: number; minutes: number }
 export interface HabitStats {
   id: string; name: string; durationMin: number; scheduled: number; done: number; rate: number
-  avgSpentMin: number; samples: number; suggestedDurationMin?: number; streak: number
+  avgSpentMin: number; p50Min: number; p80Min: number; samples: number; suggestedDurationMin?: number; streak: number
+}
+
+// Percentil por posto mais próximo (sem interpolar): com poucas amostras é o valor realmente medido.
+export const percentile = (values: number[], p: number) => {
+  if (!values.length) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)]!
 }
 
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
@@ -50,8 +57,9 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
       suggestedDurationMin: spent.length >= 3 && off ? Math.max(5, Math.round(avgSpentMin / 5) * 5) : undefined,
       scheduled: scheduledDays.length, done,
       rate: scheduledDays.length ? done / scheduledDays.length : 0,
-      avgSpentMin,
-      streak,
+      avgSpentMin, streak,
+      p50Min: percentile(spent.map((c) => c.spent_min), 50),
+      p80Min: percentile(spent.map((c) => c.spent_min), 80),
     }
   })
 
