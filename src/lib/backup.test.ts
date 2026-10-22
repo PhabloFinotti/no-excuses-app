@@ -8,6 +8,17 @@ describe('buildCsv', () => {
   })
 })
 
+describe('buildCsv formulas', () => {
+  it('neutralizes names that would run as a spreadsheet formula', () => {
+    const csv = buildCsv([{ id: 'a', name: '=HYPERLINK("x")', kind: 'habit' }, { id: 'b', name: '-5 flexões', kind: 'habit' }], [
+      { item_id: 'a', day: '2026-10-21', done: true, skipped: false, spent_min: 1 },
+      { item_id: 'b', day: '2026-10-21', done: true, skipped: false, spent_min: 1 },
+    ])
+    expect(csv).toContain(`"'=HYPERLINK(""x"")"`)
+    expect(csv).toContain("'-5 flexões")
+  })
+})
+
 describe('parseBackup', () => {
   const good = { version: 1, items: [{ id: 'a', kind: 'habit', name: 'x', duration_min: 30, user_id: 'u' }], completions: [{ item_id: 'a', day: '2026-10-21', user_id: 'u' }] }
   it('accepts a valid backup and drops user_id', () => {

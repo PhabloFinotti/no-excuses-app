@@ -1,6 +1,6 @@
 // Resumos da manhã e do fim do dia. Pura, como runTick, para testar com relógio simulado.
 import { toCalcItems, type CompletionRow, type ItemRow } from './pending.ts'
-import { localTime, timeToMin } from './time.ts'
+import { formatMinutes as fmt, localTime, timeToMin } from './time.ts'
 import type { TickProfile } from './runTick.ts'
 
 export interface SummaryProfile extends TickProfile {
@@ -15,8 +15,6 @@ export interface PlannedSummary {
   title: string
   body: string
 }
-
-const fmt = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}` : `${min} min`)
 
 // `sent` guarda `${day}:${kind}` já enviados (summary_log).
 export function planSummaries(p: SummaryProfile, items: ItemRow[], completions: CompletionRow[], sent: Set<string>, nowDate: Date): PlannedSummary[] {

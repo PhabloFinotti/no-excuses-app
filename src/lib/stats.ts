@@ -1,3 +1,4 @@
+import { addDays } from '../../supabase/functions/_shared/time'
 import type { CompletionRow, ItemRow } from '../../supabase/functions/_shared/pending'
 
 export interface DayCell { day: string; scheduled: number; done: number; minutes: number }
@@ -7,7 +8,6 @@ export interface HabitStats {
 }
 
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
-const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 export function computeStats(items: ItemRow[], completions: CompletionRow[], today: string, days = 30) {
   // Antes do primeiro item cadastrado não há dado: esses dias ficam fora da série (não são "zero").

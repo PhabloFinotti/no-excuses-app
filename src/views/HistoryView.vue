@@ -4,6 +4,7 @@ import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
 import { act } from '../lib/toast'
 import { completions, items, setDuration, today } from '../lib/store'
+import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
 import { computeHabitDetail, computeStats } from '../lib/stats'
 
 const RANGES = [7, 30, 90] as const
@@ -46,7 +47,6 @@ function pick(id: string) {
   window.scrollTo({ top: 0 })
 }
 const bestWeekday = computed(() => stats.value.weekdayAvg.indexOf(Math.max(...stats.value.weekdayAvg)))
-const hm = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(Math.round(min % 60)).padStart(2, '0')}` : `${Math.round(min)} min`)
 const avgLabel = computed(() => stats.value.avgPerDay.toLocaleString('pt-BR', { maximumFractionDigits: 1 }))
 const DOW = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 // Células do calendário para os dois escopos: cor, tooltip e se o dia teve algo agendado.

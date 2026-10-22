@@ -31,7 +31,7 @@ sw.addEventListener('notificationclick', (e: any) => {
   e.waitUntil(
     sw.clients.matchAll({ type: 'window' }).then(async (wins: any[]) => {
       if (!wins[0]) return sw.clients.openWindow(url)
-      await wins[0].navigate(url)
+      if (e.action && id) await wins[0].navigate(url) // clique simples só traz o app à frente, sem recarregar
       return wins[0].focus()
     }),
   )

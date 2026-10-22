@@ -43,7 +43,7 @@ Nada disso foi executado contra um Supabase real nem num aparelho.
 
 ## Pós-MVP
 Ver `docs/ROADMAP.md` (status no topo). Fases 1 a 3 implementadas, exceto os itens marcados como não implementados.
-Novas migrações (`supabase db push`): `20261022_fixed_grace`, `20261023_snooze`, `20261024_summaries`, `20261025_realtime`, `20261026_time_source`.
+Novas migrações (`supabase db push`): `20261022_fixed_grace`, `20261023_snooze`, `20261024_summaries`, `20261025_realtime`, `20261026_time_source`, `20261027_google_calendar`, `20261028_constraints`, `20261029_profile_trigger`. Faça redeploy de todas as functions (`tick` e `gcal-sync` mudaram).
 Rode de novo `supabase/cron.sql` só para o job `cleanup-logs` (o `tick-every-minute` já existe) e faça redeploy das functions (`supabase functions deploy tick --no-verify-jwt`).
 
 ## Validação pendente adicional

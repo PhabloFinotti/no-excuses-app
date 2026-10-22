@@ -4,6 +4,7 @@ import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
 import { googleCalendarUrl } from '../lib/calendar'
 import { shortDate } from '../lib/format'
+import { addDays } from '../../supabase/functions/_shared/time'
 import { completionOf, now, nowMs, profile, rescheduleTo, setSpent } from '../lib/store'
 import { act, notify } from '../lib/toast'
 import Icon from './Icon.vue'
@@ -44,7 +45,7 @@ function saveTime() {
   emit('close')
 }
 function tomorrow() {
-  const d = new Date(Date.parse(`${now.value.day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
+  const d = addDays(now.value.day, 1)
   act(() => rescheduleTo(props.item, d))
   notify(`${props.item.name}: movida para ${shortDate(d)}.`)
   emit('close')

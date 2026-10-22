@@ -11,7 +11,7 @@ import { burst } from '../lib/confetti'
 import { act, notify } from '../lib/toast'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
 import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
-import { timeToMin } from '../../supabase/functions/_shared/time'
+import { formatMinutes as hm, timeToMin } from '../../supabase/functions/_shared/time'
 import { calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, rescheduleToday, skipItem, snoozeItem, staleTasks, startTimer, undoToday } from '../lib/store'
 
 const rows = computed(() =>
@@ -26,7 +26,6 @@ const suggested = computed(() => items.value.find((i) => i.id === calc.value.sug
 const total = computed(() => rows.value.length + doneToday.value.length)
 const pct = computed(() => (total.value ? doneToday.value.length / total.value : 0))
 const sleepLeftMin = computed(() => (profile.value ? Math.max(0, timeToMin(profile.value.sleep_time) - now.value.minutes) : 0))
-const hm = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}` : `${min} min`)
 const dateLabel = computed(() =>
   new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: profile.value?.tz }).format(new Date(nowMs.value)),
 )

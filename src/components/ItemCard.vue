@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { ItemState } from '../lib/calculateState'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
-import { minToTime } from '../../supabase/functions/_shared/time'
+import { formatMinutes as hm, minToTime } from '../../supabase/functions/_shared/time'
 import Icon from './Icon.vue'
 
 const props = defineProps<{
@@ -24,10 +24,7 @@ const LABEL = { normal: '', attention: 'Atenção', urgent: 'Urgente', overdue: 
 const secondsLeft = computed(() => props.state.deadlineMin * 60 - props.nowSec)
 const fraction = computed(() => Math.max(0, Math.min(1, secondsLeft.value / (Math.max(props.warnMin * 2, 30) * 60))))
 
-function span(sec: number) {
-  const min = Math.ceil(sec / 60)
-  return min < 60 ? `${Math.max(min, 1)} min` : `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`
-}
+const span = (sec: number) => hm(Math.max(1, Math.ceil(sec / 60)))
 const timeLabel = computed(() =>
   secondsLeft.value > 0 ? span(secondsLeft.value) : props.state.level === 'overdue' ? `há ${span(-secondsLeft.value)}` : 'agora',
 )

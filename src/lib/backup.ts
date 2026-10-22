@@ -6,8 +6,10 @@ export interface Backup {
   completions: Record<string, unknown>[]
 }
 
+// Texto que começa com = + - @ vira fórmula no Excel/Sheets: o apóstrofo mantém como texto.
 const csvCell = (v: unknown) => {
-  const s = String(v ?? '')
+  let s = String(v ?? '')
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 

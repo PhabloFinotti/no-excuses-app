@@ -1,9 +1,8 @@
 // Modo demo (npm run dev:demo): mini-Supabase em memória com dados relativos a "agora", para testar a UI sem backend.
-import { localTime, minToTime } from '../../supabase/functions/_shared/time'
+import { addDays, localTime, minToTime } from '../../supabase/functions/_shared/time'
 
 type Row = Record<string, any>
 const uid = () => crypto.randomUUID()
-const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 function seed() {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
