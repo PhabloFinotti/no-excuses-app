@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
+import { authReady, isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import BrandMark from './components/BrandMark.vue'
 import Icon from './components/Icon.vue'
@@ -67,9 +67,12 @@ watch(
 
 onMounted(async () => {
   session.value = (await supabase.auth.getSession()).data.session
+  authReady.value = true
+  // O INITIAL_SESSION e a renovação do token repetem a sessão já conhecida: só recarrega quando o usuário muda.
   supabase.auth.onAuthStateChange((_, s) => {
+    const changed = s?.user.id !== session.value?.user.id
     session.value = s
-    refresh()
+    if (changed) refresh()
   })
   refresh()
   document.addEventListener('visibilitychange', () => !document.hidden && refresh())
@@ -77,7 +80,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <LoginView v-if="!session" />
+  <template v-if="!authReady" />
+  <LoginView v-else-if="!session" />
   <div v-else class="shell">
     <nav aria-label="Navegação principal">
       <div class="brand"><BrandMark :size="36" /><span>No Excuses</span></div>

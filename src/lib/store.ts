@@ -24,6 +24,7 @@ export interface ProfileRow {
 export type ItemForm = Omit<ItemRow, 'id' | 'archived' | 'archived_at' | 'created_at'> & { id?: string }
 
 export const session = ref<Session | null>(null)
+export const authReady = ref(false) // false até saber se há sessão salva: evita mostrar o login por um instante
 export const profile = ref<ProfileRow | null>(null)
 export const items = ref<ItemRow[]>([])
 export const archivedItems = ref<ItemRow[]>([]) // só para o histórico: o que foi feito antes de arquivar continua contando
@@ -62,12 +63,21 @@ export const completionOf = (item: ItemRow) => findCompletion(item, completions.
 
 export const isItemPending = (item: ItemRow) => isPending(item, completions.value, now.value)
 
+// Busca tudo em paralelo e só então grava: itens sem as conclusões apareceriam todos como pendentes/atrasados por um instante.
 export async function loadAll() {
-  profile.value = must(await supabase.from('profiles').select('*').single())
-  items.value = must(await supabase.from('items').select('*').eq('archived', false).order('created_at')) as ItemRow[]
-  archivedItems.value = must(await supabase.from('items').select('*').eq('archived', true)) as ItemRow[]
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
-  completions.value = must(await supabase.from('item_completions').select('*').gte('day', since)) as CompletionRow[]
+  const [p, active, archived, done] = await Promise.all([
+    supabase.from('profiles').select('*').single(),
+    supabase.from('items').select('*').eq('archived', false).order('created_at'),
+    supabase.from('items').select('*').eq('archived', true),
+    supabase.from('item_completions').select('*').gte('day', since),
+  ])
+  const next = { profile: must(p) as ProfileRow, items: must(active) as ItemRow[], archived: must(archived) as ItemRow[], completions: must(done) as CompletionRow[] }
+  // Sem await entre as quatro atribuições, a tela renderiza uma vez só com o conjunto completo.
+  profile.value = next.profile
+  items.value = next.items
+  archivedItems.value = next.archived
+  completions.value = next.completions
 }
 
 // Só os campos editáveis em Ajustes: o formulário guarda uma cópia do perfil, e mandar a linha inteira
