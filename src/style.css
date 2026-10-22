@@ -359,9 +359,14 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
 @media (prefers-reduced-motion: reduce) { .hero-clock .fill { transition: none; } }
 
 /* Ações secundárias do card, com texto (só ícone não explica nada no celular) */
-.tools-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
-.tools-row .sub { min-height: 44px; padding: 0 8px; font-size: 0.8125rem; font-weight: 600; gap: 6px; color: var(--muted); }
+.tools-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+.tools-row .sub { min-height: 52px; padding: 4px 2px; font-size: 0.75rem; font-weight: 600; flex-direction: column; gap: 2px; white-space: nowrap; color: var(--muted); }
 .tools-row .sub:hover { color: var(--text); }
+/* Nomes e links pequenos ganham área de toque de 44 px sem mudar o layout */
+.card-title h3 .link, .done-name { position: relative; }
+.card-title h3 .link::after, .done-name::after { content: ''; position: absolute; inset: -11px -6px; }
+.time-chip { min-height: 44px; display: inline-flex; align-items: center; }
+.icon-btn.small { width: 44px; min-height: 44px; }
 
 /* Seções recolhíveis (arquivados, avançado, ajuda) */
 .fold, .howto { margin: 12px 0; }

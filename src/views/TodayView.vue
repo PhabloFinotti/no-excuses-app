@@ -54,7 +54,7 @@ function complete(item: ItemRow, e?: MouseEvent, minutes?: number) {
   // Sem timer nem minutos informados, o app grava o previsto: avisa e oferece corrigir.
   const planned = minutes == null && elapsed(item) < 60
   act(() => markDone(item, minutes))
-  notify(planned ? `${item.name} feito · ${item.duration_min} min (estimado, sem timer).` : `${item.name} feito.`, {
+  notify(planned ? `${item.name} feito · ${item.duration_min} min (estimado).` : `${item.name} feito.`, {
     undo: () => undoToday(item),
     action: planned ? { label: 'Ajustar tempo', run: () => (detail.value = item) } : undefined,
   }, planned ? 7000 : 5000)

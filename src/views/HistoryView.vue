@@ -95,16 +95,19 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <select v-model="selectedId" aria-label="Escopo do histórico">
       <option value="">Todos os itens</option>
       <optgroup v-if="categories.length" label="Categorias">
-        <option v-for="c in categories" :key="c.key" :value="`cat:${c.key}`">{{ c.label }}</option>
+        <option v-for="c in categories" :key="c.key" :value="`cat:${c.key}`">Categoria · {{ c.label }}</option>
       </optgroup>
       <optgroup label="Hábitos">
-        <option v-for="h in habits" :key="h.id" :value="h.id">{{ h.name }}</option>
+        <option v-for="h in habits" :key="h.id" :value="h.id">Hábito · {{ h.name }}</option>
       </optgroup>
     </select>
   </div>
 
   <p v-if="stats.cells.length < days" class="meta">O período mostra só os {{ stats.cells.length }} dias desde o primeiro item cadastrado.</p>
-  <p class="meta">Itens pulados de propósito não contam como falha nem quebram a sequência. Sequências valem dentro do período escolhido.</p>
+  <details class="fold">
+    <summary>Como contamos</summary>
+    <p class="meta">Itens pulados de propósito não contam como falha nem quebram a sequência. Sequências valem dentro do período escolhido. O que foi feito em itens arquivados continua valendo.</p>
+  </details>
 
   <div class="charts">
   <template v-if="detail && habit">
