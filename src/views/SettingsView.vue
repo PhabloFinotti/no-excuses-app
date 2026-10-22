@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { exportBackup, exportCsv, importBackup } from '../lib/backup'
-import { enablePush, sendTestPush } from '../lib/push'
+import { enablePush, pushDiagnostics, sendTestPush, type PushDiagnostics } from '../lib/push'
 import { connectCalendar, disconnectCalendar, loadAll, profile, saveProfile, signOut, syncPendingTasks } from '../lib/store'
 import { notify } from '../lib/toast'
 
@@ -16,6 +16,8 @@ async function run(fn: () => Promise<unknown>, ok: string | ((result: any) => st
     notify((e as Error).message, { error: true })
   }
 }
+const diag = ref<PushDiagnostics>()
+const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'nunca')
 const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 function validTz(tz: string) {
   try {
@@ -63,6 +65,14 @@ const save = () => run(() => {
     <button @click="run(enablePush, 'Notificações ativadas neste aparelho.')">Ativar</button>
     <button class="ghost" @click="run(sendTestPush, 'Teste enviado.')">Enviar teste</button>
   </div>
+  <button class="ghost" style="margin-top: 10px" @click="run(async () => (diag = await pushDiagnostics()), '')">Verificar situação</button>
+  <ul v-if="diag" class="meta diag">
+    <li>Permissão: {{ diag.permission === 'granted' ? 'concedida' : diag.permission === 'denied' ? 'negada (libere nas configurações do navegador)' : diag.permission === 'unsupported' ? 'sem suporte neste navegador' : 'ainda não pedida' }}</li>
+    <li>Assinatura neste aparelho: {{ diag.localSubscription ? 'ativa' : 'não encontrada (toque em Ativar)' }}</li>
+    <li>Aparelhos cadastrados: {{ diag.devices }}</li>
+    <li>Último envio aceito pelo provedor: {{ when(diag.lastOkAt) }} (aceito não garante que apareceu na tela)</li>
+    <li v-if="diag.lastError">Último erro: {{ diag.lastError }} ({{ when(diag.lastErrorAt) }})</li>
+  </ul>
   <p class="meta">
     No Samsung, para o alerta chegar no horário: Configurações → Aplicativos → este app → Bateria → “Sem restrições”,
     e tire o app de “Apps em suspensão”.

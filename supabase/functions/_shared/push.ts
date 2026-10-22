@@ -22,12 +22,16 @@ export async function sendToUser(db: SupabaseClient, userId: string, payload: Pu
         TTL: 600, // alerta velho não vale a pena: descarta após 10 min
       })
       sent++
+      await db.from('push_subscriptions').update({ last_ok_at: new Date().toISOString(), last_error: null, last_error_at: null }).eq('id', s.id)
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode
       if (code === 404 || code === 410) {
         attempted-- // aparelho morto: não conta como falha de entrega
         await db.from('push_subscriptions').delete().eq('id', s.id)
-      } else console.error('push failed', code, (e as Error).message)
+      } else {
+        console.error('push failed', code, (e as Error).message)
+        await db.from('push_subscriptions').update({ last_error: `${code ?? 'erro'}: ${(e as Error).message}`.slice(0, 200), last_error_at: new Date().toISOString() }).eq('id', s.id)
+      }
     }
   }
   return { sent, attempted }
