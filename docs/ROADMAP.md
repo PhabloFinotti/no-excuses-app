@@ -8,6 +8,10 @@ Implementado (código + testes unitários, sem validação em Supabase/aparelho 
 Decisões tomadas: tolerância de hábito fixo 15 min (configurável); tarefa parada após 3 dias (`STALE_DAYS`); ações da notificação abrem o app (`?action=done|snooze&item=ID`).
 **Não implementados de propósito:** F0.1/F0.2 (dependem de uso real), F2.7 (condicional), F3.2 recorrência mensal e meta semanal (mexe no modelo; só com necessidade real), F3.5 subtarefas/etiquetas, F4.1 Capacitor (contingência do atraso de push).
 
+## Pós-revisão externa (implementado)
+Alerta some da bandeja ao concluir, pular ou adiar; diagnóstico de push em Ajustes; percentis P50/P80 no histórico; modo de recuperação (sugere pular quantos itens forem preciso e mostra o déficit que sobra); `notification_log` filtrado por perfil; constraints validadas; `scripts/rls-check.mjs`.
+Adiados de propósito: dormir após a meia-noite, preferências de ordem, estado "received" do push, e2e completo, revisão semanal (esperar uso real).
+
 ## Fase 0: validar o que existe (gate para o resto)
 Já listado em `TASKS.md` (V1 a V7). Acrescento:
 - [ ] F0.1 Usar o app 2 a 3 dias reais e anotar atritos em `docs/NOTES.md`. Pronto: lista de problemas reais priorizada.

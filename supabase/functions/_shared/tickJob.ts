@@ -52,7 +52,9 @@ async function tickProfile(db: Db, send: Send, p: any, nowDate: Date): Promise<n
     if (r.attempted > 0 && r.sent === 0) await db.from('summary_log').delete().eq('user_id', p.user_id).eq('day', sum.day).eq('kind', sum.kind)
   }
 
-  const already = new Set<string>((log ?? []).map((l: any) => `${l.item_id}:${l.day}:${l.level}`))
+  // O log é lido de todos os usuários (a chave de serviço ignora RLS): fica só o que é dos itens deste perfil.
+  const mine = new Set(itemRows.map((i) => i.id))
+  const already = new Set<string>((log ?? []).filter((l: any) => mine.has(l.item_id)).map((l: any) => `${l.item_id}:${l.day}:${l.level}`))
   for (const push of runTick(p, itemRows, completionRows, already, nowDate)) {
     // O log único (item, dia, nível) garante um envio por nível mesmo com execuções concorrentes.
     const { data: inserted } = await db

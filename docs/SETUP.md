@@ -44,3 +44,8 @@ O app cria um calendário próprio "No Excuses" e só mexe nele (escopo `calenda
    supabase functions deploy gcal-callback --no-verify-jwt
    ```
 5. No app: **Ajustes → Google Agenda → Conectar**. Aprove no Google; você volta ao app já conectado. Use "Enviar tarefas pendentes" para as que já existiam.
+
+## Verificações extras
+- **Isolamento entre contas (RLS):** em um projeto de teste, `SUPABASE_URL=… SUPABASE_ANON_KEY=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/rls-check.mjs`. Cria dois usuários temporários, tenta ler e escrever dados do outro e apaga os usuários ao final. Não rode com a chave de serviço do projeto de produção.
+- **Diagnóstico de push:** Ajustes → Notificações → "Verificar situação" mostra permissão, assinatura, último envio aceito e último erro. "Aceito" significa que o provedor recebeu; só você vê se apareceu na tela.
+- As migrações `20261030` (colunas de diagnóstico) e `20261031` (valida as constraints antigas) entram com `supabase db push`. Se a 31 falhar, há linhas antigas fora do limite: corrija-as e rode de novo.
