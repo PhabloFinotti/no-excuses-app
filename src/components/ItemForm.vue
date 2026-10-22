@@ -12,11 +12,12 @@ const emit = defineEmits<{ saved: []; cancel: [] }>()
 
 const DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const blank = (): ItemForm => ({
-  kind: 'habit', name: '', category: null, duration_min: 30, fixed_time: null, weekdays: [0, 1, 2, 3, 4, 5, 6],
+  id: crypto.randomUUID(), kind: 'habit', name: '', category: null, duration_min: 30, fixed_time: null, weekdays: [0, 1, 2, 3, 4, 5, 6],
   due_date: null, essential: false, warn_min: null, urgent_min: null,
 })
 const form = reactive<ItemForm>(props.item ? { ...props.item, fixed_time: props.item.fixed_time?.slice(0, 5) ?? null } : blank())
 const error = ref('')
+const busy = ref(false)
 
 function setKind(kind: 'habit' | 'task') {
   form.kind = kind
@@ -40,11 +41,13 @@ const detected = computed(() => categoryLabel(detectCategory(form.name)))
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
 async function submit() {
+  if (busy.value) return // Enter repetido ou toque duplo não envia de novo
   error.value = ''
   if (!Number.isInteger(form.duration_min) || form.duration_min < 1 || form.duration_min > 1440) {
     error.value = 'A duração precisa ser um número inteiro de 1 a 1440 minutos.'
     return
   }
+  busy.value = true
   try {
     await saveItem({ ...form, fixed_time: form.fixed_time || null, warn_min: num(form.warn_min), urgent_min: num(form.urgent_min) })
     if (form.kind === 'task' && !props.item && !profile.value?.calendar_connected) {
@@ -54,6 +57,8 @@ async function submit() {
     emit('saved')
   } catch (e) {
     error.value = (e as Error).message
+  } finally {
+    busy.value = false
   }
 }
 </script>
@@ -88,7 +93,7 @@ async function submit() {
     </div>
     <p v-if="error" class="error">{{ error }}</p>
     <div class="row" style="margin-top: 14px">
-      <button :disabled="form.kind === 'habit' && !form.weekdays.length">Salvar</button>
+      <button :disabled="busy || (form.kind === 'habit' && !form.weekdays.length)">Salvar</button>
       <button type="button" class="ghost" @click="emit('cancel')">Cancelar</button>
     </div>
   </form>

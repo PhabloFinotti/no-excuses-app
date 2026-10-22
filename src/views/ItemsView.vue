@@ -12,6 +12,7 @@ const editing = ref<ItemRow | undefined>()
 const open = ref(false)
 const error = ref('')
 const quick = ref('')
+const adding = ref(false)
 const filter = ref('')
 // Só as categorias que têm item, para o filtro não listar opções vazias.
 const present = computed(() => CATEGORIES.filter((c) => items.value.some((i) => categoryOf(i) === c.key)))
@@ -22,12 +23,16 @@ function edit(item?: ItemRow) {
   open.value = true
 }
 async function quickAdd(kind: 'habit' | 'task') {
+  if (adding.value) return // Enter repetido ou toque duplo não cria o item duas vezes
+  adding.value = true
   error.value = ''
   try {
     await addQuick(kind, quick.value)
     quick.value = ''
   } catch (e) {
     error.value = (e as Error).message
+  } finally {
+    adding.value = false
   }
 }
 function archive(item: ItemRow) {
@@ -45,8 +50,8 @@ function archive(item: ItemRow) {
   <template v-else>
     <input v-model="quick" placeholder="Adicionar rápido: Ler por 45 minutos" @keydown.enter.prevent="quickAdd('task')" />
     <div class="row" style="margin: 8px 0">
-      <button class="ghost" @click="quickAdd('task')">+ Tarefa hoje</button>
-      <button class="ghost" @click="quickAdd('habit')">+ Hábito diário</button>
+      <button class="ghost" :disabled="adding" @click="quickAdd('task')">+ Tarefa hoje</button>
+      <button class="ghost" :disabled="adding" @click="quickAdd('habit')">+ Hábito diário</button>
       <button class="ghost" @click="edit()">Formulário completo</button>
     </div>
     <p v-if="error" class="error">{{ error }}</p>

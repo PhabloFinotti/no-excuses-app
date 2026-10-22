@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { calculateState } from './calculateState'
 import { parseQuickAdd } from './quickAdd'
 import { clearNotification } from './push'
+import { keyedQueue } from './serial'
 import { must, supabase } from './supabase'
 import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
@@ -63,21 +64,31 @@ export const completionOf = (item: ItemRow) => findCompletion(item, completions.
 
 export const isItemPending = (item: ItemRow) => isPending(item, completions.value, now.value)
 
-// Busca tudo em paralelo e só então grava: itens sem as conclusões apareceriam todos como pendentes/atrasados por um instante.
+// Uma leitura só vale se nenhuma escrita começou ou terminou durante ela e se nenhuma leitura mais nova a substituiu;
+// senão ela traria o estado de antes da escrita e desfaria a tela. Nesse caso refaz (até 3 vezes).
+let loadSeq = 0
 export async function loadAll() {
+  const seq = ++loadSeq
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
-  const [p, active, archived, done] = await Promise.all([
-    supabase.from('profiles').select('*').single(),
-    supabase.from('items').select('*').eq('archived', false).order('created_at'),
-    supabase.from('items').select('*').eq('archived', true),
-    supabase.from('item_completions').select('*').gte('day', since),
-  ])
-  const next = { profile: must(p) as ProfileRow, items: must(active) as ItemRow[], archived: must(archived) as ItemRow[], completions: must(done) as CompletionRow[] }
-  // Sem await entre as quatro atribuições, a tela renderiza uma vez só com o conjunto completo.
-  profile.value = next.profile
-  items.value = next.items
-  archivedItems.value = next.archived
-  completions.value = next.completions
+  for (let attempt = 1; ; attempt++) {
+    const startEpoch = writeEpoch
+    // Busca tudo em paralelo e só então grava: itens sem as conclusões apareceriam todos como pendentes/atrasados por um instante.
+    const [p, active, archived, done] = await Promise.all([
+      supabase.from('profiles').select('*').single(),
+      supabase.from('items').select('*').eq('archived', false).order('created_at'),
+      supabase.from('items').select('*').eq('archived', true),
+      supabase.from('item_completions').select('*').gte('day', since),
+    ])
+    const next = { profile: must(p) as ProfileRow, items: must(active) as ItemRow[], archived: must(archived) as ItemRow[], completions: must(done) as CompletionRow[] }
+    if (seq !== loadSeq) return // uma leitura mais nova assumiu
+    if ((writeEpoch !== startEpoch || inflight > 0) && attempt < 3) continue
+    // Sem await entre as quatro atribuições, a tela renderiza uma vez só com o conjunto completo.
+    profile.value = next.profile
+    items.value = next.items
+    archivedItems.value = next.archived
+    completions.value = next.completions
+    return
+  }
 }
 
 // Só os campos editáveis em Ajustes: o formulário guarda uma cópia do perfil, e mandar a linha inteira
@@ -90,7 +101,10 @@ export async function saveProfile(patch: Partial<ProfileRow>) {
 }
 
 export async function saveItem(form: ItemForm) {
-  const row = (await tracked(async () => must(await supabase.from('items').upsert(form).select().single()))) as ItemRow
+  // O id nasce no cliente: reenviar o mesmo formulário (toque duplo, nova tentativa) regrava a mesma linha em vez de criar outra.
+  // Estado de arquivamento não segue no envio, para uma edição não desfazer um arquivamento feito em outro aparelho.
+  const { archived: _a, archived_at: _b, created_at: _c, ...fields } = form as ItemForm & Partial<ItemRow>
+  const row = (await tracked(async () => must(await supabase.from('items').upsert({ ...fields, id: form.id ?? crypto.randomUUID() }).select().single()))) as ItemRow
   await loadAll()
   if (row.kind === 'task') syncCalendar(row.id)
 }
@@ -105,22 +119,27 @@ export async function archiveItem(id: string) {
 // Escritas em andamento (ou muito recentes): o Realtime ignora o próprio eco, para uma leitura antiga não desfazer a tela.
 let inflight = 0
 let lastWriteAt = 0
+let writeEpoch = 0 // sobe a cada início e fim de escrita: loadAll descarta a leitura que atravessou uma escrita
 export const isWriting = () => inflight > 0 || Date.now() - lastWriteAt < 1500
 async function tracked<T>(fn: () => Promise<T>): Promise<T> {
   inflight++
+  writeEpoch++
   try {
     return await fn()
   } finally {
     inflight--
+    writeEpoch++
     lastWriteAt = Date.now()
   }
 }
 
-// Otimista: a tela muda na hora e volta atrás se o servidor recusar.
+// Otimista: a tela muda na hora. As gravações do mesmo item vão em fila, na ordem dos toques: sem isso a resposta de uma
+// ação lenta chegaria depois da seguinte e a desfaria na tela. Se o servidor recusar, relê o estado real (um instantâneo
+// antigo apagaria também as ações seguintes).
 // Sempre grava em "hoje"; se a tarefa tinha uma linha de outro dia, ela é movida (apagada) para não duplicar.
+const writes = keyedQueue()
 async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   const day = now.value.day
-  const before = completions.value
   const prev = completionOf(item)
   const merged = { item_id: item.id, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, ...prev, ...patch, day }
   // Só o que mudou vai ao servidor (o tick também escreve em snooze_notified_for); ao mover uma linha de outro dia, leva o estado dela junto.
@@ -129,13 +148,17 @@ async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   replace(merged)
   if (patch.done || patch.skipped || patch.snoozed_until) clearNotification(item.id) // o alerta já respondido some da bandeja
   try {
-    await tracked(async () => {
-      replace(must(await supabase.from('item_completions').upsert(payload, { onConflict: 'item_id,day' }).select().single()) as CompletionRow)
-      if (prev && prev.day !== day) must(await supabase.from('item_completions').delete().eq('item_id', item.id).eq('day', prev.day))
-    })
+    await writes.run(item.id, () =>
+      tracked(async () => {
+        const saved = must(await supabase.from('item_completions').upsert(payload, { onConflict: 'item_id,day' }).select().single()) as CompletionRow
+        if (prev && prev.day !== day) must(await supabase.from('item_completions').delete().eq('item_id', item.id).eq('day', prev.day))
+        // Só a última ação da fila pode aplicar a resposta do servidor; as anteriores já foram superadas na tela.
+        if (writes.pending(item.id) <= 1) replace(saved)
+      }),
+    )
     if (item.kind === 'task' && ('done' in patch || 'skipped' in patch)) syncCalendar(item.id)
   } catch (e) {
-    completions.value = before
+    await loadAll().catch(() => {})
     throw e
   }
 }

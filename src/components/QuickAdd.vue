@@ -16,6 +16,7 @@ function close() {
   text.value = ''
 }
 async function submit() {
+  if (busy.value) return // Enter repetido enquanto grava
   busy.value = true
   await act(async () => {
     const item = await addQuick(kind.value, text.value)
