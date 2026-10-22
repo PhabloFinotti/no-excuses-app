@@ -375,3 +375,11 @@ h3 .link { font-family: var(--display); font-weight: 700; font-size: inherit; le
 .howto { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 0 16px; }
 .howto ul { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 0.9375rem; }
 .hint { margin: -4px 0 8px; }
+
+/* Esqueleto de carregamento: usa as classes do conteúdo real e só troca o miolo por blocos */
+.sk { background: var(--raised); border-radius: 10px; animation: sk-pulse 1.4s ease-in-out infinite; }
+.sk-inline { display: inline-block; height: 1rem; vertical-align: middle; }
+.sk-how { height: 46px; margin: 12px 0; border-radius: 14px; }
+.sk-card { height: 265px; border-radius: 18px; margin-bottom: 12px; }
+@keyframes sk-pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }

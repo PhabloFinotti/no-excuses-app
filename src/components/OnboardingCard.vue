@@ -9,8 +9,10 @@ const read = () => {
   try { return localStorage.getItem(KEY) === '1' } catch { return false }
 }
 
-const installed = ref(true)
-const notifying = ref(true)
+// Valores já corretos na primeira renderização (matchMedia e permissão são síncronos): só a assinatura exige await,
+// e supor que ela existe evita o cartão aparecer e empurrar a lista no caso comum.
+const installed = ref(matchMedia('(display-mode: standalone)').matches)
+const notifying = ref('Notification' in window && Notification.permission === 'granted')
 const battery = ref(read())
 
 async function check() {

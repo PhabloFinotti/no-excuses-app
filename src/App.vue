@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { authReady, isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import BrandMark from './components/BrandMark.vue'
+import TodaySkeleton from './components/TodaySkeleton.vue'
 import Icon from './components/Icon.vue'
 import { act, dismiss, notify, toasts } from './lib/toast'
 import LoginView from './views/LoginView.vue'
@@ -93,7 +94,7 @@ onMounted(async () => {
     </nav>
     <main>
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="!profile" class="empty">Carregando…</p>
+      <TodaySkeleton v-if="!profile" />
       <template v-else>
         <TodayView v-if="tab === 'today'" />
         <ItemsView v-else-if="tab === 'items'" />

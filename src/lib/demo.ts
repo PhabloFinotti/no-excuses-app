@@ -40,6 +40,10 @@ function seed() {
 
 const KEYS: Record<string, string[]> = { items: ['id'], item_completions: ['item_id', 'day'], profiles: ['user_id'] }
 
+// ?delay=400 simula a latência da rede (o demo responde na hora e esconde problemas de carregamento).
+const DELAY = Number(new URLSearchParams(location.search).get('delay')) || 0
+const lag = () => new Promise((r) => setTimeout(r, DELAY))
+
 export class Query {
   private op: 'select' | 'upsert' | 'update' | 'delete' = 'select'
   private payload: Row | Row[] = {}
@@ -68,7 +72,7 @@ export class Query {
   update(p: Row) { this.op = 'update'; this.payload = p; return this }
   delete() { this.op = 'delete'; return this }
   then(ok?: (v: { data: any; error: null }) => unknown, bad?: (e: unknown) => unknown) {
-    return Promise.resolve().then(() => this.run()).then(ok, bad)
+    return lag().then(() => this.run()).then(ok, bad)
   }
   private run() {
     const rows = this.db[this.table]!
@@ -109,7 +113,7 @@ export function createFake() {
   return {
     from: (t: string) => new Query(db as Record<string, Row[]>, t),
     auth: {
-      getSession: async () => ({ data: { session: new URLSearchParams(location.search).has('login') ? null : session } }),
+      getSession: async () => (await lag(), { data: { session: new URLSearchParams(location.search).has('login') ? null : session } }),
       onAuthStateChange: (cb: (e: string, s: typeof session) => void) => {
         listeners.push(cb)
         return { data: { subscription: { unsubscribe() {} } } }
