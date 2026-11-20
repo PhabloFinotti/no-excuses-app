@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Ícones desenhados em um traço só (24x24, stroke 1.75), no estilo Lucide.
+// Ícones desenhados em um traço só (24x24, traço 2; os preenchidos, 1.25), no estilo Lucide.
 const PATHS: Record<string, string> = {
   check: 'M20 6 9 17l-5-5',
   play: 'M7 4v16l13-8z',

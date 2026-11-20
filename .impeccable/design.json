@@ -1,0 +1,770 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-20T16:02:19+00:00",
+  "title": "Design System: No Excuses",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Fundo",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#0F1216"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superfície",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#181C22"
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Elevado",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#232831"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#ECEFF3"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Tinta Calma",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#A0A9B6"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Linha",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#2A3039"
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Linha Firme",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#3A424D"
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Verde de Ação",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ]
+      },
+      "primary-edge": {
+        "role": "primary",
+        "displayName": "Borda Verde",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ]
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "Tinta Verde",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ],
+        "dark": "#4ADE80"
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Verde Suave",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ],
+        "dark": "#14301F"
+      },
+      "partial-ink": {
+        "role": "primary",
+        "displayName": "Tinta do Dia Parcial",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ],
+        "dark": "#4ADE80"
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "Sobre o Verde",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ]
+      },
+      "done": {
+        "role": "primary",
+        "displayName": "Verde Feito",
+        "tonalRamp": [
+          "#052E16",
+          "#14532D",
+          "#166534",
+          "#15803D",
+          "#16A34A",
+          "#22C55E",
+          "#86EFAC",
+          "#DCFCE7"
+        ],
+        "dark": "#22C55E"
+      },
+      "flame": {
+        "role": "secondary",
+        "displayName": "Laranja Chama",
+        "tonalRamp": [
+          "#7C2D12",
+          "#9A3412",
+          "#C2410C",
+          "#EA580C",
+          "#EA580C",
+          "#FB923C",
+          "#FED7AA",
+          "#FFEDD5"
+        ]
+      },
+      "flame-ink": {
+        "role": "secondary",
+        "displayName": "Tinta Chama",
+        "tonalRamp": [
+          "#7C2D12",
+          "#9A3412",
+          "#C2410C",
+          "#EA580C",
+          "#EA580C",
+          "#FB923C",
+          "#FED7AA",
+          "#FFEDD5"
+        ],
+        "dark": "#FB923C"
+      },
+      "flame-soft": {
+        "role": "secondary",
+        "displayName": "Chama Suave",
+        "tonalRamp": [
+          "#7C2D12",
+          "#9A3412",
+          "#C2410C",
+          "#EA580C",
+          "#EA580C",
+          "#FB923C",
+          "#FED7AA",
+          "#FFEDD5"
+        ],
+        "dark": "#3A2414"
+      },
+      "xp": {
+        "role": "tertiary",
+        "displayName": "Dourado XP",
+        "tonalRamp": [
+          "#713F12",
+          "#854D0E",
+          "#A16207",
+          "#CA8A04",
+          "#EAB308",
+          "#FACC15",
+          "#FEF08A",
+          "#FEF9C3"
+        ]
+      },
+      "xp-ink": {
+        "role": "tertiary",
+        "displayName": "Tinta XP",
+        "tonalRamp": [
+          "#713F12",
+          "#854D0E",
+          "#A16207",
+          "#CA8A04",
+          "#EAB308",
+          "#FACC15",
+          "#FEF08A",
+          "#FEF9C3"
+        ],
+        "dark": "#FACC15"
+      },
+      "xp-soft": {
+        "role": "tertiary",
+        "displayName": "XP Suave",
+        "tonalRamp": [
+          "#713F12",
+          "#854D0E",
+          "#A16207",
+          "#CA8A04",
+          "#EAB308",
+          "#FACC15",
+          "#FEF08A",
+          "#FEF9C3"
+        ],
+        "dark": "#362C0E"
+      },
+      "attention": {
+        "role": "urgency",
+        "displayName": "Âmbar Atenção",
+        "tonalRamp": [
+          "#78350F",
+          "#92400E",
+          "#B45309",
+          "#D97706",
+          "#F59E0B",
+          "#FBBF24",
+          "#FDE68A",
+          "#FEF3C7"
+        ]
+      },
+      "attention-ink": {
+        "role": "urgency",
+        "displayName": "Tinta Atenção",
+        "tonalRamp": [
+          "#78350F",
+          "#92400E",
+          "#B45309",
+          "#D97706",
+          "#F59E0B",
+          "#FBBF24",
+          "#FDE68A",
+          "#FEF3C7"
+        ],
+        "dark": "#FBBF24"
+      },
+      "attention-soft": {
+        "role": "urgency",
+        "displayName": "Atenção Suave",
+        "tonalRamp": [
+          "#78350F",
+          "#92400E",
+          "#B45309",
+          "#D97706",
+          "#F59E0B",
+          "#FBBF24",
+          "#FDE68A",
+          "#FEF3C7"
+        ],
+        "dark": "#33270E"
+      },
+      "urgent": {
+        "role": "urgency",
+        "displayName": "Vermelho Urgente",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FECACA",
+          "#FEE2E2"
+        ]
+      },
+      "urgent-ink": {
+        "role": "urgency",
+        "displayName": "Tinta Urgente",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FECACA",
+          "#FEE2E2"
+        ],
+        "dark": "#F87171"
+      },
+      "urgent-soft": {
+        "role": "urgency",
+        "displayName": "Urgente Suave",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FECACA",
+          "#FEE2E2"
+        ],
+        "dark": "#3A1717"
+      },
+      "overdue": {
+        "role": "urgency",
+        "displayName": "Vermelho Atrasado",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FECACA",
+          "#FEE2E2"
+        ]
+      },
+      "overdue-ink": {
+        "role": "urgency",
+        "displayName": "Tinta Atrasado",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FECACA",
+          "#FEE2E2"
+        ],
+        "dark": "#FCA5A5"
+      },
+      "toast-bg": {
+        "role": "neutral",
+        "displayName": "Toast",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#ECEFF3"
+      },
+      "toast-text": {
+        "role": "neutral",
+        "displayName": "Texto do Toast",
+        "tonalRamp": [
+          "#0F1216",
+          "#16181D",
+          "#232831",
+          "#3A424D",
+          "#5B6472",
+          "#A0A9B6",
+          "#E1E6EC",
+          "#F2F4F7"
+        ],
+        "dark": "#16181D"
+      },
+      "t-study": {
+        "role": "category-tint",
+        "displayName": "Tinta Estudo",
+        "dark": "#1C2A44"
+      },
+      "t-reading": {
+        "role": "category-tint",
+        "displayName": "Tinta Leitura",
+        "dark": "#183223"
+      },
+      "t-exercise": {
+        "role": "category-tint",
+        "displayName": "Tinta Exercício",
+        "dark": "#3A2617"
+      },
+      "t-health": {
+        "role": "category-tint",
+        "displayName": "Tinta Saúde",
+        "dark": "#13303A"
+      },
+      "t-mind": {
+        "role": "category-tint",
+        "displayName": "Tinta Mente",
+        "dark": "#2A2244"
+      },
+      "t-work": {
+        "role": "category-tint",
+        "displayName": "Tinta Trabalho",
+        "dark": "#262C35"
+      },
+      "t-home": {
+        "role": "category-tint",
+        "displayName": "Tinta Casa",
+        "dark": "#362D12"
+      },
+      "t-finance": {
+        "role": "category-tint",
+        "displayName": "Tinta Finanças",
+        "dark": "#22311A"
+      },
+      "t-social": {
+        "role": "category-tint",
+        "displayName": "Tinta Social",
+        "dark": "#3A1C25"
+      },
+      "t-creative": {
+        "role": "category-tint",
+        "displayName": "Tinta Criativo",
+        "dark": "#36192F"
+      },
+      "t-none": {
+        "role": "category-tint",
+        "displayName": "Tinta Sem categoria",
+        "dark": "#262B33"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Herói do login e relógio grande."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de cada tela."
+      },
+      "headline-moment": {
+        "displayName": "Headline Moment",
+        "purpose": "Pergunta de cada passo do cadastro e título de Dia fechado."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Títulos de card, grupo e seção."
+      },
+      "item": {
+        "displayName": "Item",
+        "purpose": "Nome do item na linha e texto de opção grande."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto corrido."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos de campo e data do topo."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Linha de prazo e subtítulos em muted."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Anel do dia, KPIs, contadores e relógio, sempre tabular."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow",
+        "value": "0 1px 2px rgb(16 24 40 / 0.05), 0 2px 8px -2px rgb(16 24 40 / 0.06)",
+        "dark": "0 1px 2px rgb(0 0 0 / 0.3)",
+        "purpose": "Repouso de cards, linhas de item, grupos e formulário de login."
+      },
+      {
+        "name": "shadow-lift",
+        "value": "0 12px 32px -12px rgb(16 24 40 / 0.28)",
+        "dark": "0 16px 36px -12px rgb(0 0 0 / 0.6)",
+        "purpose": "Folhas, toasts e dica do gráfico."
+      },
+      {
+        "name": "press-edge",
+        "value": "border-bottom: 4px solid var(--primary-edge)",
+        "purpose": "Volume tátil dos controles; encolhe no :active."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px",
+        "purpose": "Foco de teclado global."
+      },
+      {
+        "name": "scrim",
+        "value": "rgb(10 14 20 / 0.45)",
+        "purpose": "Véu atrás das folhas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Toda transição e entrada."
+      },
+      {
+        "name": "spring",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Só o pulo do check ao concluir e a tela Dia fechado."
+      },
+      {
+        "name": "press",
+        "value": "90ms",
+        "purpose": "Afundar de botão."
+      },
+      {
+        "name": "state",
+        "value": "160ms-220ms",
+        "purpose": "Cor, borda e interruptor."
+      },
+      {
+        "name": "enter",
+        "value": "240ms-420ms",
+        "purpose": "Folhas, passos, toasts, barras."
+      },
+      {
+        "name": "fill",
+        "value": "600ms-700ms",
+        "purpose": "Enchimento de anéis e barras de progresso."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "1ms",
+        "purpose": "prefers-reduced-motion: reduce zera animações, transições e a espera de 520ms antes de recolher a linha."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet",
+        "value": "700px"
+      },
+      {
+        "name": "login-split",
+        "value": "900px"
+      },
+      {
+        "name": "desktop",
+        "value": "1024px"
+      },
+      {
+        "name": "wide",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Toda ação principal; borda inferior verde-escura que afunda ao tocar.",
+      "html": "<button class=\"ds-btn\">Salvar item</button>",
+      "css": ".ds-btn { font-family: var(--font); font-weight: 800; font-size: 1rem; line-height: 1.2; letter-spacing: 0.005em; min-height: 48px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border-radius: 14px; transition: transform 90ms var(--ease), border-bottom-width 90ms var(--ease), background-color 160ms, color 160ms; border: 0; border-bottom: 4px solid var(--primary-edge); background: var(--primary); color: var(--on-primary); } .ds-btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-btn:active { transform: translateY(3px); border-bottom-width: 1px; }"
+    },
+    {
+      "name": "Botão fantasma",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação secundária neutra com a mesma borda que afunda.",
+      "html": "<button class=\"ds-btn-ghost\">Pular hoje</button>",
+      "css": ".ds-btn-ghost { font-family: var(--font); font-weight: 800; font-size: 1rem; line-height: 1.2; letter-spacing: 0.005em; min-height: 48px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border-radius: 14px; transition: transform 90ms var(--ease), border-bottom-width 90ms var(--ease), background-color 160ms, color 160ms; background: var(--surface); color: var(--text); border: 2px solid var(--line); border-bottom-width: 4px; } .ds-btn-ghost:hover { border-color: var(--line-strong); } .ds-btn-ghost:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-btn-ghost:active { transform: translateY(2px); border-bottom-width: 2px; }"
+    },
+    {
+      "name": "Fichas de escolha",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Dias, durações e filtros; selecionada em verde suave.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\">Seg</button><button class=\"ds-chip on\">Ter</button><button class=\"ds-chip\">Qua</button></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { font-family: var(--font); font-weight: 800; font-size: 1rem; min-height: 44px; padding: 0 16px; border-radius: 99px; background: var(--surface); color: var(--text); border: 2px solid var(--line); border-bottom-width: 4px; cursor: pointer; transition: transform 90ms var(--ease), border-bottom-width 90ms var(--ease); } .ds-chip.on { background: var(--primary-soft); border-color: var(--primary-ink); color: var(--primary-ink); } .ds-chip:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-chip:active { transform: translateY(2px); border-bottom-width: 2px; }"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto; a borda vira verde no foco.",
+      "html": "<label class=\"ds-label\">Nome do item<input class=\"ds-input\" placeholder=\"Ler 30 min\"></label>",
+      "css": ".ds-label { display: block; font-family: var(--font); font-size: 0.9375rem; font-weight: 700; color: var(--text); } .ds-input { display: block; width: 100%; margin-top: 6px; font-family: var(--font); font-weight: 600; font-size: 1rem; min-height: 52px; padding: 12px 14px; color: var(--text); background: var(--surface); border: 2px solid var(--line); border-radius: 14px; caret-color: var(--primary-ink); transition: border-color 160ms; } .ds-input:focus { outline: none; border-color: var(--primary-ink); }"
+    },
+    {
+      "name": "Linha de item",
+      "kind": "card",
+      "refersTo": "task-row",
+      "description": "Assinatura: quadradinho tingido, nome, prazo e círculo de concluir à direita.",
+      "html": "<article class=\"ds-task\"><span class=\"ds-tile\" style=\"background: var(--t-reading)\">📚</span><span class=\"ds-task-text\"><span class=\"ds-task-name\">Ler 30 min<svg class=\"ds-star\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linejoin=\"round\"><path d=\"m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z\"/></svg></span><span class=\"ds-task-sub\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2\"/></svg>comece até 21:30</span></span><button class=\"ds-check\" aria-label=\"Concluir\"><span class=\"ds-disc\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg></span></button></article>",
+      "css": ".ds-task { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; min-height: 80px; padding: 4px 10px 4px 13px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); font-family: var(--font); color: var(--text); } .ds-tile { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; font-size: 1.5rem; line-height: 1; } .ds-task-name { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 1.0625rem; line-height: 1.25; } .ds-star { color: var(--xp); } .ds-task-sub { display: flex; align-items: center; gap: 5px; margin-top: 3px; font-size: 0.875rem; font-weight: 700; color: var(--attention-ink); } .ds-check { width: 52px; height: 52px; padding: 0; border: 0; border-radius: 50%; background: var(--surface); color: transparent; display: grid; place-items: center; cursor: pointer; } .ds-disc { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2.5px var(--line-strong); transition: background-color 200ms, box-shadow 200ms, color 200ms; } .ds-check:hover .ds-disc { box-shadow: inset 0 0 0 2.5px var(--done); color: color-mix(in srgb, var(--done) 45%, transparent); } .ds-check:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-check:active .ds-disc { background: var(--done); box-shadow: none; color: #fff; animation: ds-pop 420ms var(--spring) both; } @keyframes ds-pop { from { transform: scale(0.5); } }"
+    },
+    {
+      "name": "Pílulas de sequência e XP",
+      "kind": "chip",
+      "refersTo": "pill-flame",
+      "description": "Status no topo de Hoje; laranja só na sequência, dourado só no XP.",
+      "html": "<div class=\"ds-pills\"><span class=\"ds-pill flame\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z\"/></svg>12</span><span class=\"ds-pill xp\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linejoin=\"round\"><path d=\"m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z\"/></svg>Nv 4</span></div>",
+      "css": ".ds-pills { display: flex; gap: 6px; } .ds-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px 6px 8px; border-radius: 99px; font-family: var(--font); font-weight: 900; font-size: 0.9375rem; line-height: 1; } .ds-pill.flame { background: var(--flame-soft); color: var(--flame-ink); } .ds-pill.flame svg { color: var(--flame); } .ds-pill.xp { background: var(--xp-soft); color: var(--xp-ink); } .ds-pill.xp svg { color: var(--xp); }"
+    },
+    {
+      "name": "Barra de abas",
+      "kind": "nav",
+      "refersTo": "nav-tab",
+      "description": "Barra inferior no celular com o + verde no centro.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-tab on\"><span class=\"ds-ico\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg></span>Hoje</button><button class=\"ds-tab\"><span class=\"ds-ico\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/></svg></span>Itens</button><button class=\"ds-add\" aria-label=\"Novo item\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg></button></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; background: var(--surface); border-top: 1px solid var(--line); } .ds-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 64px; padding: 6px 0; background: none; border: 0; color: var(--muted); font-family: var(--font); font-size: 0.75rem; font-weight: 800; cursor: pointer; } .ds-ico { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 99px; transition: background-color 200ms; } .ds-tab.on { color: var(--primary-ink); } .ds-tab.on .ds-ico { background: var(--primary-soft); } .ds-tab:focus-visible, .ds-add:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-add { flex: none; width: 56px; height: 48px; margin: 0 4px; padding: 0; display: grid; place-items: center; border: 0; border-bottom: 4px solid var(--primary-edge); border-radius: 16px; background: var(--primary); color: var(--on-primary); cursor: pointer; transition: transform 90ms var(--ease), border-bottom-width 90ms var(--ease); } .ds-add:active { transform: translateY(3px); border-bottom-width: 1px; }"
+    },
+    {
+      "name": "Opção de passo",
+      "kind": "custom",
+      "refersTo": "option",
+      "description": "Escolha grande do cadastro em passos.",
+      "html": "<div class=\"ds-options\"><button class=\"ds-option on\">Todo dia<small>seg a dom</small></button><button class=\"ds-option\">Alguns dias<small>escolha quais</small></button></div>",
+      "css": ".ds-options { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; } .ds-option { min-height: 84px; padding: 12px 14px; display: grid; justify-items: start; align-content: center; gap: 4px; text-align: left; background: var(--surface); color: var(--text); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; font-family: var(--font); font-weight: 800; font-size: 1.0625rem; cursor: pointer; transition: transform 90ms var(--ease), border-bottom-width 90ms var(--ease); } .ds-option small { font-size: 0.8125rem; font-weight: 700; color: var(--muted); } .ds-option.on { background: var(--primary-soft); border-color: var(--primary-ink); color: var(--primary-ink); } .ds-option.on small { color: var(--primary-ink); } .ds-option:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-ink) 70%, transparent); outline-offset: 2px; } .ds-option:active { transform: translateY(2px); border-bottom-width: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Lista a Um Toque",
+    "overview": "**Creative North Star: \"A Lista a Um Toque\"**\n\nO padrão dos apps de hábito executado com capricho. Uma lista calma de linhas brancas sobre fundo cinza-azulado claro, tinta quase preta, e cada item a um toque de feito. A régua de acabamento é Duolingo e Todoist: formas gordas e arredondadas, Nunito em pesos fortes, botões que afundam ao tocar e progresso que se sente (anel do dia, sequência, XP, a tela de dia fechado).\n\nA densidade é de app de celular: uma coluna de até 560 px, linhas de 72 px de altura, alvos de toque de 44 px ou mais em todo controle. A cor é rara e sempre quer dizer alguma coisa: verde é ação e feito, laranja é sequência, dourado é XP, âmbar e vermelho são prazo apertando. O resto é neutro. O movimento é rápido e assentado (`--ease`); o elástico (`--spring`) aparece só em dois momentos de recompensa.\n\nA variante escura segue o sistema operacional (`prefers-color-scheme`) e troca neutros, tintas e fundos suaves, mantendo os papéis.",
+    "keyCharacteristics": [
+      "Fundo claro com linhas e cards brancos de sombra mínima; nada de painel escuro com bordas pesadas.",
+      "Um único verde de ação; as outras cores são semânticas e confinadas ao seu papel.",
+      "Botões, fichas e opções com borda inferior mais grossa que afunda no `:active`.",
+      "Quadradinhos arredondados tingidos pela categoria guardam o emoji do item.",
+      "Ícones de traço desenhados à mão (24x24, `stroke-width` 2, pontas redondas), nunca glifos de texto.",
+      "Números em `tabular-nums` e peso 900."
+    ],
+    "rules": [
+      {
+        "name": "The One Green Rule",
+        "body": "Existe um verde de ação. Todo botão principal, seleção e conclusão usa a família `primary`/`done`; nenhuma outra cor vira botão.",
+        "section": "colors"
+      },
+      {
+        "name": "The Colour Has A Job Rule",
+        "body": "Laranja só na sequência, dourado só no XP, âmbar e vermelho só no prazo e no erro, tintas de categoria só no quadradinho do item. Se uma cor aparece fora do seu papel, ela mente.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-On-Soft Rule",
+        "body": "Texto sobre fundo suave usa o par `-ink` da mesma família, nunca a cor cheia; quando o `-ink` não passa de 4.5:1 sobre o suave, cria-se um token de contraste próprio, como `partial-ink` (#0E5F2D no claro) para o numeral do dia parcial sobre `primary-soft`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heavy Rounded Rule",
+        "body": "Hierarquia por peso e tamanho dentro de Nunito; nada abaixo de 500, nenhuma segunda família, nada em caixa alta.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Count Rule",
+        "body": "Todo número que muda (contagens, tempos, XP, percentuais) usa `tabular-nums` para não dançar.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thumb Floor Rule",
+        "body": "Nenhum alvo de toque abaixo de 44 px: botões 48, campos 52, círculo de concluir 52, abas 64, linhas de item 72, opções de passo 84, botões de rodapé 54.",
+        "section": "layout"
+      },
+      {
+        "name": "The Right Edge Is Done Rule",
+        "body": "O círculo de concluir mora na borda direita de cada linha; nada flutua por cima dele. Por isso o + fica no centro da barra de abas, nunca como botão flutuante no canto.",
+        "section": "layout"
+      },
+      {
+        "name": "The Pressable Edge Rule",
+        "body": "Volume de controle é uma borda inferior de 4 px mais escura (`primary-edge` no verde, `line` nos neutros) que encolhe no `:active` (para 1 px com `translateY(3px)` no principal; para 2 px com `translateY(2px)` nos neutros), em 90 ms. O toque se sente.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Spring Is A Reward Rule",
+        "body": "`--spring` (`cubic-bezier(0.34, 1.56, 0.64, 1)`) só existe no pulo do check ao concluir e na tela Dia fechado (medalha e número da sequência). Navegação, folhas e listas nunca quicam.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** use o verde `primary` para toda ação principal e `done` para todo estado concluído.",
+      "**Do** dê a todo botão, ficha e opção a borda inferior de 4 px que afunda no `:active`.",
+      "**Do** mantenha todo alvo de toque em 44 px ou mais, e a ação principal de um passo em 54 px de largura total.",
+      "**Do** escreva texto sobre fundo suave com o `-ink` da mesma família, e crie um token de contraste (como `partial-ink`) quando o par não passar de 4.5:1.",
+      "**Do** use os ícones de traço de `Icon.vue` (24x24, traço 2, pontas redondas) e acrescente novos no mesmo desenho.",
+      "**Do** defina toda cor nova como token nos dois temas, em `:root` e no bloco `prefers-color-scheme: dark`.",
+      "**Do** coloque números que mudam em `tabular-nums` e peso 900."
+    ],
+    "donts": [
+      "**Don't** use laranja fora da sequência, dourado fora do XP, âmbar ou vermelho fora de prazo e erro, nem tinta de categoria fora do quadradinho do item.",
+      "**Don't** crie um segundo verde, uma segunda cor de botão ou botão em cor semântica.",
+      "**Don't** use `--spring` fora do check e da tela Dia fechado.",
+      "**Don't** ponha nada flutuando sobre a borda direita das linhas, onde fica o círculo de concluir.",
+      "**Don't** volte ao painel escuro com vários botões em cada card: a linha tem um toque de concluir, o resto vai para a folha de detalhes.",
+      "**Don't** use texto em caixa alta, rótulos acima de títulos, ou uma segunda família tipográfica."
+    ]
+  }
+}
