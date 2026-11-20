@@ -7,6 +7,7 @@ import ItemSheet from '../components/ItemSheet.vue'
 import QuickAdd from '../components/QuickAdd.vue'
 import OnboardingCard from '../components/OnboardingCard.vue'
 import { shortDate } from '../lib/format'
+import { emojiOf } from '../lib/categories'
 import { burst } from '../lib/confetti'
 import { act, notify } from '../lib/toast'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
@@ -189,7 +190,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
       <div v-for="item in doneToday" :key="item.id" class="slot">
         <div class="plain done-row">
           <span class="done-check"><Icon name="check" :size="16" /></span>
-          <button class="link done-name" @click="detail = item">{{ item.name }}</button>
+          <button class="link done-name" @click="detail = item"><span v-if="emojiOf(item)" class="emoji" aria-hidden="true">{{ emojiOf(item) }}</span>{{ item.name }}</button>
           <template v-if="isRepeat(item)">
             <span class="meta num">{{ timesOf(item) }}/{{ item.times_per_day }}</span>
             <button class="icon-btn small" aria-label="Registrar mais uma vez" title="Mais uma vez" @click="complete(item, $event)"><span aria-hidden="true">+1</span></button>

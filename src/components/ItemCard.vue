@@ -53,7 +53,7 @@ const taskFraction = computed(() => Math.min(1, props.elapsedS / (props.item.dur
 
       <p class="meta meta-line">
         <span v-if="rep">
-          <span class="num">{{ rep.count }}/{{ rep.target }}</span><template v-if="category"> · {{ category }}</template> · próxima às <span class="num">{{ minToTime(rep.deadlineMin) }}</span>
+          <span class="num">{{ rep.count }}/{{ rep.target }}</span><template v-if="category"> · {{ category }}</template> · {{ rep.due ? 'na hora desde' : 'próxima às' }} <span class="num">{{ minToTime(rep.deadlineMin) }}</span>
           <template v-if="!rep.fits"> · não dá mais para chegar a {{ rep.target }} hoje</template>
           <template v-if="snoozed"> · alerta adiado</template>
         </span>
