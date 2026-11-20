@@ -60,6 +60,9 @@ const extra = computed(() =>
   [props.rolledDays ? (props.rolledDays === 1 ? 'de ontem' : `há ${props.rolledDays} dias`) : '', props.snoozed ? 'alerta adiado' : ''].filter(Boolean).join(' · '),
 )
 
+// Pedaços da linha ("Comece até 13:15", "em 30 min", "de ontem"): a quebra só acontece entre eles.
+const parts = computed(() => [...sub.value.text.split(' · '), ...(extra.value ? extra.value.split(' · ') : [])])
+
 // Anel segmentado do item repetido: um pedaço por vez do dia.
 const C = 2 * Math.PI * 23
 const segments = computed(() => {
@@ -82,7 +85,7 @@ const checkLabel = computed(() => {
         <ItemTile :item="item" />
         <span>
           <span class="task-name">{{ item.name }}<Icon v-if="item.essential" name="star" filled :size="15" class="star" /></span>
-          <span class="task-sub"><Icon :name="sub.icon" :size="15" />{{ sub.text }}<template v-if="extra"> · {{ extra }}</template></span>
+          <span class="task-sub"><Icon :name="sub.icon" :size="15" /><span><template v-for="(p, i) in parts" :key="i"><template v-if="i"> · </template><span class="nw">{{ p }}</span></template></span></span>
         </span>
       </button>
       <button class="check" :class="{ multi: !!rep, got }" :aria-label="checkLabel" @click="tap">

@@ -98,12 +98,12 @@ function tomorrow() {
         </label>
         <button class="ghost" aria-label="Mais 5 minutos" @click="step(5)"><span aria-hidden="true">+</span></button>
       </div>
-      <div class="chips">
+      <div class="presets">
         <button v-for="p in presets" :key="p" class="chip-btn" :class="{ on: minutes === p }" @click="minutes = p">{{ p }} min</button>
       </div>
       <p class="meta">{{ hint }}</p>
       <button v-if="pending" class="sheet-done" :disabled="!clamp(minutes)" @click="emit('finish', clamp(minutes))"><Icon name="check" :size="22" />Concluir com {{ clamp(minutes) }} min</button>
-      <button :class="pending ? 'ghost' : 'sheet-done'" :disabled="isDone && !clamp(minutes)" @click="saveTime">{{ isDone ? 'Salvar tempo' : 'Só salvar o cronômetro' }}</button>
+      <button v-if="isDone || hasTimer" :class="pending ? 'ghost' : 'sheet-done'" :disabled="isDone && !clamp(minutes)" @click="saveTime">{{ isDone ? 'Salvar tempo' : 'Só salvar o cronômetro' }}</button>
     </template>
 
     <a v-if="calendarUrl && !profile?.calendar_connected" class="btn ghost" :href="calendarUrl" target="_blank" rel="noopener"><Icon name="calendar" />Adicionar ao Google Agenda</a>

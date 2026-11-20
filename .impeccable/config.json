@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-11-20T15:49:12.884Z",
         "reason": "assistant decision, not user confirmed: pressable button bottom edge (Duolingo bar named by the user), collapses on :active; not a card accent"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-20T15:52:24.784Z",
+        "reason": "assistant decision, not user confirmed: unchosen decision-round sketch (Folhinha), not shipped, git-ignored"
       }
     ]
   }

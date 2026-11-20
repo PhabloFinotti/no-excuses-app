@@ -24,6 +24,10 @@ Fora de propósito: dormir depois da meia-noite (mudança profunda no motor, rot
 Hábito com "vezes por dia", intervalo e primeiro aviso (colírio 5x, a cada 2h, a partir de 09:30): próximo aviso = última vez + intervalo, sem encurtar para recuperar; card "2/5 · próxima às 13:40" com Feito (+1); dia feito ao bater a meta; atrasado e um push só quando a meta não cabe antes de dormir; histórico com vezes por dia. Data de fim opcional para qualquer hábito. Emoji no título de todos os pushes (do item ou da categoria) e tipo de aviso no título; `renotify` para a notificação substituta vibrar. Decisão em ADR 0005.
 Fora de propósito: repetir o aviso se ignorado, fim de janela por item, horários por dia da semana, duração/timer no item repetido, ícone desenhado por categoria, arquivar sozinho no fim, "5x 2h" na adição rápida.
 
+## Redesenho da UI e UX (implementado)
+Nova identidade no padrão dos apps de hábito (régua Duolingo e Todoist), cadastro em passos curtos, linha de item com círculo de concluir e detalhes numa folha, card do dia com anel e semana, tela "Dia fechado", sequência, meta semanal, XP e níveis calculados do histórico. Contexto em `PRODUCT.md`; contrato da direção em `.impeccable/surfaces/`.
+Adiados: meta semanal configurável (fixa em 5), conquistas, som ao concluir, gestos de arrastar.
+
 ## Fase 0: validar o que existe (gate para o resto)
 Já listado em `TASKS.md` (V1 a V7). Acrescento:
 - [ ] F0.1 Usar o app 2 a 3 dias reais e anotar atritos em `docs/NOTES.md`. Pronto: lista de problemas reais priorizada.

@@ -27,7 +27,7 @@ const archived = computed(() => archivedItems.value.filter(matchesFilter))
 const preview = computed(() => describeQuickAdd(quick.value))
 // "5x, a cada 2h, a partir de 09:30" ou "30 min"
 const amount = (i: ItemRow) =>
-  isRepeat(i) ? `${i.times_per_day}x, a cada ${i.interval_min! % 60 ? hm(i.interval_min!) : `${i.interval_min! / 60}h`}${i.repeat_from ? `, a partir de ${i.repeat_from.slice(0, 5)}` : ''}` : `${i.duration_min} min`
+  isRepeat(i) ? `${i.times_per_day}x, a cada ${i.interval_min! % 60 ? hm(i.interval_min!) : `${i.interval_min! / 60}h`}${i.repeat_from ? `, a partir de\u00a0${i.repeat_from.slice(0, 5)}` : ''}` : `${i.duration_min}\u00a0min`
 const ending = (i: ItemRow) => (!i.ends_on ? '' : i.ends_on < today.value ? `terminou em ${shortDate(i.ends_on)}` : `até ${shortDate(i.ends_on)}`)
 
 const edit = (item: ItemRow) => (editing.value = item)
@@ -82,7 +82,7 @@ function restore(item: ItemRow) {
       <button class="link grow" :aria-label="`Editar ${item.name}`" @click="edit(item)">
         <strong>{{ item.name }}</strong>
         <span class="meta" style="display: block">
-          {{ item.kind === 'task' ? `Tarefa · ${shortDate(item.due_date!)}` : `Hábito · ${weekdaysLabel(item.weekdays)}` }} · {{ amount(item) }}<template v-if="item.fixed_time"> · às {{ item.fixed_time.slice(0, 5) }}</template>
+          {{ item.kind === 'task' ? `Tarefa · ${shortDate(item.due_date!)}` : `Hábito · ${weekdaysLabel(item.weekdays)}` }} · {{ amount(item) }}<template v-if="item.fixed_time"> · às&nbsp;{{ item.fixed_time.slice(0, 5) }}</template>
           <template v-if="ending(item)"> · {{ ending(item) }}</template>
         </span>
       </button>

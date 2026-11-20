@@ -111,9 +111,7 @@ const save = () => run(() => {
           <button class="ghost" @click="run(exportCsv, 'CSV exportado.')">Exportar CSV</button>
           <button class="ghost" @click="run(exportBackup, 'Backup exportado (itens, conclusões e rotina).')">Backup JSON</button>
         </div>
-        <label>Restaurar backup JSON
-          <input type="file" accept="application/json" @change="restore" />
-        </label>
+        <label class="btn ghost file-btn">Restaurar backup JSON…<input type="file" accept="application/json" class="sr" @change="restore" /></label>
         <p class="meta">Restaurar mistura o backup com o que já existe: itens e conclusões com o mesmo código são substituídos pelos do arquivo; o resto fica como está.</p>
       </section>
 

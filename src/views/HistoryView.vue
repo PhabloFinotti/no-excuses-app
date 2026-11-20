@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
 import { act, notify } from '../lib/toast'
+import Icon from '../components/Icon.vue'
 import ItemTile from '../components/ItemTile.vue'
 import { archivedItems, completions, items, progress, setDuration, today } from '../lib/store'
 import { XP_PER_DONE } from '../lib/progress'
@@ -73,19 +74,19 @@ const calendar = computed(() => {
   if (detail.value)
     return detail.value.cells.map((c) => ({
       day: c.day, has: c.scheduled,
-      bg: c.done ? 'var(--done)' : c.skipped ? 'var(--attention)' : c.counted ? 'var(--urgent)' : '',
+      tone: c.done ? 'full' : c.skipped ? 'skip' : c.counted ? 'none' : '',
       title: (c.done ? (repeat.value ? 'Feito' : `Feito (${c.minutes} min)`) : c.skipped ? 'Pulado' : c.counted ? 'Não feito' : c.scheduled ? 'Hoje' : 'Sem agenda')
         + (repeat.value && c.scheduled ? ` (${c.times}/${habit.value!.times_per_day})` : ''),
     }))
   if (catKey.value)
     return stats.value.cells.map((c) => ({
       day: c.day, has: c.scheduled > 0 || c.done > 0,
-      bg: c.done > 0 ? 'var(--done)' : c.scheduled > 0 ? 'var(--urgent)' : '',
+      tone: c.done > 0 ? 'full' : c.scheduled > 0 ? 'none' : '',
       title: c.done > 0 ? `${c.done} feito(s)` : c.scheduled > 0 ? 'Nada feito' : 'Sem agenda',
     }))
   return stats.value.cells.map((c) => ({
     day: c.day, has: c.scheduled > 0,
-    bg: !c.scheduled ? '' : c.done === c.scheduled ? 'var(--done)' : c.done ? 'var(--attention)' : 'var(--urgent)',
+    tone: !c.scheduled ? '' : c.done === c.scheduled ? 'full' : c.done ? 'partial' : 'none',
     title: `${c.done}/${c.scheduled}`,
   }))
 })
@@ -110,15 +111,15 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
   </div>
 
   <section v-if="!selectedId" class="card summary-card" aria-label="Seu progresso">
-    <div class="kpis">
-      <div class="kpi flame"><b class="num">{{ progress.streak }}</b><span>{{ progress.streak === 1 ? 'dia seguido' : 'dias seguidos' }}</span></div>
-      <div class="kpi"><b class="num">{{ progress.week.closed }}/{{ progress.week.goal }}</b><span>dias fechados na semana</span></div>
-      <div class="kpi xp"><b class="num">{{ progress.xp }}</b><span>XP no total</span></div>
-    </div>
     <div class="level-row">
-      <p class="meta"><span>Nível {{ progress.level }}</span><span class="num">{{ progress.into }} de {{ progress.span }} XP</span></p>
+      <div class="level-head"><h2>Nível {{ progress.level }}</h2><span class="num">{{ progress.into }} de {{ progress.span }} XP</span></div>
       <div class="level-bar" role="progressbar" :aria-valuenow="progress.into" aria-valuemin="0" :aria-valuemax="progress.span" :aria-label="`Progresso no nível ${progress.level}`"><i :style="{ transform: `scaleX(${progress.into / progress.span})` }" /></div>
       <p class="meta">Mais {{ Math.ceil((progress.span - progress.into) / XP_PER_DONE) }} itens feitos e você chega ao nível {{ progress.level + 1 }}.</p>
+    </div>
+    <div class="pills wrap">
+      <span class="pill flame" :class="{ off: !progress.streak }"><Icon name="flame" filled :size="18" />{{ progress.streak }} {{ progress.streak === 1 ? 'dia seguido' : 'dias seguidos' }}</span>
+      <span class="pill done-pill"><Icon name="check" :size="18" />{{ progress.week.closed }} de {{ progress.week.goal }} dias na semana</span>
+      <span class="pill xp"><Icon name="star" filled :size="18" />{{ progress.xp }} XP</span>
     </div>
   </section>
 
@@ -237,24 +238,23 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <div
       v-for="c in calendar"
       :key="c.day"
-      :class="{ has: c.has, today: c.day === today }"
-      :style="{ background: c.bg }"
+      :class="[c.tone && `c-${c.tone}`, { today: c.day === today }]"
       :title="c.title"
     >{{ Number(c.day.slice(8)) }}</div>
   </div>
   <p v-if="detail" class="legend">
-    <span><i style="background: var(--done)" />Feito</span>
-    <span><i style="background: var(--attention)" />Pulado</span>
-    <span><i style="background: var(--urgent)" />Não feito</span>
+    <span><i class="c-full" />Feito</span>
+    <span><i class="c-skip" />Pulado</span>
+    <span><i class="c-none" />Não feito</span>
   </p>
   <p v-else-if="catKey" class="legend">
-    <span><i style="background: var(--done)" />Algum item feito</span>
-    <span><i style="background: var(--urgent)" />Nada feito</span>
+    <span><i class="c-full" />Algum item feito</span>
+    <span><i class="c-none" />Nada feito</span>
   </p>
   <p v-else class="legend">
-    <span><i style="background: var(--done)" />Tudo feito</span>
-    <span><i style="background: var(--attention)" />Parcial</span>
-    <span><i style="background: var(--urgent)" />Nada feito</span>
+    <span><i class="c-full" />Tudo feito</span>
+    <span><i class="c-partial" />Parcial</span>
+    <span><i class="c-none" />Nada feito</span>
   </p>
 
     </section>

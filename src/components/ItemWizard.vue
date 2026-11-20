@@ -122,12 +122,11 @@ const open = ref<string | null>(null)
 const toggle = (k: string) => (open.value = open.value === k ? null : k)
 
 // ---- Navegação --------------------------------------------------------------------------------------
-// No meio da frase o nome vai em minúscula ("Quando você faz ler?"); siglas ficam como estão.
-const inSentence = computed(() => (/^\p{Lu}\p{Ll}/u.test(form.name) ? form.name.charAt(0).toLowerCase() + form.name.slice(1) : form.name))
+// O nome não entra na pergunta (frases como "Quando você faz ler?" não funcionam): ele aparece acima, como contexto.
 const titles = computed(() => [
   editing ? 'Nome do item' : 'O que você quer fazer?',
-  form.kind === 'task' && editing ? `Quando é ${inSentence.value}?` : `Quando você faz ${inSentence.value}?`,
-  form.kind === 'task' ? `Quanto tempo leva ${inSentence.value}?` : `Como é ${inSentence.value} no seu dia?`,
+  form.kind === 'task' && editing ? 'Para quando?' : 'Com que frequência?',
+  form.kind === 'task' ? 'Quanto tempo leva?' : 'Uma vez ou várias vezes por dia?',
   editing ? 'Revise e salve' : 'Tudo certo?',
 ])
 
@@ -226,6 +225,7 @@ async function save() {
 
       <div class="flow-body">
         <div :key="step" class="step">
+          <p v-if="step === 1 || step === 2" class="flow-context"><ItemTile :item="form" size="sm" />{{ form.name }}</p>
           <h2 ref="heading" tabindex="-1">{{ titles[step] }}</h2>
 
           <!-- 1. Nome -->

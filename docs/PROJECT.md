@@ -22,7 +22,7 @@ Slogan do app: "Sem desculpas."
 | Integração | Google Agenda (OAuth próprio, escopo `calendar.app.created`) |
 | Testes | Vitest (62 testes sobre a lógica pura) |
 | Deploy | Vercel (front), Supabase (funções e banco), GitHub Actions (CI e deploy das funções) |
-| Fonte | Bricolage Grotesque (títulos e números), sans do sistema no corpo |
+| Fonte | Nunito (variável, servida pelo próprio app via @fontsource) |
 
 Convenção: identificadores em inglês, comentários em português só quando necessário.
 
@@ -32,13 +32,20 @@ Convenção: identificadores em inglês, comentários em português só quando n
 - **Hábito**: nome, duração (min), horário fixo opcional, dias da semana, prioridade (normal/essencial), limites de alerta próprios (opcionais), emoji opcional, data de fim opcional ("termina em"), arquivável.
 - **Item repetido no dia** (ADR 0005): hábito com "vezes por dia" > 1, intervalo e horário do primeiro aviso (ex.: colírio 5x, a cada 2h, a partir de 09:30). Sem duração: cada toque em "Feito (+1)" registra uma vez; o próximo aviso é a última vez + o intervalo. Bateu a meta, o dia está feito (e ainda aceita +1). Fica atrasado quando a meta não cabe antes de dormir; o intervalo nunca encolhe.
 - **Tarefa avulsa**: nome, duração, data de vencimento. Tarefa não concluída **rola para o dia seguinte**. Após 3 dias parada (`STALE_DAYS`), sai do cálculo e aparece em "Paradas há dias" com as ações "Fazer hoje" ou "Descartar".
-- **Adição rápida** na tela Hoje: texto único tipo `Leitura 30`. Vira hábito diário ou tarefa de hoje.
+- **Cadastro em passos** (botão + no centro da barra): nome com sugestões, quando (todo dia, dias úteis, escolher os dias, só uma vez), quanto (duração ou várias vezes por dia) e resumo com os opcionais recolhidos. Editar abre direto no resumo.
+- **Adição rápida** em Itens: texto único tipo `Leitura 30`. Vira tarefa de hoje ou hábito diário.
 
 ### Tela "Hoje"
 - Itens ordenados pelo prazo, em grupos **Agora** (atenção, urgente, atrasado), **Mais tarde** e **Feitos hoje**.
-- Cada card: barra que esvazia com o tempo até o limite, cor e tremor por nível, timer, ações (feito, adiar 10 min, pular, abrir detalhes).
+- Cada linha: quadradinho com o emoji na cor da categoria, nome, linha do prazo em palavras na cor da urgência e um círculo à direita que conclui com um toque (anel segmentado nos itens repetidos). Tocar no nome abre os detalhes: cronômetro, foco, adiar, pular, tempo gasto e editar.
+- Card do dia: anel de progresso, tempo até dormir, aviso de déficit e a semana (dias fechados com chama).
 - Banner quando **não cabe tudo antes de dormir**: mostra o déficit e sugere o item a pular (essenciais são preservados).
-- Confete ao concluir (e um maior ao fechar o dia), vibração curta, desfazer por toast.
+- Concluir enche o círculo e mostra +10 XP; fechar o dia abre a tela "Dia fechado" (sequência, itens, tempo, XP) com confete; vibração curta, desfazer por toast.
+
+### Motivação (calculada do histórico, sem tabela nova; `src/lib/progress.ts`)
+- **Sequência**: dias fechados seguidos (tudo feito ou pulado); hoje em andamento não quebra.
+- **Meta da semana**: 5 dias fechados de domingo a sábado (fixa por enquanto).
+- **XP e nível**: 10 XP por item feito; o nível n começa em 50·n·(n−1) XP. Conclusões antigas (fora da janela de 90 dias) entram por uma contagem no servidor.
 - **Modo foco**: timer em tela cheia com wake lock.
 - Onboarding de primeiro uso (notificações, bateria "Sem restrições" no Samsung, instalar o PWA).
 
@@ -138,12 +145,11 @@ Scripts: `npm run dev`, `npm run dev:demo` (dados falsos, sem Supabase), `npm te
 
 ## 7. Design e UX
 
-- Modo "Operate": ferramenta de uso diário, escaneável, marca nos detalhes.
-- Paleta grafite quente com acento brasa (tokens OKLCH); cores por nível de urgência.
-- Barras de tempo com `transform: scaleX`; respeita `prefers-reduced-motion`.
-- Responsivo: celular (barra inferior, folhas de baixo), desktop ≥ 1024 px (barra lateral, diálogos centrados ≥ 700 px, grids de gráficos e listas).
-- Acessibilidade: foco preso nas folhas, Esc fecha, gráfico de colunas navegável por setas.
-- Tela de login redesenhada.
+- Padrão dos apps de hábito executado com capricho (escolha do dono, 20/11/2026), com a régua de Duolingo e Todoist. Contrato da direção em `.impeccable/surfaces/`, contexto de produto em `PRODUCT.md`.
+- Fundo claro com variante escura pelo sistema; um verde de ação; laranja só na sequência; dourado só no XP; âmbar e vermelho só na urgência; quadradinhos tingidos por categoria.
+- Nunito arredondada em pesos fortes; botões principais com borda inferior que afunda ao tocar; ícones de traço desenhados (`Icon.vue`).
+- Celular: barra inferior com o + no centro; desktop ≥ 1024 px: barra lateral com "Novo item" no topo e painel lateral no Hoje.
+- Acessibilidade: foco preso nas folhas, Esc fecha, alvos de 44 px ou mais, contraste AA nos textos, movimento reduzido respeitado.
 
 ## 8. Decisões já tomadas (não reabrir sem motivo)
 

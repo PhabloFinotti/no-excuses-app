@@ -2,7 +2,7 @@
 version: 1
 slug: "src-views-todayview-vue"
 primary_target: "src/views/TodayView.vue"
-related_targets: ["src/components/ItemForm.vue","src/views/ItemsView.vue","src/views/HistoryView.vue","src/views/SettingsView.vue","src/views/LoginView.vue","src/App.vue","src/style.css"]
+related_targets: ["src/components/ItemWizard.vue","src/views/ItemsView.vue","src/views/HistoryView.vue","src/views/SettingsView.vue","src/views/LoginView.vue","src/App.vue","src/style.css"]
 ---
 
 # Superfície: app inteiro (Hoje, cadastro em passos, Itens, Histórico, Ajustes, Login)
@@ -21,7 +21,7 @@ OWN-WORLD: Fundo claro cinza-azulado com linhas brancas e tinta quase preta (var
 
 STORY: Ao abrir, a pessoa vê saudação, sequência, o anel "3 de 8 · 2h10 até dormir" e o próximo item com "comece até". Toca no círculo: ele enche, sobe +10 XP, a linha vai para Feitos. No último, a tela "Dia fechado". Criar item são três passos com opções grandes.
 
-FIRST VIEWPORT: Topo: data e saudação à esquerda, chips de sequência e nível à direita. Card do dia: anel de progresso, contagem, tempo até dormir e aviso de déficit dentro dele. Depois "Agora": quadradinho com emoji, nome, linha do prazo colorida pela urgência e círculo de concluir à direita (anel segmentado nos itens repetidos). Botão + redondo embaixo à direita, acima de quatro abas.
+FIRST VIEWPORT: Topo: data e saudação à esquerda, chips de sequência e nível à direita. Card do dia: anel de progresso, contagem, tempo até dormir e aviso de déficit dentro dele. Depois "Agora": quadradinho com emoji, nome, linha do prazo colorida pela urgência e círculo de concluir à direita (anel segmentado nos itens repetidos). Botão + no centro da barra de abas (Hoje, Itens, +, Histórico, Ajustes); no desktop, "Novo item" no topo da barra lateral. Desvio do esboço registrado na inspeção: o + flutuante embaixo à direita cobria o círculo de concluir da última linha visível, que também fica à direita.
 
 FORM: padrão da categoria (saída padrão escolhida pelo dono, sobre a direção sorteada, que era a 6 da lista), afinado pela régua Duolingo e Todoist. seed:6cddcef88d9749c2
 
