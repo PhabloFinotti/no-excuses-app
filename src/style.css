@@ -13,6 +13,7 @@
   --primary-edge: #0E5F2D;   /* borda inferior que afunda ao tocar */
   --primary-ink: #15803D;    /* texto e ícone na cor de ação */
   --primary-soft: #E3F4E8;
+  --partial-ink: #0E5F2D;    /* numeral sobre --primary-soft: passa de 4.5:1 */
   --on-primary: #FFFFFF;
   --done: #16A34A;
 
@@ -38,7 +39,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0F1216; --surface: #181C22; --raised: #232831; --text: #ECEFF3; --muted: #A0A9B6; --line: #2A3039; --line-strong: #3A424D;
-    --primary-ink: #4ADE80; --primary-soft: #14301F; --done: #22C55E;
+    --primary-ink: #4ADE80; --primary-soft: #14301F; --partial-ink: #4ADE80; --done: #22C55E;
     --flame-ink: #FB923C; --flame-soft: #3A2414; --xp-ink: #FACC15; --xp-soft: #362C0E;
     --attention-ink: #FBBF24; --attention-soft: #33270E; --urgent-ink: #F87171; --urgent-soft: #3A1717; --overdue-ink: #FCA5A5;
     --t-study: #1C2A44; --t-reading: #183223; --t-exercise: #3A2617; --t-health: #13303A; --t-mind: #2A2244;
@@ -394,7 +395,7 @@ nav .inner > button:nth-child(n + 3):not(.nav-add) { order: 3; }
 .cells .dow { background: none; aspect-ratio: auto; font-size: 0.75rem; color: var(--muted); font-weight: 800; }
 .cells div { aspect-ratio: 1; border-radius: 10px; background: var(--raised); font-size: 0.75rem; font-weight: 800; display: grid; place-items: center; color: var(--muted); }
 .cells .c-full { background: var(--primary); color: #fff; }
-.cells .c-partial { background: var(--primary-soft); color: var(--primary-ink); }
+.cells .c-partial { background: var(--primary-soft); color: var(--partial-ink); }
 .cells .c-none { background: var(--urgent-soft); color: var(--urgent-ink); }
 .cells .c-skip { background: var(--raised); color: var(--muted); text-decoration: line-through; }
 .cells .today { box-shadow: inset 0 0 0 2.5px var(--text); }
