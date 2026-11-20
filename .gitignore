@@ -30,3 +30,7 @@ supabase/.temp/
 supabase/.env.local
 .vitest/
 deno.lock
+
+# Impeccable: arquivos de trabalho (rodadas de decisão, capturas de revisão)
+.impeccable/mocks/
+.impeccable/review/
