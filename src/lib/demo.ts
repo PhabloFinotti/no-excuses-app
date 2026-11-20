@@ -61,6 +61,7 @@ export class Query {
   private ignoreDup = false
   private one = false
   private orderCol?: string
+  private head = false
   private db: Record<string, Row[]>
   private table: string
   constructor(db: Record<string, Row[]>, table: string) {
@@ -68,11 +69,12 @@ export class Query {
     this.table = table
     this.conflict = KEYS[table] ?? ['id']
   }
-  select() { return this }
+  select(_cols?: string, opts: { head?: boolean } = {}) { this.head = !!opts.head; return this }
   single() { this.one = true; return this }
   order(col: string) { this.orderCol = col; return this }
   eq(col: string, v: unknown) { this.filters.push((r) => r[col] === v); return this }
   gte(col: string, v: string) { this.filters.push((r) => r[col] >= v); return this }
+  lt(col: string, v: string) { this.filters.push((r) => r[col] < v); return this }
   in(col: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[col])); return this }
   upsert(p: Row | Row[], opts: { onConflict?: string; ignoreDuplicates?: boolean } = {}) {
     this.op = 'upsert'; this.payload = p; this.ignoreDup = !!opts.ignoreDuplicates
@@ -107,6 +109,7 @@ export class Query {
       if (this.op === 'delete') for (const r of out) rows.splice(rows.indexOf(r), 1)
       if (this.orderCol) out.sort((a, b) => String(a[this.orderCol!]).localeCompare(String(b[this.orderCol!])))
     }
+    if (this.head) return { data: null, count: out.length, error: null } // select com { head: true }: só a contagem, como o PostgREST
     return { data: this.one ? (out[0] ? { ...out[0] } : null) : out.map((r) => ({ ...r })), error: null }
   }
 }

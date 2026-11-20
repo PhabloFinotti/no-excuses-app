@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Public+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sheet:#F9F9F6;--ink:#161616;--red:#D6252C;--blue:#2A4D8F;--rule:#E2DED2;--soft:#5E5E58}
+*{box-sizing:border-box;margin:0}
+body{width:390px;height:844px;overflow:hidden;background:#E9E6DC;font-family:"Public Sans",system-ui,sans-serif;color:var(--ink)}
+.sheet{margin:14px 12px 0;background:var(--sheet);border-radius:4px 4px 0 0;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.holes{display:flex;justify-content:center;gap:18px;padding:10px 0 6px;border-bottom:2px dashed var(--rule)}
+.holes i{width:10px;height:10px;border-radius:50%;background:#E9E6DC}
+.top{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end;padding:10px 18px 14px}
+.day{font-family:"Big Shoulders Display";font-weight:900;font-size:120px;line-height:.82;color:var(--ink)}
+.wk{font-family:"Big Shoulders Display";font-weight:900;font-size:30px;color:var(--red);line-height:1}
+.mo{font-weight:800;font-size:14px;margin-top:4px}
+.sun{display:flex;gap:12px;margin-top:10px;font-weight:700;font-size:13px;color:var(--soft)}
+.sun b{color:var(--ink)}
+.left{margin:0 18px;padding:10px 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;font-weight:800;font-size:15px}
+.left span:last-child{color:var(--blue)}
+.list{padding:4px 18px}
+.it{display:grid;grid-template-columns:64px 1fr 36px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)}
+.t{font-family:"Big Shoulders Display";font-weight:900;font-size:30px;line-height:1}
+.t small{display:block;font-family:"Public Sans";font-size:10px;font-weight:700;color:var(--soft)}
+.n{font-weight:800;font-size:17px}
+.m{font-weight:600;font-size:12px;color:var(--soft)}
+.ck{width:32px;height:32px;border:2.5px solid var(--ink);border-radius:50%}
+.urg .t{color:var(--red)}
+.ok .ck{background:var(--ink);border-color:var(--ink)}
+.ok .n{text-decoration:line-through;color:var(--soft)}
+.dose{display:flex;gap:4px;margin-top:4px}
+.dose i{width:10px;height:10px;border:2px solid var(--blue);border-radius:2px}
+.dose i.on{background:var(--blue)}
+nav{position:absolute;left:0;right:0;bottom:0;height:84px;background:var(--sheet);border-top:2px solid var(--ink);display:flex;justify-content:space-around;align-items:center;padding-bottom:18px}
+nav span{font-weight:800;font-size:12px;color:var(--soft)}
+nav span.on{color:var(--red)}
+nav .add{width:54px;height:54px;border-radius:50%;background:var(--red);color:#fff;font-size:32px;font-weight:800;display:grid;place-items:center}
+</style></head><body>
+<div class="sheet">
+  <div class="holes"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="top">
+    <p class="day">20</p>
+    <div><p class="wk">SEXTA-FEIRA</p><p class="mo">Novembro de 2026</p>
+      <div class="sun"><span>acorda <b>07:00</b></span><span>dorme <b>23:00</b></span></div></div>
+  </div>
+  <div class="left"><span>Faltam 5 itens</span><span>2h10 até dormir</span></div>
+  <div class="list">
+    <div class="it urg"><p class="t"><small>até</small>12:15</p><div><p class="n">🧘 Meditar</p><p class="m">10 min · urgente</p></div><i class="ck"></i></div>
+    <div class="it"><p class="t"><small>próxima</small>13:40</p><div><p class="n">💧 Colírio</p><div class="dose"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></div><i class="ck"></i></div>
+    <div class="it"><p class="t"><small>até</small>21:40</p><div><p class="n">💰 Pagar a conta de luz</p><p class="m">20 min · de ontem</p></div><i class="ck"></i></div>
+    <div class="it"><p class="t"><small>até</small>22:00</p><div><p class="n">📖 Leitura</p><p class="m">30 min · essencial</p></div><i class="ck"></i></div>
+    <div class="it ok"><p class="t"><small>feito</small>09:12</p><div><p class="n">🥤 Beber água</p><p class="m">5 min</p></div><i class="ck"></i></div>
+  </div>
+</div>
+<nav><span class="on">Hoje</span><span>Itens</span><div class="add">+</div><span>Histórico</span><span>Ajustes</span></nav>
+</body></html>

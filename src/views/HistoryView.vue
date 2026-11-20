@@ -3,7 +3,9 @@ import { computed, ref } from 'vue'
 import ColumnChart from '../components/ColumnChart.vue'
 import { shortDate } from '../lib/format'
 import { act, notify } from '../lib/toast'
-import { archivedItems, completions, items, setDuration, today } from '../lib/store'
+import ItemTile from '../components/ItemTile.vue'
+import { archivedItems, completions, items, progress, setDuration, today } from '../lib/store'
+import { XP_PER_DONE } from '../lib/progress'
 import { categoryOf } from '../lib/categories'
 import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
 import { isRepeat } from '../../supabase/functions/_shared/pending'
@@ -26,6 +28,7 @@ const stats = computed(() => computeStats(scoped.value, completions.value, today
 const categories = computed(() => computeCategoryStats(everything.value, completions.value, today.value, days.value))
 const catCard = computed(() => categories.value.find((c) => c.key === catKey.value))
 const activeHabitStats = computed(() => stats.value.habitStats.filter((h) => !h.archived))
+const itemOf = (id: string) => everything.value.find((i) => i.id === id)!
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const dayTitle = (day: string) => `${WEEKDAYS[new Date(`${day}T00:00:00Z`).getUTCDay()]!.slice(0, 3)}, ${shortDate(day)}`
@@ -93,7 +96,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
   <h1>Histórico</h1>
   <div class="filters">
     <div class="chips range" role="group" aria-label="Período">
-      <button v-for="r in RANGES" :key="r" class="ghost" :class="{ on: days === r }" :aria-pressed="days === r" @click="days = r">{{ r }} dias</button>
+      <button v-for="r in RANGES" :key="r" class="chip-btn" :class="{ on: days === r }" :aria-pressed="days === r" @click="days = r">{{ r }} dias</button>
     </div>
     <select v-model="selectedId" aria-label="Escopo do histórico">
       <option value="">Todos os itens</option>
@@ -106,7 +109,20 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </select>
   </div>
 
-  <p v-if="stats.cells.length < days" class="meta">O período mostra só os {{ stats.cells.length }} dias desde o primeiro item cadastrado.</p>
+  <section v-if="!selectedId" class="card summary-card" aria-label="Seu progresso">
+    <div class="kpis">
+      <div class="kpi flame"><b class="num">{{ progress.streak }}</b><span>{{ progress.streak === 1 ? 'dia seguido' : 'dias seguidos' }}</span></div>
+      <div class="kpi"><b class="num">{{ progress.week.closed }}/{{ progress.week.goal }}</b><span>dias fechados na semana</span></div>
+      <div class="kpi xp"><b class="num">{{ progress.xp }}</b><span>XP no total</span></div>
+    </div>
+    <div class="level-row">
+      <p class="meta"><span>Nível {{ progress.level }}</span><span class="num">{{ progress.into }} de {{ progress.span }} XP</span></p>
+      <div class="level-bar" role="progressbar" :aria-valuenow="progress.into" aria-valuemin="0" :aria-valuemax="progress.span" :aria-label="`Progresso no nível ${progress.level}`"><i :style="{ transform: `scaleX(${progress.into / progress.span})` }" /></div>
+      <p class="meta">Mais {{ Math.ceil((progress.span - progress.into) / XP_PER_DONE) }} itens feitos e você chega ao nível {{ progress.level + 1 }}.</p>
+    </div>
+  </section>
+
+  <p v-if="stats.cells.length < days" class="meta" style="margin-top: 12px">O período mostra só os {{ stats.cells.length }} dias desde o primeiro item cadastrado.</p>
   <details class="fold">
     <summary>Como contamos</summary>
     <p class="meta">Itens pulados de propósito não contam como falha nem quebram a sequência. Sequências valem dentro do período escolhido. O que foi feito em itens arquivados continua valendo.</p>
@@ -249,7 +265,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
   <div class="habit-grid">
   <div v-for="h in activeHabitStats" :key="h.id" class="plain stat">
     <div class="stat-top">
-      <strong>{{ h.name }}</strong>
+      <strong><ItemTile :item="itemOf(h.id)" size="sm" />{{ h.name }}</strong>
       <span class="stat-rate">{{ Math.round(h.rate * 100) }}%</span>
     </div>
     <div class="track"><div class="fill ok" :style="{ transform: `scaleX(${h.rate})` }" /></div>

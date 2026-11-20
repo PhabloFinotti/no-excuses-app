@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { authReady, isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
+import { authReady, creatingItem, isWriting, items, loadAll, markDone, profile, session, snoozeItem } from './lib/store'
 import { supabase } from './lib/supabase'
 import BrandMark from './components/BrandMark.vue'
 import TodaySkeleton from './components/TodaySkeleton.vue'
 import Icon from './components/Icon.vue'
+import ItemWizard from './components/ItemWizard.vue'
 import { act, dismiss, notify, toasts } from './lib/toast'
 import LoginView from './views/LoginView.vue'
 import TodayView from './views/TodayView.vue'
@@ -88,8 +89,9 @@ onMounted(async () => {
       <div class="brand"><BrandMark :size="36" /><span>No Excuses</span></div>
       <div class="inner">
         <button v-for="([label, icon], key) in tabs" :key="key" :class="{ on: tab === key }" :aria-current="tab === key ? 'page' : undefined" @click="tab = key">
-          <Icon :name="icon" :size="22" />{{ label }}
+          <span class="ico"><Icon :name="icon" :size="22" /></span>{{ label }}
         </button>
+        <button class="nav-add" aria-label="Novo item" @click="creatingItem = true"><Icon name="plus" :size="26" /><span>Novo item</span></button>
       </div>
     </nav>
     <main>
@@ -102,6 +104,7 @@ onMounted(async () => {
         <SettingsView v-else />
       </template>
     </main>
+    <ItemWizard v-if="creatingItem" @close="creatingItem = false" />
     <div class="toasts" aria-live="polite">
       <div v-for="t in toasts" :key="t.id" class="toast" :class="{ error: t.error }" :role="t.error ? 'alert' : 'status'">
         <span>{{ t.text }}</span>

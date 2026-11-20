@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F6F8FC;--line:#DCE3F2;--pen:#2346B8;--pen-ink:#1A3487;--stamp:#6D3FB5;--red:#D7263D;--amber:#C96A00;--gold:#F2B705;--ink:#1E2330;--soft:#5B6478}
+*{box-sizing:border-box;margin:0}
+body{width:390px;height:844px;overflow:hidden;background:var(--paper);font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
+.band{background:var(--pen);color:#fff;padding:52px 20px 18px}
+.date{font-weight:700;font-size:15px;color:#C9D6FF}
+.big{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+.big b{font-size:56px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.big span{font-size:17px;font-weight:700;color:#DCE5FF}
+.stars{display:flex;align-items:center;gap:4px;margin-top:14px}
+.stars svg{width:22px;height:22px}
+.stars .off{opacity:.28}
+.stars em{font-style:normal;font-weight:800;font-size:15px;margin-left:8px}
+.prog{margin-top:14px;height:10px;border-radius:6px;background:#1A3487;overflow:hidden}
+.prog i{display:block;width:38%;height:100%;background:#fff;border-radius:6px}
+.sec{padding:18px 20px 6px;font-weight:800;font-size:15px;color:var(--soft)}
+.row{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line)}
+.box{width:40px;height:40px;border:2.5px solid var(--pen);border-radius:10px;background:#fff}
+.name{font-weight:800;font-size:18px;line-height:1.2}
+.meta{font-weight:600;font-size:13px;color:var(--soft);margin-top:2px}
+.due{text-align:right}
+.due small{display:block;font-size:12px;font-weight:700;color:var(--soft)}
+.due b{font-size:26px;font-weight:900;letter-spacing:-.02em}
+.urgent .due b{color:var(--red);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px}
+.attn .due b{color:var(--amber)}
+.dots{display:flex;gap:5px;margin-top:6px}
+.dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--pen)}
+.dots i.on{background:var(--pen)}
+.done .name{color:var(--soft)}
+.stampbox{position:relative;width:40px;height:40px}
+.stamp{position:absolute;left:-10px;top:4px;transform:rotate(-12deg);border:3px solid var(--stamp);color:var(--stamp);font-weight:900;font-size:13px;padding:2px 6px;border-radius:6px;background:rgba(109,63,181,.06)}
+.skip .name{text-decoration:line-through;color:var(--soft)}
+nav{position:absolute;left:0;right:0;bottom:0;height:84px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;padding-bottom:18px}
+nav span{font-weight:800;font-size:12px;color:var(--soft);text-align:center}
+nav span.on{color:var(--pen)}
+nav .add{width:58px;height:58px;border-radius:50%;background:var(--pen);color:#fff;font-size:34px;font-weight:800;display:grid;place-items:center;box-shadow:0 6px 14px rgba(30,35,48,.22);margin-top:-26px}
+</style></head><body>
+<header class="band">
+  <p class="date">Sexta, 20 de novembro</p>
+  <div class="big"><b>2h10</b><span>até dormir · 3 de 8 feitos</span></div>
+  <div class="stars">
+    <svg viewBox="0 0 24 24"><path fill="#F2B705" d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg>
+    <svg viewBox="0 0 24 24"><path fill="#F2B705" d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg>
+    <svg viewBox="0 0 24 24"><path fill="#F2B705" d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg>
+    <svg viewBox="0 0 24 24"><path fill="#F2B705" d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg>
+    <svg class="off" viewBox="0 0 24 24"><path fill="#fff" d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg>
+    <em>12 dias seguidos</em>
+  </div>
+  <div class="prog"><i></i></div>
+</header>
+<p class="sec">Agora</p>
+<div class="row urgent"><div class="box"></div><div><p class="name">🧘 Meditar</p><p class="meta">10 min · Mente</p></div><div class="due"><small>começar até</small><b>12:15</b></div></div>
+<div class="row attn"><div class="box"></div><div><p class="name">💧 Colírio</p><div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></div><div class="due"><small>próxima</small><b>13:40</b></div></div>
+<p class="sec">Mais tarde</p>
+<div class="row"><div class="box"></div><div><p class="name">📖 Leitura</p><p class="meta">30 min · essencial</p></div><div class="due"><small>começar até</small><b>22:00</b></div></div>
+<div class="row"><div class="box"></div><div><p class="name">💰 Pagar a conta de luz</p><p class="meta">20 min · de ontem</p></div><div class="due"><small>começar até</small><b>21:40</b></div></div>
+<div class="row done"><div class="stampbox"><span class="stamp">FEITO</span></div><div><p class="name">🥤 Beber água</p><p class="meta">5 min · 09:12</p></div><div class="due"><small>+10</small><b style="color:#F2B705">★</b></div></div>
+<div class="row skip"><div class="box" style="border-color:#B8C2D9"></div><div><p class="name">🏋️ Alongar</p><p class="meta">pulado hoje</p></div><div class="due"><small>&nbsp;</small><b style="color:#B8C2D9">—</b></div></div>
+<nav><span class="on">Hoje</span><span>Itens</span><div class="add">+</div><span>Histórico</span><span>Ajustes</span></nav>
+</body></html>

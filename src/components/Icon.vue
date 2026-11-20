@@ -21,13 +21,25 @@ const PATHS: Record<string, string> = {
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   eyeoff: 'M9.9 4.2A10.6 10.6 0 0 1 12 4c6.5 0 10 8 10 8a17.6 17.6 0 0 1-2.7 3.9M6.6 6.6A17.2 17.2 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6M2 2l20 20M10.6 10.6a3 3 0 0 0 4.2 4.2',
   archive: 'M21 8v13H3V8M1 3h22v5H1zM10 12h4',
+  back: 'm15 18-6-6 6-6',
+  next: 'm9 18 6-6-6-6',
+  x: 'M18 6 6 18M6 6l12 12',
+  calendar: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
+  repeat: 'm17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3',
+  sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z',
+  bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
+  once: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v8M9 11l3-3',
+  pick: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  timer: 'M10 2h4M12 14l3-3M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z',
 }
-defineProps<{ name: keyof typeof PATHS; size?: number }>()
+// filled: preenche o desenho (estrela do XP, chama da sequência)
+defineProps<{ name: keyof typeof PATHS; size?: number; filled?: boolean }>()
 defineExpose({ PATHS })
 </script>
 
 <template>
-  <svg :width="size ?? 20" :height="size ?? 20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <svg :width="size ?? 20" :height="size ?? 20" viewBox="0 0 24 24" :fill="filled ? 'currentColor' : 'none'" stroke="currentColor" :stroke-width="filled ? 1.25 : 2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path :d="PATHS[name]" />
   </svg>
 </template>

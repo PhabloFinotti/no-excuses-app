@@ -2,7 +2,8 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 // persistent: um toque fora não fecha (usado quando há edição em andamento); Esc e os botões continuam fechando.
-const props = defineProps<{ title: string; persistent?: boolean }>()
+// full: ocupa a tela no celular (fluxo de cadastro em passos).
+const props = defineProps<{ title: string; persistent?: boolean; full?: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const panel = ref<HTMLElement>()
@@ -41,7 +42,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="scrim" @click="!props.persistent && emit('close')" />
-  <div ref="panel" class="sheet" role="dialog" aria-modal="true" :aria-label="title">
+  <div ref="panel" class="sheet" :class="{ full }" role="dialog" aria-modal="true" :aria-label="title">
     <slot />
   </div>
 </template>

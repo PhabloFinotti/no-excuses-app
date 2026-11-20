@@ -9,6 +9,8 @@ import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
 import { elapsedSeconds, finishMinutes, findCompletion, isPending, isRepeat, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
 import { repeatStates } from '../../supabase/functions/_shared/repeat'
+import { level, streak, week, XP_PER_DONE } from './progress'
+import { computeStats } from './stats'
 
 export interface ProfileRow {
   wake_time: string
@@ -31,7 +33,9 @@ export const profile = ref<ProfileRow | null>(null)
 export const items = ref<ItemRow[]>([])
 export const archivedItems = ref<ItemRow[]>([]) // só para o histórico: o que foi feito antes de arquivar continua contando
 export const completions = ref<CompletionRow[]>([])
+const olderDone = ref(0) // conclusões anteriores à janela carregada (90 dias): o XP não pode cair quando elas saem da janela
 export const nowMs = ref(Date.now())
+export const creatingItem = ref(false) // fluxo de novo item aberto (o botão + mora na navegação)
 // 1s para a barra de tempo e o timer andarem suaves; parado com a aba oculta.
 setInterval(() => !document.hidden && (nowMs.value = Date.now()), 1000)
 
@@ -73,6 +77,23 @@ export const skippedToday = computed(() =>
   }),
 )
 
+// Dia fechado: nada pendente no cálculo (paradas há dias não seguram o dia) e ao menos um item feito.
+export const dayClosed = computed(() => !calc.value.states.length && !repeats.value.length && doneToday.value.length > 0)
+
+// Motivação: sequência de dias fechados, semana, XP e nível (ver progress.ts).
+export const progress = computed(() => {
+  const { cells } = computeStats([...items.value, ...archivedItems.value], completions.value, today.value, 90)
+  const done = completions.value.filter((c) => c.done)
+  const xp = (olderDone.value + done.length) * XP_PER_DONE
+  return {
+    streak: streak(cells, today.value, dayClosed.value),
+    week: week(cells, today.value, dayClosed.value),
+    xp,
+    xpToday: done.filter((c) => c.day === today.value).length * XP_PER_DONE,
+    ...level(xp),
+  }
+})
+
 export const staleTasks = computed(() => items.value.filter((i) => isStale(i, now.value.day) && isPending(i, completions.value, now.value)))
 
 export const completionOf = (item: ItemRow) => findCompletion(item, completions.value, now.value.day)
@@ -88,12 +109,14 @@ export async function loadAll() {
   for (let attempt = 1; ; attempt++) {
     const startEpoch = writeEpoch
     // Busca tudo em paralelo e só então grava: itens sem as conclusões apareceriam todos como pendentes/atrasados por um instante.
-    const [p, active, archived, done] = await Promise.all([
+    const [p, active, archived, done, older] = await Promise.all([
       supabase.from('profiles').select('*').single(),
       supabase.from('items').select('*').eq('archived', false).order('created_at'),
       supabase.from('items').select('*').eq('archived', true),
       supabase.from('item_completions').select('*').gte('day', since),
+      supabase.from('item_completions').select('item_id', { count: 'exact', head: true }).eq('done', true).lt('day', since),
     ])
+    if (older.error) throw new Error(older.error.message)
     const next = { profile: must(p) as ProfileRow, items: must(active) as ItemRow[], archived: must(archived) as ItemRow[], completions: must(done) as CompletionRow[] }
     if (seq !== loadSeq) return // uma leitura mais nova assumiu
     if ((writeEpoch !== startEpoch || inflight > 0) && attempt < 3) continue
@@ -102,6 +125,7 @@ export async function loadAll() {
     items.value = next.items
     archivedItems.value = next.archived
     completions.value = next.completions
+    olderDone.value = older.count ?? 0
     return
   }
 }

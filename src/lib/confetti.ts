@@ -11,7 +11,7 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function palette(): string[] {
   const cs = getComputedStyle(document.documentElement)
-  return ['--accent', '--ok', '--attention', '--text'].map((v) => cs.getPropertyValue(v).trim()).filter(Boolean)
+  return ['--done', '--flame', '--xp', '--primary'].map((v) => cs.getPropertyValue(v).trim()).filter(Boolean)
 }
 
 function ensureCanvas() {
