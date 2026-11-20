@@ -47,7 +47,7 @@ const sub = computed((): { icon: 'timer' | 'alert' | 'bell' | 'repeat' | 'flame'
   if (r) {
     const base = `${r.count} de ${r.target}`
     if (!r.fits) return { icon: 'alert', text: `${base} · não dá mais para chegar a ${r.target} hoje` }
-    if (r.due) return { icon: 'bell', text: `${base} · hora da ${r.count + 1}ª, desde ${t}` }
+    if (r.due) return { icon: 'bell', text: `${base} · ${r.count + 1}ª vez desde ${t}` }
     return { icon: 'repeat', text: `${base} · próxima às ${t}` }
   }
   const fixed = !!props.item.fixed_time

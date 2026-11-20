@@ -253,7 +253,7 @@ async function save() {
             </div>
             <div v-if="when === 'custom'" class="sub-block">
               <p class="meta">Em quais dias?</p>
-              <div class="chips">
+              <div class="chips days">
                 <button v-for="(d, i) in DAYS" :key="i" class="chip-btn day" :class="{ on: form.weekdays.includes(i) }" :aria-pressed="form.weekdays.includes(i)" :aria-label="DAY_NAMES[i]" @click="toggleDay(i)">{{ d }}</button>
               </div>
             </div>

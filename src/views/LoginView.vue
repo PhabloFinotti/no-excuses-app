@@ -37,7 +37,7 @@ const dayPct = computed(() => (now.value.getHours() * 3600 + now.value.getMinute
       </div>
       <div class="hero-clock" aria-hidden="true">
         <p class="clock-big num">{{ clock }}</p>
-        <p class="clock-date">{{ date }}</p>
+        <p class="clock-date cap">{{ date }}</p>
         <div class="track"><div class="fill" :style="{ transform: `scaleX(${dayPct})` }" /></div>
         <p class="clock-date">{{ Math.round(dayPct * 100) }}% do dia já passou</p>
       </div>

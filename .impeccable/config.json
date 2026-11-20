@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-10-21T23:08:02.833Z",
         "reason": "assistant decision, not user confirmed: single collapsing .slot, 420ms, avoids a 12px jump after the grid-template-rows collapse"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/style.css"
+        ],
+        "createdAt": "2026-11-20T15:49:12.884Z",
+        "reason": "assistant decision, not user confirmed: pressable button bottom edge (Duolingo bar named by the user), collapses on :active; not a card accent"
       }
     ]
   }

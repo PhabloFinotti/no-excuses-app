@@ -6,7 +6,7 @@ import { act, notify } from '../lib/toast'
 import ItemTile from '../components/ItemTile.vue'
 import { archivedItems, completions, items, progress, setDuration, today } from '../lib/store'
 import { XP_PER_DONE } from '../lib/progress'
-import { categoryOf } from '../lib/categories'
+import { CATEGORIES, categoryOf } from '../lib/categories'
 import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
 import { isRepeat } from '../../supabase/functions/_shared/pending'
 import { computeCategoryStats, computeHabitDetail, computeStats } from '../lib/stats'
@@ -73,19 +73,19 @@ const calendar = computed(() => {
   if (detail.value)
     return detail.value.cells.map((c) => ({
       day: c.day, has: c.scheduled,
-      bg: c.done ? 'var(--ok)' : c.skipped ? 'var(--attention)' : c.counted ? 'var(--urgent)' : '',
+      bg: c.done ? 'var(--done)' : c.skipped ? 'var(--attention)' : c.counted ? 'var(--urgent)' : '',
       title: (c.done ? (repeat.value ? 'Feito' : `Feito (${c.minutes} min)`) : c.skipped ? 'Pulado' : c.counted ? 'Não feito' : c.scheduled ? 'Hoje' : 'Sem agenda')
         + (repeat.value && c.scheduled ? ` (${c.times}/${habit.value!.times_per_day})` : ''),
     }))
   if (catKey.value)
     return stats.value.cells.map((c) => ({
       day: c.day, has: c.scheduled > 0 || c.done > 0,
-      bg: c.done > 0 ? 'var(--ok)' : c.scheduled > 0 ? 'var(--urgent)' : '',
+      bg: c.done > 0 ? 'var(--done)' : c.scheduled > 0 ? 'var(--urgent)' : '',
       title: c.done > 0 ? `${c.done} feito(s)` : c.scheduled > 0 ? 'Nada feito' : 'Sem agenda',
     }))
   return stats.value.cells.map((c) => ({
     day: c.day, has: c.scheduled > 0,
-    bg: !c.scheduled ? '' : c.done === c.scheduled ? 'var(--ok)' : c.done ? 'var(--attention)' : 'var(--urgent)',
+    bg: !c.scheduled ? '' : c.done === c.scheduled ? 'var(--done)' : c.done ? 'var(--attention)' : 'var(--urgent)',
     title: `${c.done}/${c.scheduled}`,
   }))
 })
@@ -191,11 +191,11 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     <p class="meta">Inclui os itens arquivados: o que você já fez continua valendo.</p>
   </div>
     </section>
-    <section v-else-if="categories.length">
+    <section v-else-if="categories.length" class="wide">
   <h2 class="section">Por categoria</h2>
   <div class="habit-grid">
     <button v-for="c in categories" :key="c.key" class="plain stat cat-card" @click="pick(`cat:${c.key}`)">
-      <div class="stat-top"><strong>{{ c.label }}</strong><span class="stat-rate">{{ c.activeDays }}/{{ c.days }}</span></div>
+      <div class="stat-top"><strong><span class="tile sm" :style="{ background: `var(--t-${c.key})` }" aria-hidden="true">{{ CATEGORIES.find((x) => x.key === c.key)?.emoji }}</span>{{ c.label }}</strong><span class="stat-rate">{{ c.activeDays }}/{{ c.days }}</span></div>
       <div class="track"><div class="fill ok" :style="{ transform: `scaleX(${c.activeDays / c.days})` }" /></div>
       <span class="meta">dias com atividade · sequência <span class="num">{{ c.streak }}</span> · {{ hm(c.minutes) }}</span>
     </button>
@@ -243,16 +243,16 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     >{{ Number(c.day.slice(8)) }}</div>
   </div>
   <p v-if="detail" class="legend">
-    <span><i style="background: var(--ok)" />Feito</span>
+    <span><i style="background: var(--done)" />Feito</span>
     <span><i style="background: var(--attention)" />Pulado</span>
     <span><i style="background: var(--urgent)" />Não feito</span>
   </p>
   <p v-else-if="catKey" class="legend">
-    <span><i style="background: var(--ok)" />Algum item feito</span>
+    <span><i style="background: var(--done)" />Algum item feito</span>
     <span><i style="background: var(--urgent)" />Nada feito</span>
   </p>
   <p v-else class="legend">
-    <span><i style="background: var(--ok)" />Tudo feito</span>
+    <span><i style="background: var(--done)" />Tudo feito</span>
     <span><i style="background: var(--attention)" />Parcial</span>
     <span><i style="background: var(--urgent)" />Nada feito</span>
   </p>
@@ -274,7 +274,7 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
       <template v-if="h.avgSpentMin"> · média {{ h.avgSpentMin }} min (planejado {{ h.durationMin }})</template>
       <template v-if="h.samples >= 3"> · metade leva até {{ h.p50Min }} min, 80% até {{ h.p80Min }} min</template>
     </div>
-    <div class="row" style="margin-top: 8px">
+    <div class="card-actions">
       <button class="ghost" @click="pick(h.id)">Ver histórico</button>
       <button v-if="h.suggestedDurationMin" class="ghost" @click="applyDuration(h.id, h.name, h.durationMin, h.suggestedDurationMin!)">Ajustar para {{ h.suggestedDurationMin }} min</button>
     </div>
