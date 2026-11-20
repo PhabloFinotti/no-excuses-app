@@ -56,10 +56,10 @@ async function tickProfile(db: Db, send: Send, p: any, nowDate: Date): Promise<n
   const mine = new Set(itemRows.map((i) => i.id))
   const already = new Set<string>((log ?? []).filter((l: any) => mine.has(l.item_id)).map((l: any) => `${l.item_id}:${l.day}:${l.level}`))
   for (const push of runTick(p, itemRows, completionRows, already, nowDate)) {
-    // O log único (item, dia, nível) garante um envio por nível mesmo com execuções concorrentes.
+    // O log único (item, dia, nível) garante um envio por nível mesmo com execuções concorrentes. Só libera, na falha, o que esta execução gravou.
     const { data: inserted } = await db
       .from('notification_log')
-      .upsert({ item_id: push.itemId, day: push.day, level: push.level }, { onConflict: 'item_id,day,level', ignoreDuplicates: true })
+      .upsert(push.keys.map((level) => ({ item_id: push.itemId, day: push.day, level })), { onConflict: 'item_id,day,level', ignoreDuplicates: true })
       .select()
     if (!inserted?.length && !push.snooze) continue
     if (push.snooze)
@@ -68,7 +68,7 @@ async function tickProfile(db: Db, send: Send, p: any, nowDate: Date): Promise<n
     const r = await send(p.user_id, { title: push.title, body: push.body, tag: push.itemId, level: push.level, itemId: push.itemId })
     sent += r.sent
     if (r.attempted > 0 && r.sent === 0) {
-      if (inserted?.length) await db.from('notification_log').delete().eq('item_id', push.itemId).eq('day', push.day).eq('level', push.level)
+      if (inserted?.length) await db.from('notification_log').delete().eq('item_id', push.itemId).eq('day', push.day).in('level', inserted.map((l: any) => l.level))
       if (push.snooze) await db.from('item_completions').update({ snooze_notified_for: null }).eq('item_id', push.itemId).eq('day', push.snooze.completionDay)
     }
   }

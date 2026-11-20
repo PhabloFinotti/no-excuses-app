@@ -3,6 +3,6 @@ export interface PushPayload {
   title: string
   body: string
   tag?: string
-  level?: 'attention' | 'urgent' | 'overdue' | 'test' | 'summary'
+  level?: 'attention' | 'urgent' | 'overdue' | 'dose' | 'test' | 'summary'
   itemId?: string // habilita as ações Feito/Adiar na notificação
 }

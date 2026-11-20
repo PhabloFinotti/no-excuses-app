@@ -13,6 +13,7 @@ sw.addEventListener('push', (e: any) => {
     sw.registration.showNotification(d.title ?? 'No Excuses', {
       body: d.body,
       tag: d.tag, // mesmo tag substitui a notificação anterior do mesmo item
+      renotify: !!d.tag, // sem isso a substituta entra calada na bandeja (renotify sem tag lança erro)
       icon: '/icon-192.png',
       silent: d.level === 'attention' || d.level === 'summary',
       vibrate: d.level === 'attention' || d.level === 'summary' ? undefined : [200, 100, 200, 100, 200],

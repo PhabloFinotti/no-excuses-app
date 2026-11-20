@@ -15,7 +15,12 @@ export interface ItemRow {
   urgent_min: number | null
   archived: boolean
   archived_at?: string | null // fim do período em que um hábito arquivado conta no histórico
-  category?: string | null // null = automática pelo nome; ver src/lib/categories.ts
+  category?: string | null // null = automática pelo nome; ver categories.ts
+  emoji?: string | null // null = emoji da categoria
+  ends_on?: string | null // último dia (inclusive) de um hábito
+  times_per_day?: number | null // > 1 = item repetido no dia (ver repeat.ts)
+  interval_min?: number | null
+  repeat_from?: string | null // horário do primeiro aviso do item repetido; null = hora de acordar
   created_at: string
 }
 
@@ -30,7 +35,10 @@ export interface CompletionRow {
   snoozed_until?: string | null
   snooze_notified_for?: string | null
   time_source?: 'timer' | 'manual' | 'planned' | null
+  done_times?: string[] // item repetido: horário de cada vez registrada no dia
 }
+
+export const isRepeat = (i: { times_per_day?: number | null }) => (i.times_per_day ?? 0) > 1
 
 // Hábito: a conclusão de hoje. Tarefa: a única conclusão dela, de qualquer dia (a mais recente).
 // Assim uma tarefa atrasada concluída hoje é gravada em hoje, e timer/adiar sobrevivem a "Fazer amanhã".
@@ -43,7 +51,7 @@ export function findCompletion(item: ItemRow, completions: CompletionRow[], toda
 
 // Tarefa vencida e não concluída rola para hoje ("atrasada de ontem").
 export function isPending(item: ItemRow, completions: CompletionRow[], now: LocalTime): boolean {
-  if (item.archived) return false
+  if (item.archived || (item.ends_on && now.day > item.ends_on)) return false
   const due = item.kind === 'task' ? item.due_date! <= now.day : item.weekdays.includes(now.weekday)
   if (!due) return false
   const c = findCompletion(item, completions, now.day)
@@ -71,7 +79,8 @@ export function finishMinutes(c: CompletionRow | undefined, plannedMin: number, 
 
 export function toCalcItems(items: ItemRow[], completions: CompletionRow[], now: LocalTime, nowMs: number): CalcItem[] {
   return items
-    .filter((i) => isPending(i, completions, now) && !isStale(i, now.day))
+    // Item repetido não tem duração nem entra no empilhamento: o estado dele vem de repeat.ts.
+    .filter((i) => !isRepeat(i) && isPending(i, completions, now) && !isStale(i, now.day))
     .map((i) => {
       const c = findCompletion(i, completions, now.day)
       const remaining = Math.max(0, Math.ceil(i.duration_min - elapsedSeconds(c, nowMs) / 60))

@@ -64,6 +64,7 @@ export class Query {
   order(col: string) { this.orderCol = col; return this }
   eq(col: string, v: unknown) { this.filters.push((r) => r[col] === v); return this }
   gte(col: string, v: string) { this.filters.push((r) => r[col] >= v); return this }
+  in(col: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[col])); return this }
   upsert(p: Row | Row[], opts: { onConflict?: string; ignoreDuplicates?: boolean } = {}) {
     this.op = 'upsert'; this.payload = p; this.ignoreDup = !!opts.ignoreDuplicates
     if (opts.onConflict) this.conflict = opts.onConflict.split(',')
@@ -85,7 +86,7 @@ export class Query {
           if (!this.ignoreDup) { Object.assign(hit, p); out.push(hit) } // ignoreDuplicates devolve só o que foi inserido, como o PostgREST
           continue
         }
-        const base: Row = { user_id: 'demo', created_at: new Date().toISOString(), archived: false, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0 }
+        const base: Row = { user_id: 'demo', created_at: new Date().toISOString(), archived: false, done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, done_times: [] }
         if (this.table === 'items') base.id = uid()
         const row = { ...base, ...p }
         if (this.table === 'profiles' && !Object.keys(p).length) continue
