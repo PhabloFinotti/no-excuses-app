@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
-import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
+import { elapsedSeconds, isRepeat } from '../../supabase/functions/_shared/pending'
 import { googleCalendarUrl } from '../lib/calendar'
 import { shortDate } from '../lib/format'
-import { addDays } from '../../supabase/functions/_shared/time'
+import { addDays, localTime, minToTime } from '../../supabase/functions/_shared/time'
 import { completionOf, now, nowMs, profile, rescheduleTo, setSpent } from '../lib/store'
 import { act, notify } from '../lib/toast'
 import Icon from './Icon.vue'
@@ -14,7 +14,10 @@ import Sheet from './Sheet.vue'
 const props = defineProps<{ item: ItemRow }>()
 const emit = defineEmits<{ close: []; finish: [minutes: number] }>()
 
-const tab = ref<'time' | 'edit'>('time')
+// Item repetido não registra tempo: a folha mostra as vezes de hoje e abre direto na edição.
+const repeat = isRepeat(props.item)
+const tab = ref<'time' | 'edit'>(repeat ? 'edit' : 'time')
+const timesToday = computed(() => (c.value?.done_times ?? []).map((t) => minToTime(localTime(new Date(t), profile.value?.tz ?? 'America/Sao_Paulo').minutes)))
 const c = computed(() => completionOf(props.item))
 const isDone = computed(() => !!c.value?.done)
 
@@ -56,7 +59,10 @@ function tomorrow() {
   <Sheet :title="item.name" :persistent="tab === 'edit'" @close="emit('close')">
     <div class="stack">
       <h2>{{ item.name }}</h2>
-      <div class="chips" role="tablist">
+      <p v-if="repeat" class="meta">
+        Hoje: <span class="num">{{ timesToday.length }}/{{ item.times_per_day }}</span><template v-if="timesToday.length"> ({{ timesToday.join(', ') }})</template>
+      </p>
+      <div v-else class="chips" role="tablist">
         <button class="ghost" :class="{ on: tab === 'time' }" role="tab" :aria-selected="tab === 'time'" @click="tab = 'time'">Tempo</button>
         <button class="ghost" :class="{ on: tab === 'edit' }" role="tab" :aria-selected="tab === 'edit'" @click="tab = 'edit'">Editar item</button>
       </div>

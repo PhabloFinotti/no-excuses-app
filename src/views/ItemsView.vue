@@ -3,11 +3,12 @@ import { computed, ref } from 'vue'
 import { addedText, shortDate, weekdaysLabel } from '../lib/format'
 import Icon from '../components/Icon.vue'
 import ItemForm from '../components/ItemForm.vue'
-import { CATEGORIES, categoryLabel, categoryOf } from '../lib/categories'
+import { CATEGORIES, categoryLabel, categoryOf, emojiOf } from '../lib/categories'
 import { act, notify } from '../lib/toast'
 import { describeQuickAdd } from '../lib/quickAdd'
-import { addQuick, archiveItem, archivedItems, completionOf, items, unarchiveItem } from '../lib/store'
-import type { ItemRow } from '../../supabase/functions/_shared/pending'
+import { addQuick, archiveItem, archivedItems, completionOf, items, today, unarchiveItem } from '../lib/store'
+import { isRepeat, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
 
 const editing = ref<ItemRow | undefined>()
 const open = ref(false)
@@ -24,6 +25,10 @@ const shown = computed(() => items.value.filter((i) => matchesFilter(i) && !isDo
 const doneTasks = computed(() => items.value.filter((i) => matchesFilter(i) && isDoneTask(i)))
 const archived = computed(() => archivedItems.value.filter(matchesFilter))
 const preview = computed(() => describeQuickAdd(quick.value))
+// "5x, a cada 2h, a partir de 09:30" ou "30 min"
+const amount = (i: ItemRow) =>
+  isRepeat(i) ? `${i.times_per_day}x, a cada ${i.interval_min! % 60 ? hm(i.interval_min!) : `${i.interval_min! / 60}h`}${i.repeat_from ? `, a partir de ${i.repeat_from.slice(0, 5)}` : ''}` : `${i.duration_min} min`
+const ending = (i: ItemRow) => (!i.ends_on ? '' : i.ends_on < today.value ? `terminou em ${shortDate(i.ends_on)}` : `até ${shortDate(i.ends_on)}`)
 
 function edit(item?: ItemRow) {
   editing.value = item
@@ -78,10 +83,11 @@ function restore(item: ItemRow) {
   <div class="list-grid">
   <div v-for="item in shown" :key="item.id" class="plain item-row">
     <div class="grow">
-      <strong>{{ item.name }}</strong>
+      <strong><span v-if="emojiOf(item)" class="emoji" aria-hidden="true">{{ emojiOf(item) }}</span>{{ item.name }}</strong>
       <div class="meta">
-        {{ item.kind === 'task' ? `Tarefa · ${shortDate(item.due_date!)}` : `Hábito · ${weekdaysLabel(item.weekdays)}` }} · {{ item.duration_min }} min<template v-if="categoryOf(item)"> · {{ categoryLabel(categoryOf(item)) }}</template>
+        {{ item.kind === 'task' ? `Tarefa · ${shortDate(item.due_date!)}` : `Hábito · ${weekdaysLabel(item.weekdays)}` }} · {{ amount(item) }}<template v-if="categoryOf(item)"> · {{ categoryLabel(categoryOf(item)) }}</template>
         <template v-if="item.fixed_time"> · {{ item.fixed_time.slice(0, 5) }}</template>
+        <template v-if="ending(item)"> · {{ ending(item) }}</template>
       </div>
     </div>
     <div class="tools">

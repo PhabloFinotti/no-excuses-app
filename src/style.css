@@ -102,6 +102,7 @@ button.ghost:hover { background: var(--raised); }
 .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .card-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .card-title h3 { overflow-wrap: anywhere; }
+.emoji { margin-right: 0.3em; } /* espaço explícito: dentro de botão flex o espaço no fim do span some */
 .essential { color: var(--attention); flex: none; fill: currentColor; }
 .chip { display: inline-flex; align-items: center; gap: 5px; flex: none; padding: 3px 10px 3px 8px; border-radius: 99px; font-size: 0.8125rem; font-weight: 600; }
 .until { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }

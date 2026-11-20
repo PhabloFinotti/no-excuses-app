@@ -34,6 +34,15 @@ function seed() {
     if ((d * 7 + h.name.length) % 5 === 0) continue
     completions.push({ item_id: h.id, day: addDays(now.day, -d), user_id: 'demo', done: true, skipped: false, spent_min: h.duration_min + 22 * +(h.name === 'Leitura'), timer_started_at: null, timer_accum_s: 0 })
   }
+  // Item repetido: 4x, a cada 30 min, última vez há 40 min (a próxima já chegou); dias anteriores ora completos, ora pela metade.
+  const drops = habit('Colírio', 1, { times_per_day: 4, interval_min: 30, emoji: '💧' })
+  items.push(drops)
+  const ago = (min: number, days = 0) => new Date(Date.now() - days * 86_400_000 - min * 60_000).toISOString()
+  completions.push({ item_id: drops.id, day: now.day, user_id: 'demo', done: false, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, done_times: [ago(40)] })
+  for (let d = 1; d <= 20; d++) {
+    const n = d % 4 === 0 ? 2 : 4
+    completions.push({ item_id: drops.id, day: addDays(now.day, -d), user_id: 'demo', done: n >= 4, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0, done_times: Array.from({ length: n }, (_, i) => ago(i * 30, d)) })
+  }
   const profile = { user_id: 'demo', wake_time: `${minToTime(wake)}:00`, sleep_time: `${minToTime(sleep)}:00`, tz, warn_min: 30, urgent_min: 10, fixed_grace_min: 15, morning_summary: true, evening_summary: true, evening_min: 60, calendar_connected: false }
   return { items, item_completions: completions, profiles: [profile], push_subscriptions: [] as Row[] }
 }

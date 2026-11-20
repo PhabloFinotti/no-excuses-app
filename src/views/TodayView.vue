@@ -10,12 +10,12 @@ import { shortDate } from '../lib/format'
 import { burst } from '../lib/confetti'
 import { act, notify } from '../lib/toast'
 import type { ItemRow } from '../../supabase/functions/_shared/pending'
-import { elapsedSeconds } from '../../supabase/functions/_shared/pending'
+import { elapsedSeconds, isRepeat } from '../../supabase/functions/_shared/pending'
 import { formatMinutes as hm, timeToMin } from '../../supabase/functions/_shared/time'
-import { calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, rescheduleToday, skipItem, skippedToday, snoozeItem, staleTasks, startTimer, undoToday } from '../lib/store'
+import { addTime, calc, completionOf, doneToday, isSnoozed, items, markDone, now, nowMs, pauseTimer, profile, repeats, rescheduleToday, skipItem, skippedToday, snoozeItem, staleTasks, startTimer, undoTime, undoToday } from '../lib/store'
 
 const rows = computed(() =>
-  calc.value.states
+  [...calc.value.states, ...repeats.value]
     .map((state) => ({ state, item: items.value.find((i) => i.id === state.id)! }))
     .sort((a, b) => a.state.deadlineMin - b.state.deadlineMin),
 )
@@ -42,15 +42,24 @@ const hasTimer = (item: ItemRow) => running(item) || (completionOf(item)?.timer_
 // Dias de atraso de uma tarefa rolada (0 = vence hoje ou depois).
 const rolledDays = (item: ItemRow) => (item.kind === 'task' && item.due_date! < now.value.day ? Math.round((Date.parse(now.value.day) - Date.parse(item.due_date!)) / 86_400_000) : 0)
 const warnOf = (item: ItemRow) => item.warn_min ?? profile.value?.warn_min ?? 30
+const timesOf = (item: ItemRow) => completionOf(item)?.done_times?.length ?? 0
 
 function complete(item: ItemRow, e?: MouseEvent, minutes?: number) {
-  const wasLast = rows.value.length === 1
+  const repeat = isRepeat(item)
+  const count = timesOf(item) + 1 // item repetido: a vez que está sendo registrada
+  // Fecha o dia só se este era o último pendente e (sendo repetido) esta vez bate a meta.
+  const wasLast = rows.value.length === 1 && rows.value[0]!.item.id === item.id && (!repeat || count >= item.times_per_day!)
   const el = e?.currentTarget as HTMLElement | undefined
   const r = el?.getBoundingClientRect()
   lastAction.value = 'done'
   burst(r ? r.left + r.width / 2 : innerWidth / 2, r ? r.top + r.height / 2 : innerHeight / 2)
   if (wasLast) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.25, true), 280)
   navigator.vibrate?.(15) // retorno tátil curto no Android
+  if (repeat) {
+    act(() => addTime(item))
+    notify(`${item.name}: ${count} de ${item.times_per_day}${count === item.times_per_day ? '. Meta de hoje batida.' : '.'}`, { undo: () => undoTime(item) })
+    return
+  }
   // Sem timer nem minutos informados, o app grava o previsto: avisa e oferece corrigir.
   const planned = minutes == null && elapsed(item) < 60
   act(() => markDone(item, minutes))
@@ -121,6 +130,7 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
       <li>A <strong>barra</strong> esvazia até esse momento. Quando acaba, o item está atrasado.</li>
       <li><strong>Neutro</strong>: tem tempo. <strong>Amarelo</strong>: atenção. <strong>Vermelho vivo</strong>: urgente. <strong>Vermelho escuro</strong>: atrasado.</li>
       <li><strong>Adiar alerta</strong> só silencia o aviso por 10 min. <strong>Pular hoje</strong> tira o item do dia.</li>
+      <li>Itens que se repetem no dia mostram quantas vezes já foram feitos (<span class="num">2/5</span>) e a hora da próxima. Ficam atrasados quando a meta não cabe mais antes de dormir.</li>
     </ul>
   </details>
 
@@ -180,10 +190,17 @@ const leaveClass = (el: Element) => el.classList.add(`leave-${lastAction.value}`
         <div class="plain done-row">
           <span class="done-check"><Icon name="check" :size="16" /></span>
           <button class="link done-name" @click="detail = item">{{ item.name }}</button>
-          <button class="link time-chip" aria-label="Ajustar o tempo registrado" @click="detail = item">
-            <span class="num">{{ completionOf(item)?.spent_min ?? 0 }} min</span><span v-if="completionOf(item)?.time_source === 'planned'" class="planned">estimado</span>
-          </button>
-          <button class="icon-btn small" aria-label="Desfazer" title="Desfazer" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" /></button>
+          <template v-if="isRepeat(item)">
+            <span class="meta num">{{ timesOf(item) }}/{{ item.times_per_day }}</span>
+            <button class="icon-btn small" aria-label="Registrar mais uma vez" title="Mais uma vez" @click="complete(item, $event)"><span aria-hidden="true">+1</span></button>
+            <button class="icon-btn small" aria-label="Desfazer a última vez" title="Desfazer a última vez" @click="act(() => undoTime(item))"><Icon name="undo" :size="16" /></button>
+          </template>
+          <template v-else>
+            <button class="link time-chip" aria-label="Ajustar o tempo registrado" @click="detail = item">
+              <span class="num">{{ completionOf(item)?.spent_min ?? 0 }} min</span><span v-if="completionOf(item)?.time_source === 'planned'" class="planned">estimado</span>
+            </button>
+            <button class="icon-btn small" aria-label="Desfazer" title="Desfazer" @click="act(() => undoToday(item))"><Icon name="undo" :size="16" /></button>
+          </template>
         </div>
       </div>
     </TransitionGroup>

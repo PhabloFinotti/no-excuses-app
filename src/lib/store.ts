@@ -7,7 +7,8 @@ import { keyedQueue } from './serial'
 import { must, supabase } from './supabase'
 import { notify } from './toast'
 import { localTime, timeToMin } from '../../supabase/functions/_shared/time'
-import { elapsedSeconds, finishMinutes, findCompletion, isPending, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { elapsedSeconds, finishMinutes, findCompletion, isPending, isRepeat, isStale, toCalcItems, type CompletionRow, type ItemRow } from '../../supabase/functions/_shared/pending'
+import { repeatStates } from '../../supabase/functions/_shared/repeat'
 
 export interface ProfileRow {
   wake_time: string
@@ -48,6 +49,13 @@ export const calc = computed(() => {
     urgentMin: p.urgent_min,
     graceMin: p.fixed_grace_min,
   })
+})
+
+// Itens repetidos pendentes (ex.: colírio 2/5): ficam fora de `calc`, que só empilha itens com duração.
+export const repeats = computed(() => {
+  const p = profile.value
+  if (!p) return []
+  return repeatStates(items.value, completions.value, now.value, { tz: p.tz, wakeMin: timeToMin(p.wake_time), sleepMin: timeToMin(p.sleep_time) })
 })
 
 export const doneToday = computed(() =>
@@ -153,7 +161,7 @@ async function patchCompletion(item: ItemRow, patch: Partial<CompletionRow>) {
   const payload = { ...(prev && prev.day !== day ? prev : {}), item_id: item.id, day, ...patch }
   const replace = (row: CompletionRow) => (completions.value = [...completions.value.filter((c) => c.item_id !== row.item_id || (item.kind === 'habit' && c.day !== row.day)), row])
   replace(merged)
-  if (patch.done || patch.skipped || patch.snoozed_until) clearNotification(item.id) // o alerta já respondido some da bandeja
+  if (patch.done || patch.skipped || patch.snoozed_until || patch.done_times) clearNotification(item.id) // o alerta já respondido some da bandeja
   try {
     await writes.run(item.id, () =>
       tracked(async () => {
@@ -182,13 +190,26 @@ export function pauseTimer(item: ItemRow) {
   return patchCompletion(item, { timer_accum_s: Math.round(elapsedSeconds(completionOf(item), Date.now())), timer_started_at: null })
 }
 
-// Sem minutes: usa o timer ou, se não houve, o previsto. Com minutes: tempo informado à mão.
+// Sem minutes: usa o timer ou, se não houve, o previsto. Com minutes: tempo informado à mão. Item repetido: +1 vez.
 export function markDone(item: ItemRow, minutes?: number) {
+  if (isRepeat(item)) return addTime(item)
   const c = completionOf(item)
   if (minutes != null) return patchCompletion(item, { done: true, skipped: false, timer_accum_s: minutes * 60, timer_started_at: null, spent_min: minutes, time_source: 'manual' })
   const f = finishMinutes(c, item.duration_min, Date.now())
   const timer = f.source === 'timer' ? { timer_accum_s: Math.round(elapsedSeconds(c, Date.now())) } : {}
   return patchCompletion(item, { done: true, skipped: false, timer_started_at: null, spent_min: f.minutes, time_source: f.source, ...timer })
+}
+
+// Item repetido: registra uma vez agora; ao bater a meta o dia conta como feito (e ainda aceita mais).
+// shortcut: grava a lista inteira, não um append atômico; dois aparelhos registrando no mesmo instante perdem uma vez. Trocar por RPC se isso acontecer.
+export function addTime(item: ItemRow) {
+  const times = [...(completionOf(item)?.done_times ?? []), new Date().toISOString()]
+  return patchCompletion(item, { done_times: times, done: times.length >= item.times_per_day!, skipped: false })
+}
+
+export function undoTime(item: ItemRow) {
+  const times = (completionOf(item)?.done_times ?? []).slice(0, -1)
+  return patchCompletion(item, { done_times: times, done: times.length >= item.times_per_day! })
 }
 
 // Corrige o cronômetro/tempo (item pendente ou já feito): vira o novo acumulado e o timer para.
