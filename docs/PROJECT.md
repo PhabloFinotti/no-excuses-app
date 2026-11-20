@@ -172,7 +172,7 @@ Scripts: `npm run dev`, `npm run dev:demo` (dados falsos, sem Supabase), `npm te
 
 - Código e testes unitários prontos; build passa. **Pouco validado em aparelho real.** Os itens V1 a V13 de `docs/TASKS.md` (push no S21+, atraso, bateria, OAuth do Google etc.) ainda precisam ser conferidos.
 - Setup do lado do usuário: aplicar migrações (`supabase db push`), publicar as funções, configurar segredos (VAPID, cron, Google), variáveis na Vercel, adicionar o próprio e-mail como usuário de teste no Google Cloud (app sem verificação).
-- Problema em aberto: ícone do PWA no celular aparece como quadrado branco sobre vermelho (provável ícone antigo em cache do WebAPK; reinstalar o app após o deploy).
+- Ícone do PWA: quadrado verde (#15803D) com ✓ branco, desenhado em `public/icon.svg` e exportado em 192 e 512 px. No Android o ícone instalado pode demorar a trocar (cache do WebAPK); se continuar o antigo, desinstale e instale o app de novo.
 
 ## 11. Limitações e pontos fracos conhecidos
 

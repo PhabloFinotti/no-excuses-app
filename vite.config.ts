@@ -16,8 +16,9 @@ export default defineConfig({
         lang: 'pt-BR',
         display: 'standalone',
         start_url: '/',
-        background_color: '#dc2626',
-        theme_color: '#dc2626',
+        // Tela de abertura e barra de status no fundo claro do app (o ícone verde se destaca sobre ele).
+        background_color: '#F2F4F7',
+        theme_color: '#F2F4F7',
         icons: [
           // Uma entrada por finalidade (o Chrome desaconselha 'any maskable' junto); o ícone já respeita a zona segura.
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
