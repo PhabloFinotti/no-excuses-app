@@ -29,6 +29,15 @@
         ],
         "createdAt": "2026-11-20T15:52:24.784Z",
         "reason": "assistant decision, not user confirmed: unchosen decision-round sketch (Folhinha), not shipped, git-ignored"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/**"
+        ],
+        "createdAt": "2026-11-20T16:03:49.798Z",
+        "reason": "assistant decision, not user confirmed: decision-round sketches of unchosen directions, not shipped, git-ignored"
       }
     ]
   }
