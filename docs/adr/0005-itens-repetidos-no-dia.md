@@ -1,0 +1,6 @@
+# ADR 0005: item repetido no dia (ex.: colírio 5x, a cada 2h)
+
+Decisão: hábito com `times_per_day` (> 1), `interval_min` e `repeat_from` opcional. O próximo aviso é a última vez registrada + o intervalo; o primeiro do dia sai em `repeat_from` (ou ao acordar). As vezes ficam em `item_completions.done_times` (na linha do dia que já existia) e `done` vira true ao bater a meta, então sequência, taxa e "Feitos hoje" não mudam. Fica fora do empilhamento de `calculateState` (não tem duração); o estado vem de `repeat.ts`, usado pela UI e pelo `tick` (ADR 0002).
+Avisos: um por vez (`notification_log.level = dose-N`), sem repetir se ignorado. Quando a meta não cabe mais antes de dormir com o intervalo cheio, o card fica atrasado e sai um único push "atrasado" no dia.
+Descartado: horários fixos espalhados (dois hábitos com horário fixo já resolvem); encurtar o intervalo para recuperar (o intervalo pode ser regra médica); repetir o aviso a cada 30 min (vira ruído); tabela de doses separada (perderia Realtime, RLS e desfazer da linha do dia); `kind` novo (espalharia `kind === 'habit'` pelo código).
+Custo aceito: a lista de horários é gravada inteira, não com append atômico; dois aparelhos registrando no mesmo instante podem perder uma vez. Mudar a meta no meio do dia só reflete no próximo +1.

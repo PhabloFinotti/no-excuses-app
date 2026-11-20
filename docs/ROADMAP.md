@@ -20,6 +20,10 @@ Adiado: categorias criadas pelo usuário (exigiria tabela própria e escolha de 
 Arquivados e pulados com tela para restaurar; tarefas concluídas fora da lista principal; toasts empilhados (cada um com seu Desfazer); ações do card com texto (Timer, Foco, Adiar alerta, Pular hoje); prévia e mensagens de erro na adição rápida, tipo (hábito/tarefa) lembrado e avisado; número solto no fim do nome só vira duração na adição rápida; horas decimais (1,5h); pulado não conta como falha nem quebra a sequência; calendário da categoria usa "algum item feito"; um cronômetro por vez; "Ajustar duração" com desfazer; backup inclui a rotina e informa o que restaurou; CSV com BOM; legenda "Como ler esta tela"; jargão trocado (previsto→estimado, avançado recolhido); alvos de toque de 44 px; tarefa atrasada mostra quantos dias; toque fora não fecha a edição.
 Fora de propósito: dormir depois da meia-noite (mudança profunda no motor, rotina atual não precisa); timer que atravessa a meia-noite.
 
+## Itens repetidos no dia e avisos distintos (implementado)
+Hábito com "vezes por dia", intervalo e primeiro aviso (colírio 5x, a cada 2h, a partir de 09:30): próximo aviso = última vez + intervalo, sem encurtar para recuperar; card "2/5 · próxima às 13:40" com Feito (+1); dia feito ao bater a meta; atrasado e um push só quando a meta não cabe antes de dormir; histórico com vezes por dia. Data de fim opcional para qualquer hábito. Emoji no título de todos os pushes (do item ou da categoria) e tipo de aviso no título; `renotify` para a notificação substituta vibrar. Decisão em ADR 0005.
+Fora de propósito: repetir o aviso se ignorado, fim de janela por item, horários por dia da semana, duração/timer no item repetido, ícone desenhado por categoria, arquivar sozinho no fim, "5x 2h" na adição rápida.
+
 ## Fase 0: validar o que existe (gate para o resto)
 Já listado em `TASKS.md` (V1 a V7). Acrescento:
 - [ ] F0.1 Usar o app 2 a 3 dias reais e anotar atritos em `docs/NOTES.md`. Pronto: lista de problemas reais priorizada.

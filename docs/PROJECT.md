@@ -29,7 +29,8 @@ Convenção: identificadores em inglês, comentários em português só quando n
 ## 3. Funcionalidades
 
 ### Itens
-- **Hábito**: nome, duração (min), horário fixo opcional, dias da semana, prioridade (normal/essencial), limites de alerta próprios (opcionais), arquivável.
+- **Hábito**: nome, duração (min), horário fixo opcional, dias da semana, prioridade (normal/essencial), limites de alerta próprios (opcionais), emoji opcional, data de fim opcional ("termina em"), arquivável.
+- **Item repetido no dia** (ADR 0005): hábito com "vezes por dia" > 1, intervalo e horário do primeiro aviso (ex.: colírio 5x, a cada 2h, a partir de 09:30). Sem duração: cada toque em "Feito (+1)" registra uma vez; o próximo aviso é a última vez + o intervalo. Bateu a meta, o dia está feito (e ainda aceita +1). Fica atrasado quando a meta não cabe antes de dormir; o intervalo nunca encolhe.
 - **Tarefa avulsa**: nome, duração, data de vencimento. Tarefa não concluída **rola para o dia seguinte**. Após 3 dias parada (`STALE_DAYS`), sai do cálculo e aparece em "Paradas há dias" com as ações "Fazer hoje" ou "Descartar".
 - **Adição rápida** na tela Hoje: texto único tipo `Leitura 30`. Vira hábito diário ou tarefa de hoje.
 
@@ -54,6 +55,8 @@ Convenção: identificadores em inglês, comentários em português só quando n
 
 ### Notificações (push)
 - Níveis: **normal, atenção, urgente, atrasado**. Padrão 30 e 10 min antes do limite, ajustável globalmente e por hábito.
+- Título com **emoji** (o do item ou o da categoria) e o tipo de aviso: `💧 Colírio · 3ª de 5`, `🏋️ Academia · urgente`, `☀️ Hoje`, `🌙 Antes de dormir`. A API de notificação não permite escolher cor.
+- Item repetido: um aviso por vez (vibra), sem repetir se ignorado; um "atrasado" por dia quando a meta deixa de caber.
 - Ações na notificação: **Feito** e **Adiar**; abrem o app com `?action=…&item=…`.
 - **Resumo da manhã** (ao acordar) e **aviso do fim do dia** (X min antes de dormir), ambos desligáveis.
 - Adiar silencia o item por 10 min.
@@ -99,10 +102,10 @@ Todas as tabelas com RLS `user_id = auth.uid()`; cadastro público desativado.
 | Tabela | Papel |
 |---|---|
 | `profiles` | acordar, dormir, fuso, limites, tolerância, flags de resumo, `calendar_connected` (criado por trigger no signup) |
-| `items` | hábitos e tarefas (`kind`, duração, horário fixo, `weekdays`, `due_date`, prioridade, limites próprios, arquivado) |
-| `item_completions` | conclusões, pulos, timer, adiamento, `time_source` |
+| `items` | hábitos e tarefas (`kind`, duração, horário fixo, `weekdays`, `due_date`, prioridade, limites próprios, arquivado, `emoji`, `ends_on`, e para itens repetidos `times_per_day`, `interval_min`, `repeat_from`) |
+| `item_completions` | conclusões, pulos, timer, adiamento, `time_source`, `done_times` (horários de cada vez do item repetido) |
 | `push_subscriptions` | assinaturas Web Push por aparelho |
-| `notification_log` | dedupe dos pushes (limpeza semanal de linhas com mais de 30 dias) |
+| `notification_log` | dedupe dos pushes: `attention`/`urgent`/`overdue` ou `dose-N` (limpeza semanal de linhas com mais de 30 dias) |
 | `google_calendar_links` | refresh token (acesso só por service role) |
 | `calendar_events` | mapa tarefa → evento do Google |
 
@@ -121,7 +124,7 @@ src/
   style.css                tokens OKLCH e layout responsivo
 sw/sw.ts                   service worker: precache, push, ações da notificação
 supabase/
-  functions/_shared/       lógica pura compartilhada (UI e Deno): calculateState, pending, time,
+  functions/_shared/       lógica pura compartilhada (UI e Deno): calculateState, pending, repeat, categories, time,
                            runTick, tickJob, summaries, push, calendarEvent, oauthState, google
   functions/tick           cron por minuto
   functions/push-test      push de teste
@@ -145,14 +148,14 @@ Scripts: `npm run dev`, `npm run dev:demo` (dados falsos, sem Supabase), `npm te
 ## 8. Decisões já tomadas (não reabrir sem motivo)
 
 - **PWA em vez de app nativo** (testar e publicar é mais simples; ADR 0001). Risco aceito: Web Push pode atrasar com Doze/economia de bateria da Samsung. Plano B: Capacitor.
-- **Scheduler stateless por cron** (ADR 0002), **e-mail+senha com RLS** (ADR 0003), **item = hábito ou tarefa** (ADR 0004).
+- **Scheduler stateless por cron** (ADR 0002), **e-mail+senha com RLS** (ADR 0003), **item = hábito ou tarefa** (ADR 0004), **item repetido no dia = hábito com meta e intervalo** (ADR 0005).
 - Agendamento reverso a partir da hora de dormir; déficit só **avisa**, não pula sozinho.
 - Google: escopo mínimo `calendar.app.created`, sem login com Google.
 - Tarefa parada há mais de 3 dias sai do cálculo até você decidir.
 
 ## 9. Fora do escopo por enquanto
 
-- Recorrência mensal e meta semanal ("3x por semana, dia livre").
+- Recorrência mensal e meta semanal ("3x por semana, dia livre"). (Várias vezes **no dia** já existe: ADR 0005.)
 - Subtarefas, etiquetas, projetos.
 - Dias silenciosos por hábito (F2.7).
 - App nativo / Capacitor (só se o atraso do push for ruim).

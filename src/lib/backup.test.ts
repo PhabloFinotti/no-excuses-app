@@ -7,7 +7,11 @@ import { buildCsv, parseBackup } from './backup'
 describe('buildCsv', () => {
   it('escapes commas, quotes and joins the item name', () => {
     const csv = buildCsv([{ id: 'a', name: 'Ler, "muito"', kind: 'habit' }], [{ item_id: 'a', day: '2026-10-21', done: true, skipped: false, spent_min: 20 }])
-    expect(csv).toBe('day,name,kind,done,skipped,spent_min\n2026-10-21,"Ler, ""muito""",habit,true,false,20')
+    expect(csv).toBe('day,name,kind,done,skipped,spent_min,times\n2026-10-21,"Ler, ""muito""",habit,true,false,20,')
+  })
+  it('repeated item: how many times on the day', () => {
+    const csv = buildCsv([{ id: 'c', name: 'Colírio', kind: 'habit' }], [{ item_id: 'c', day: '2026-10-21', done: false, skipped: false, spent_min: 0, done_times: ['a', 'b', 'c'] }])
+    expect(csv.split('\n')[1]).toBe('2026-10-21,Colírio,habit,false,false,0,3')
   })
 })
 

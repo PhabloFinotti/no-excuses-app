@@ -16,10 +16,11 @@ const csvCell = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 
-export function buildCsv(items: { id: string; name: string; kind: string }[], completions: { item_id: string; day: string; done: boolean; skipped: boolean; spent_min: number }[]): string {
+export function buildCsv(items: { id: string; name: string; kind: string }[], completions: { item_id: string; day: string; done: boolean; skipped: boolean; spent_min: number; done_times?: string[] }[]): string {
   const byId = new Map(items.map((i) => [i.id, i]))
-  const rows = completions.map((c) => [c.day, byId.get(c.item_id)?.name ?? '', byId.get(c.item_id)?.kind ?? '', c.done, c.skipped, c.spent_min])
-  return [['day', 'name', 'kind', 'done', 'skipped', 'spent_min'], ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
+  // times: vezes registradas no dia (item repetido); vazio nos demais.
+  const rows = completions.map((c) => [c.day, byId.get(c.item_id)?.name ?? '', byId.get(c.item_id)?.kind ?? '', c.done, c.skipped, c.spent_min, c.done_times?.length || ''])
+  return [['day', 'name', 'kind', 'done', 'skipped', 'spent_min', 'times'], ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
 }
 
 // Valida o formato antes de qualquer escrita; user_id sai para o banco preencher com o usuário logado.

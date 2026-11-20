@@ -6,6 +6,7 @@ import { act, notify } from '../lib/toast'
 import { archivedItems, completions, items, setDuration, today } from '../lib/store'
 import { categoryOf } from '../lib/categories'
 import { formatMinutes as hm } from '../../supabase/functions/_shared/time'
+import { isRepeat } from '../../supabase/functions/_shared/pending'
 import { computeCategoryStats, computeHabitDetail, computeStats } from '../lib/stats'
 
 // Aplica a duração sugerida e deixa desfazer (era uma mudança silenciosa).
@@ -41,6 +42,7 @@ const habits = computed(() => items.value.filter((i) => i.kind === 'habit'))
 const habit = computed(() => habits.value.find((h) => h.id === selectedId.value))
 const detail = computed(() => (habit.value ? computeHabitDetail(habit.value, completions.value, today.value, days.value) : null))
 const habitCard = computed(() => stats.value.habitStats.find((h) => h.id === habit.value?.id))
+const repeat = computed(() => !!habit.value && isRepeat(habit.value)) // item repetido: vezes por dia em vez de tempo
 const detailTitles = computed(() => detail.value?.cells.map((c) => dayTitle(c.day)) ?? [])
 // Melhores dias (pode haver empate): só entre os dias em que o hábito é agendado.
 const bestWeekdays = computed(() => {
@@ -69,7 +71,8 @@ const calendar = computed(() => {
     return detail.value.cells.map((c) => ({
       day: c.day, has: c.scheduled,
       bg: c.done ? 'var(--ok)' : c.skipped ? 'var(--attention)' : c.counted ? 'var(--urgent)' : '',
-      title: c.done ? `Feito (${c.minutes} min)` : c.skipped ? 'Pulado' : c.counted ? 'Não feito' : c.scheduled ? 'Hoje' : 'Sem agenda',
+      title: (c.done ? (repeat.value ? 'Feito' : `Feito (${c.minutes} min)`) : c.skipped ? 'Pulado' : c.counted ? 'Não feito' : c.scheduled ? 'Hoje' : 'Sem agenda')
+        + (repeat.value && c.scheduled ? ` (${c.times}/${habit.value!.times_per_day})` : ''),
     }))
   if (catKey.value)
     return stats.value.cells.map((c) => ({
@@ -122,7 +125,10 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
       <p class="meta">
         {{ detail.done }} de {{ detail.counted }} dias agendados · sequência atual <span class="num">{{ detail.streak }}</span> · melhor <span class="num">{{ detail.bestStreak }}</span>
       </p>
-      <p class="meta">
+      <p v-if="repeat" class="meta">
+        Média de <span class="num">{{ detail.avgTimes.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }}</span> vezes por dia agendado (meta {{ habit.times_per_day }})
+      </p>
+      <p v-else class="meta">
         Tempo total {{ hm(detail.totalMinutes) }}<template v-if="detail.avgMinutes"> · média por vez {{ detail.avgMinutes }} min (estimado {{ habit.duration_min }})</template>
         <template v-if="habitCard && habitCard.samples >= 3"> · 80% das vezes leva até {{ habitCard.p80Min }} min</template>
       </p>
@@ -132,7 +138,14 @@ const offset = computed(() => new Date(`${calendar.value[0]?.day}T00:00:00Z`).ge
     </div>
 
     </section>
-    <section>
+    <section v-if="repeat">
+    <h2 class="section">Vezes por dia</h2>
+    <div class="plain">
+      <p class="meta" style="margin-bottom: 8px">Cada coluna é quantas vezes você registrou no dia; a linha é a meta.</p>
+      <ColumnChart :values="detail.cells.map((c) => c.times)" :titles="detailTitles" :x-ticks="ticksFor(detail.cells)" value-name="vezes" :line="detail.cells.map(() => habit!.times_per_day!)" line-name="meta" />
+    </div>
+    </section>
+    <section v-else>
     <h2 class="section">Tempo por vez</h2>
     <div class="plain">
       <p class="meta" style="margin-bottom: 8px">Cada coluna é o tempo registrado no dia; a linha é a duração estimada.</p>

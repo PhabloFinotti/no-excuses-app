@@ -17,8 +17,8 @@ export const percentile = (values: number[], p: number) => {
 
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay()
 
-// Hábito arquivado só conta como agendado antes do dia em que foi arquivado (nesse dia, só se foi feito).
-const lastDayOf = (h: ItemRow) => h.archived_at?.slice(0, 10) ?? '9999-12-31'
+// Hábito arquivado só conta como agendado antes do dia em que foi arquivado (nesse dia, só se foi feito); com data de fim, até ela.
+const lastDayOf = (h: ItemRow) => [h.archived_at?.slice(0, 10), h.ends_on ? addDays(h.ends_on, 1) : undefined].filter((d): d is string => !!d).sort()[0] ?? '9999-12-31'
 
 export function computeStats(items: ItemRow[], completions: CompletionRow[], today: string, days = 30) {
   // Antes do primeiro item cadastrado não há dado: esses dias ficam fora da série (não são "zero").
@@ -90,7 +90,7 @@ export function computeStats(items: ItemRow[], completions: CompletionRow[], tod
   return { habitStats, cells, average7, minutesAvg7, totalMinutes: cells.reduce((s, c) => s + c.minutes, 0), weekdayAvg, total, avgPerDay: total / window.length, best, tasksDone: window.reduce((s, d) => s + (doneTasksByDay.get(d) ?? 0), 0) }
 }
 
-export interface HabitCell { day: string; scheduled: boolean; counted: boolean; done: boolean; skipped: boolean; minutes: number }
+export interface HabitCell { day: string; scheduled: boolean; counted: boolean; done: boolean; skipped: boolean; minutes: number; times: number }
 
 // Histórico de UM hábito: dias agendados, cumprimento, sequências, tempo e taxa por dia da semana.
 export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], today: string, days = 30) {
@@ -100,11 +100,11 @@ export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], tod
 
   const cells: HabitCell[] = window.map((day) => {
     const c = mine.find((c) => c.day === day)
-    const scheduled = h.weekdays.includes(weekdayOf(day))
     const done = !!c?.done
+    const scheduled = h.weekdays.includes(weekdayOf(day)) && (day < lastDayOf(h) || done)
     // Hoje, pendente, não conta como falha (o dia ainda não acabou).
     const skipped = !!c?.skipped && !done
-    return { day, scheduled, counted: scheduled && !skipped && (day < today || done), done, skipped, minutes: done ? c!.spent_min : 0 }
+    return { day, scheduled, counted: scheduled && !skipped && (day < today || done), done, skipped, minutes: done ? c!.spent_min : 0, times: c?.done_times?.length ?? 0 }
   })
 
   const counted = cells.filter((c) => c.counted)
@@ -133,6 +133,7 @@ export function computeHabitDetail(h: ItemRow, completions: CompletionRow[], tod
     cells, counted: counted.length, done: doneCount, rate: counted.length ? doneCount / counted.length : 0,
     streak, bestStreak: best, totalMinutes: total,
     avgMinutes: timed.length ? Math.round(timed.reduce((s, c) => s + c.spent_min, 0) / timed.length) : 0, timedSamples: timed.length,
+    avgTimes: counted.length ? counted.reduce((s, c) => s + c.times, 0) / counted.length : 0, // item repetido: vezes por dia agendado
     weekdayRate,
   }
 }

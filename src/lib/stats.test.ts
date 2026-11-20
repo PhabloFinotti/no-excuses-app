@@ -137,3 +137,23 @@ describe('archived habits and categories', () => {
     expect(d.cells.find((x) => x.day === '2026-10-19')).toMatchObject({ skipped: true, counted: false })
   })
 })
+
+describe('repeated items and end dates', () => {
+  const drops: ItemRow = { ...habit, id: 'c', name: 'Colírio', duration_min: 1, times_per_day: 5, interval_min: 120 }
+  const times = (day: string, n: number): CompletionRow => ({
+    item_id: 'c', day, done: n >= 5, skipped: false, spent_min: 0, timer_started_at: null, timer_accum_s: 0,
+    done_times: Array.from({ length: n }, (_, i) => `${day}T1${i}:00:00Z`),
+  })
+  it('a day counts as done only with the goal; the detail keeps how many times', () => {
+    const d = computeHabitDetail(drops, [times('2026-10-19', 5), times('2026-10-20', 3)], '2026-10-21', 3)
+    expect(d.cells.map((c) => [c.done, c.times])).toEqual([[true, 5], [false, 3], [false, 0]])
+    expect(d).toMatchObject({ counted: 2, done: 1, avgTimes: 4 }) // hoje pendente não conta
+  })
+  it('days after the end date are not failures', () => {
+    const ended = { ...habit, ends_on: '2026-10-19' }
+    expect(computeStats([ended], [done('2026-10-18'), done('2026-10-19')], '2026-10-21').habitStats[0]).toMatchObject({ scheduled: 19, done: 2 })
+    const d = computeHabitDetail(ended, [done('2026-10-19')], '2026-10-21', 3)
+    expect(d.cells.map((c) => c.scheduled)).toEqual([true, false, false])
+    expect(d).toMatchObject({ counted: 1, done: 1, rate: 1 })
+  })
+})
